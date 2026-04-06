@@ -1,13 +1,9 @@
-// ================================================================
 // sw-mestre.js — Service Worker — Painel do Mestre
-// Repositório: minutinhos-mestre
-// ================================================================
-
-const CACHE_NAME = 'minutinhos-mestre-v1';
+const CACHE_NAME = 'minutinhos-mestre-v2';
 
 const ASSETS = [
-  '/',
-  '/index.html',
+  '/minutinhos-mestre/',
+  '/minutinhos-mestre/index.html',
   'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js',
 ];
@@ -43,7 +39,8 @@ self.addEventListener('fetch', event => {
         }
         return res;
       }).catch(() => {
-        if (event.request.destination === 'document') return caches.match('/');
+        if (event.request.destination === 'document')
+          return caches.match('/minutinhos-mestre/');
       });
     })
   );
