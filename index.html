@@ -136,6 +136,37 @@
     .config-row input { width:90px; flex-shrink:0; margin:0; padding:8px 10px; text-align:right; font-size:0.95rem; }
 
     .empty-msg { text-align:center; color:#bbb; font-size:0.88rem; padding:18px 0; }
+    /* ── RANKINGS ── */
+    .rank-section { margin-top: 12px; }
+    .rank-nav-wrap { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+    .rank-nav-1 { display: flex; gap: 8px; }
+    .rank-tab-1 { flex:1; padding:8px 4px; border-radius:8px; border:1.5px solid #ddd;
+      background:white; color:#666; font-size:0.82rem; font-weight:700; cursor:pointer; }
+    .rank-tab-1.active { background:var(--blue); color:white; border-color:var(--blue); }
+    .rank-nav-2 { display: flex; gap: 6px; }
+    .rank-tab-2 { flex:1; padding:6px 4px; border-radius:7px; border:1px solid #ddd;
+      background:transparent; color:#aaa; font-size:0.78rem; font-weight:700; cursor:pointer; }
+    .rank-tab-2.active { background:#f0f2f5; border-color:#999; color:#333; }
+    .rank-titulo { font-family:'Segoe UI',sans-serif; font-size:0.88rem; font-weight:800;
+      color:var(--blue); text-align:center; margin-bottom:4px; }
+    .rank-subtitulo { font-size:0.72rem; color:#999; text-align:center; margin-bottom:10px; }
+    .rank-card { display:flex; align-items:center; gap:10px; padding:10px 0;
+      border-bottom:1px solid #f0f0f0; }
+    .rank-card:last-child { border-bottom:none; }
+    .rank-card.lider { background:linear-gradient(135deg,rgba(230,126,34,0.06),transparent);
+      border-radius:8px; padding:10px 8px; margin:-2px -8px; }
+    .rank-pos { font-size:1.2rem; font-weight:800; color:#ddd; width:22px; flex-shrink:0; }
+    .rank-card.lider .rank-pos { color:var(--gold); }
+    .rank-avatar { width:38px; height:38px; border-radius:50%; object-fit:contain;
+      border:2px solid #eee; flex-shrink:0; }
+    .rank-card.lider .rank-avatar { border-color:var(--gold); }
+    .rank-info { flex:1; }
+    .rank-nome { font-size:0.88rem; font-weight:700; color:var(--blue); }
+    .rank-mins { font-size:0.72rem; color:#888; margin-top:2px; }
+    .rank-bar-bg { height:4px; background:#f0f0f0; border-radius:2px; margin-top:4px; overflow:hidden; }
+    .rank-bar-fill { height:100%; border-radius:2px; background:var(--gold); transition:width 0.8s ease; }
+    .rank-trophy { font-size:1.1rem; flex-shrink:0; }
+    .rank-empty { text-align:center; color:#bbb; font-size:0.85rem; padding:16px 0; }
     /* ── BANNER DE ATUALIZAÇÃO ── */
     #update-banner {
       display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
@@ -212,6 +243,25 @@
       <div id="dashboard"><div class="empty-msg">Clique em "Atualizar Tudo".</div></div>
     </div>
 
+    <!-- RANKINGS -->
+    <div class="card">
+      <h3>🏆 Rankings</h3>
+      <p class="card-hint">Clique em "Atualizar Tudo" para carregar os dados.</p>
+      <div class="rank-nav-wrap">
+        <div class="rank-nav-1">
+          <button class="rank-tab-1 active" id="mrn1-leitura" onclick="mRankNav1('leitura')">📖 Leitura</button>
+          <button class="rank-tab-1" id="mrn1-duolingo" onclick="mRankNav1('duolingo')">🦉 Duolingo</button>
+        </div>
+        <div class="rank-nav-2">
+          <button class="rank-tab-2 active" id="mrn2-semanal" onclick="mRankNav2('semanal')">Semanal</button>
+          <button class="rank-tab-2" id="mrn2-geral" onclick="mRankNav2('geral')">Geral</button>
+        </div>
+      </div>
+      <div class="rank-titulo" id="m-rank-titulo">⚔ Duelo dos Guardiões</div>
+      <div class="rank-subtitulo" id="m-rank-sub"></div>
+      <div id="m-ranking-lista"><div class="rank-empty">Clique em "Atualizar Tudo".</div></div>
+    </div>
+
     <!-- PENDENTES -->
     <div class="card">
       <h3>📋 Aprovações Pendentes <span class="badge" id="badge-pend" style="display:none">0</span></h3>
@@ -228,7 +278,7 @@
 
     <!-- DUOLINGO -->
     <div class="card">
-      <h3>🦜 Creditar Duolingo</h3>
+      <h3>🦉 Creditar Duolingo</h3>
       <p class="card-hint">Use a data correta para não quebrar o streak do Guardião!</p>
       <select id="sel-duo"><option value="">Selecione o Guardião...</option></select>
       <input type="number" id="val-duo" placeholder="Minutos estudados (ex: 30)" min="1">
@@ -296,7 +346,7 @@
       <div class="tab-panel" id="tab-config">
         <p style="font-size:0.72rem;font-weight:700;color:#e67e22;margin-bottom:8px">⚙️ ECONOMIA GERAL</p>
         <div class="config-row"><span class="config-lbl">📖 Meta leitura semanal (min)</span><input id="cfg-leitura" type="number" min="0"></div>
-        <div class="config-row"><span class="config-lbl">🦜 Meta Duolingo semanal (min)</span><input id="cfg-duolingo" type="number" min="0"></div>
+        <div class="config-row"><span class="config-lbl">🦉 Meta Duolingo semanal (min)</span><input id="cfg-duolingo" type="number" min="0"></div>
         <div class="config-row"><span class="config-lbl">⚡ Custo da Forja (energia)</span><input id="cfg-custo-forja" type="number" min="0"></div>
         <div class="config-row"><span class="config-lbl">💎 Ganho da Forja (cristais)</span><input id="cfg-ganho-forja" type="number" min="0"></div>
         <p style="font-size:0.72rem;font-weight:700;color:#e67e22;margin:14px 0 8px">🔥 STREAK DE LEITURA</p>
@@ -305,7 +355,7 @@
         <div class="config-row"><span class="config-lbl">🎁 Bônus 7 dias (⚡)</span><input id="cfg-bonus-7d" type="number" min="0"></div>
         <div class="config-row"><span class="config-lbl">🎁 Bônus 14 dias (⚡)</span><input id="cfg-bonus-14d" type="number" min="0"></div>
         <div class="config-row"><span class="config-lbl">🎁 Bônus 30 dias (⚡)</span><input id="cfg-bonus-30d" type="number" min="0"></div>
-        <p style="font-size:0.72rem;font-weight:700;color:#e67e22;margin:14px 0 8px">🦜 STREAK DE DUOLINGO</p>
+        <p style="font-size:0.72rem;font-weight:700;color:#e67e22;margin:14px 0 8px">🦉 STREAK DE DUOLINGO</p>
         <div class="config-row"><span class="config-lbl">📅 Mínimo diário (min)</span><input id="cfg-min-duo" type="number" min="1"></div>
         <div class="config-row"><span class="config-lbl">🎯 Meta semanal (dias)</span><input id="cfg-meta-duo-dias" type="number" min="1" max="7"></div>
         <div class="config-row"><span class="config-lbl">💎 Recompensa semanal</span><input id="cfg-recompensa-duo" type="number" min="0"></div>
@@ -426,7 +476,7 @@
         return `<div class="guardiao-card">
           <div class="gc-topo"><img class="gc-avatar" src="${g.avatarUrl}" onerror="this.style.display='none'"><div class="gc-info"><div class="gc-nome">${g.nome}</div><div class="gc-nivel">⭐ Nível ${g.nivel} · ${g.xp} XP</div></div>${str}</div>
           <div class="gc-saldos"><div class="gc-pill"><div class="gc-pill-val e-val">${g.energia}</div><div class="gc-pill-lbl">⚡ Energia</div></div><div class="gc-pill"><div class="gc-pill-val c-val">${g.cristais}</div><div class="gc-pill-lbl">💎 Cristais</div></div></div>
-          <div class="gc-stats"><div>📖 Leitura: <span>${g.lS}/${metaL}</span></div><div>🦜 Duolingo: <span>${g.dS}/${metaD}</span></div><div>📊 XP nível: <span>${g.xpN}/500</span></div><div>🕐 Última: <span>${diasDesde(g.ua)}</span></div></div>
+          <div class="gc-stats"><div>📖 Leitura: <span>${g.lS}/${metaL}</span></div><div>🦉 Duolingo: <span>${g.dS}/${metaD}</span></div><div>📊 XP nível: <span>${g.xpN}/500</span></div><div>🕐 Última: <span>${diasDesde(g.ua)}</span></div></div>
           <div class="gc-bar-lbl"><span>📖 Progresso semanal</span><span>${pL}%</span></div><div class="gc-bar"><div class="gc-bar-fill ${pL>=100?'ok':''}" style="width:${pL}%"></div></div>
           <div class="gc-bar-lbl"><span>⭐ Próximo nível</span><span>${pX}%</span></div><div class="gc-bar"><div class="gc-bar-fill" style="width:${pX}%;background:linear-gradient(90deg,#1565C0,#00D4FF)"></div></div>
         </div>`;
@@ -451,7 +501,7 @@
     function renderHist(hs) {
       const d=document.getElementById('historico');
       if (!hs.length) { d.innerHTML='<div class="empty-msg">Sem histórico ainda.</div>'; return; }
-      const ic={Leitura:'📖',Forja:'⚒️',Duolingo:'🦜',Gasto:'💸'};
+      const ic={Leitura:'📖',Forja:'⚒️',Duolingo:'🦉',Gasto:'💸'};
       d.innerHTML = hs.map(h => {
         const sc=h.status==='Pendente'?'s-pend':h.status==='Aprovado'?'s-apro':'s-repr';
         const sn=h.tipo==='Gasto'?'−':'+';
@@ -509,7 +559,7 @@
           detalhes:`Duolingo (Mestre) — ${dataAferida}`, status:'Aprovado'
         });
         await db.ref('notificacoes/'+san(email)).push({
-          tipo:'duolingo', titulo:'🦜 Duolingo Creditado!',
+          tipo:'duolingo', titulo:'🦉 Duolingo Creditado!',
           mensagem:`O Mestre creditou +${min} min de Duolingo (${dataAferida})! +${min} ⚡ de Energia!`,
           quantidade:min, timestamp:new Date().toISOString()
         });
@@ -647,7 +697,7 @@
       if (filtroTipo!=='todos')   items=items.filter(t=>t.tipo===filtroTipo);
       items = items.slice(0,40);
       if (!items.length) { div.innerHTML='<div class="empty-msg">Nenhuma transação encontrada.</div>'; return; }
-      const ic={Leitura:'📖',Forja:'⚒️',Duolingo:'🦜',Gasto:'💸',Bonus:'🎁'};
+      const ic={Leitura:'📖',Forja:'⚒️',Duolingo:'🦉',Gasto:'💸',Bonus:'🎁'};
       div.innerHTML = items.map(t => {
         const dataAf = t.data_aferida ? t.data_aferida.substring(0,10) : (t.data||'').substring(0,10);
         return `<div class="trans-expandable" id="tr-wrap-${t._key}">
@@ -764,7 +814,88 @@
     }
 
     let _swReg = null;
-    if ('serviceWorker' in navigator) {
+    /* ── RANKINGS NO MESTRE ── */
+    let _mRankTema    = 'leitura';
+    let _mRankPeriodo = 'semanal';
+
+    const M_RANK_TITULOS = {
+      leitura_semanal:  '⚔ Duelo dos Guardiões',
+      leitura_geral:    '📜 Crônicas da Ordem',
+      duolingo_semanal: '🦉 Torneio das Línguas',
+      duolingo_geral:   '🦉 Lendas da Língua',
+    };
+
+    function mRankNav1(tema) {
+      _mRankTema = tema;
+      document.getElementById('mrn1-leitura').classList.toggle('active', tema === 'leitura');
+      document.getElementById('mrn1-duolingo').classList.toggle('active', tema === 'duolingo');
+      mRenderRanking();
+    }
+
+    function mRankNav2(periodo) {
+      _mRankPeriodo = periodo;
+      document.getElementById('mrn2-semanal').classList.toggle('active', periodo === 'semanal');
+      document.getElementById('mrn2-geral').classList.toggle('active', periodo === 'geral');
+      mRenderRanking();
+    }
+
+    function mRenderRanking() {
+      const chave = _mRankTema + '_' + _mRankPeriodo;
+      document.getElementById('m-rank-titulo').textContent = M_RANK_TITULOS[chave];
+
+      const hoje = new Date(), dow = hoje.getDay();
+      const seg  = new Date(hoje);
+      seg.setDate(hoje.getDate() - dow + (dow === 0 ? -6 : 1));
+      seg.setHours(0,0,0,0);
+      const dom = new Date(seg); dom.setDate(seg.getDate() + 6);
+      const fmt = d => d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
+
+      document.getElementById('m-rank-sub').textContent = _mRankPeriodo === 'semanal'
+        ? `Semana de ${fmt(seg)} a ${fmt(dom)}`
+        : 'Total histórico desde o início';
+
+      const tipo  = _mRankTema === 'leitura' ? 'Leitura' : 'Duolingo';
+      const label = _mRankTema === 'leitura' ? 'min lidos' : 'min estudados';
+
+      const guardioes = Object.values(_usuarios).filter(u => u.email && !u.is_mestre);
+      const ranking = guardioes.map(u => {
+        const mins = _trans.filter(t => {
+          if (t.email !== u.email || t.status !== 'Aprovado' || t.tipo !== tipo) return false;
+          if (_mRankPeriodo === 'semanal') {
+            const d = new Date(t.data_aferida || t.data_registro || t.data);
+            return d >= seg;
+          }
+          return true;
+        }).reduce((s, t) => s + Number(t.quantidade), 0);
+        return { nome: u.nome, email: u.email, avatarUrl: u.avatar_url, mins };
+      }).sort((a, b) => b.mins - a.mins);
+
+      const lista   = document.getElementById('m-ranking-lista');
+      const maxMins = ranking[0]?.mins || 1;
+      const trofeus = ['🏆','🥈','🥉'];
+
+      if (ranking.every(r => r.mins === 0)) {
+        lista.innerHTML = `<div class="rank-empty">Sem atividade ${_mRankPeriodo === 'semanal' ? 'esta semana' : 'registrada'} ainda.</div>`;
+        return;
+      }
+
+      lista.innerHTML = ranking.map((r, i) => {
+        const isLider = i === 0 && r.mins > 0;
+        const pct = Math.round(r.mins / maxMins * 100);
+        return `<div class="rank-card${isLider ? ' lider' : ''}">
+          <span class="rank-pos">${i+1}</span>
+          <img class="rank-avatar" src="${r.avatarUrl}" onerror="this.src='https://i.ibb.co/7xwvFvSK/avatar-boy-full-body-mod1-nobg.png'">
+          <div class="rank-info">
+            <div class="rank-nome">${r.nome}</div>
+            <div class="rank-mins">${r.mins} ${label}</div>
+            <div class="rank-bar-bg"><div class="rank-bar-fill" style="width:${pct}%"></div></div>
+          </div>
+          <span class="rank-trophy">${trofeus[i] || ''}</span>
+        </div>`;
+      }).join('');
+    }
+
+        if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw-mestre.js').then(reg => {
         _swReg = reg;
         if (reg.waiting) document.getElementById('update-banner').classList.add('show');
