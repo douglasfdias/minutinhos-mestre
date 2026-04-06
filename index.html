@@ -136,6 +136,23 @@
     .config-row input { width:90px; flex-shrink:0; margin:0; padding:8px 10px; text-align:right; font-size:0.95rem; }
 
     .empty-msg { text-align:center; color:#bbb; font-size:0.88rem; padding:18px 0; }
+    /* ── BANNER DE ATUALIZAÇÃO ── */
+    #update-banner {
+      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+      background: linear-gradient(135deg, #1a1a2e, #2c3e50);
+      color: white; padding: 10px 16px; gap: 10px;
+      align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+      animation: banner-in 0.4s ease-out;
+    }
+    @keyframes banner-in { from{transform:translateY(-100%);opacity:0} to{transform:translateY(0);opacity:1} }
+    #update-banner.show { display: flex; }
+    .upd-txt { font-size: 0.82rem; font-weight: 700; flex: 1; }
+    .upd-btn { background: #e67e22; color: white; border: none; border-radius: 8px;
+               padding: 6px 14px; font-weight: 800; font-size: 0.8rem; cursor: pointer; }
+    .upd-btn:active { opacity: 0.85; }
+    .upd-x  { background: none; border: none; color: rgba(255,255,255,0.6);
+               font-size: 1.1rem; cursor: pointer; padding: 2px 4px; }
     /* ── RESET BOTÃO ── */
     .btn-reset { background: #8e44ad; color: white; }
     .btn-reset:hover { background: #7d3c98; }
@@ -162,6 +179,13 @@
   </style>
 </head>
 <body>
+
+  <!-- BANNER DE ATUALIZAÇÃO -->
+  <div id="update-banner">
+    <span class="upd-txt">✨ Nova versão disponível!</span>
+    <button class="upd-btn" onclick="aplicarUpdate()">Atualizar</button>
+    <button class="upd-x"   onclick="this.parentElement.classList.remove('show')">✕</button>
+  </div>
 
   <!-- SENHA -->
   <div id="senha-screen">
@@ -739,7 +763,25 @@
       } catch(e) { toast('❌ '+e.message,'error'); }
     }
 
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    let _swReg = null;
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw-mestre.js').then(reg => {
+        _swReg = reg;
+        if (reg.waiting) document.getElementById('update-banner').classList.add('show');
+        reg.addEventListener('updatefound', () => {
+          const nw = reg.installing;
+          if (!nw) return;
+          nw.addEventListener('statechange', () => {
+            if (nw.state === 'installed' && navigator.serviceWorker.controller)
+              document.getElementById('update-banner').classList.add('show');
+          });
+        });
+      }).catch(()=>{});
+      navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
+    }
+    function aplicarUpdate() {
+      if (_swReg && _swReg.waiting) _swReg.waiting.postMessage('SKIP_WAITING');
+    }
   </script>
 </body>
 </html>
