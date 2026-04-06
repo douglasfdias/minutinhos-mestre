@@ -1,5 +1,5 @@
 // sw-mestre.js — Service Worker — Painel do Mestre
-const CACHE_NAME = 'minutinhos-mestre-v2';
+const CACHE_NAME = 'minutinhos-mestre-v3';
 
 const ASSETS = [
   '/minutinhos-mestre/',
@@ -9,7 +9,6 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', event => {
-  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache =>
       Promise.allSettled(ASSETS.map(url => cache.add(url).catch(() => {})))
@@ -44,4 +43,10 @@ self.addEventListener('fetch', event => {
       });
     })
   );
+});
+
+self.addEventListener('message', event => {
+  if (event.data === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
