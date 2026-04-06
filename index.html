@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Painel do Mestre — Ordem dos Guardiões</title>
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="manifest-mestre.json">
   <meta name="theme-color" content="#1a1a2e">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -136,6 +136,29 @@
     .config-row input { width:90px; flex-shrink:0; margin:0; padding:8px 10px; text-align:right; font-size:0.95rem; }
 
     .empty-msg { text-align:center; color:#bbb; font-size:0.88rem; padding:18px 0; }
+    /* ── RESET BOTÃO ── */
+    .btn-reset { background: #8e44ad; color: white; }
+    .btn-reset:hover { background: #7d3c98; }
+
+    /* ── EDIÇÃO DE TRANSAÇÃO ── */
+    .trans-edit-form {
+      display: none; background: #f8f0ff; border: 1.5px solid #d7bde2;
+      border-radius: 8px; padding: 10px; margin-top: 6px;
+    }
+    .trans-edit-form.open { display: block; }
+    .trans-edit-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .trans-edit-lbl { font-size: 0.72rem; font-weight: 700; color: #555; width: 80px; flex-shrink: 0; }
+    .trans-edit-row input, .trans-edit-row select {
+      margin: 0; flex: 1; padding: 7px 9px; font-size: 0.85rem;
+      border: 1.5px solid #ddd; border-radius: 7px; background: white; outline: none;
+    }
+    .trans-edit-row input:focus, .trans-edit-row select:focus { border-color: #8e44ad; }
+    .trans-edit-btns { display: flex; gap: 6px; margin-top: 6px; }
+    .trans-edit-btns .btn { flex: 1; height: 34px; font-size: 0.8rem; }
+    .trans-row { cursor: pointer; }
+    .trans-row:hover .trans-info { opacity: 0.85; }
+    .trans-expandable { border-bottom: 1px solid #f0f0f0; padding-bottom: 6px; margin-bottom: 0; }
+    .trans-expandable:last-child { border-bottom: none; }
   </style>
 </head>
 <body>
@@ -513,8 +536,9 @@
             </select>
           </div>
           <div class="btn-row">
-            <button class="btn btn-save" onclick="salvarUsuario('${key}')">💾 Salvar</button>
-            <button class="btn btn-del"  onclick="deletarUsuario('${key}','${u.nome}')">🗑 Apagar</button>
+            <button class="btn btn-save"  onclick="salvarUsuario('${key}')">💾 Salvar</button>
+            <button class="btn btn-reset" onclick="resetarUsuario('${key}','${u.nome}')">🔄 Resetar</button>
+            <button class="btn btn-del"   onclick="deletarUsuario('${key}','${u.nome}')">🗑 Apagar</button>
           </div>
         </div>`).join('');
     }
@@ -539,6 +563,36 @@
         document.getElementById('uc-'+key)?.remove();
         toast(`🗑 ${nome} removido.`,'success');
       } catch(e) { toast('❌ '+e.message,'error'); }
+    }
+
+    async function resetarUsuario(key, nome) {
+      if (!confirm(`Resetar ${nome}?\n\nIsso vai:\n• Zerar energia e cristais\n• Apagar TODAS as transações\n• Streak, XP e nível voltam a zero\n\nAvatar e dados do perfil são preservados.`)) return;
+      if (!confirm(`Confirma o reset completo de ${nome}? Esta ação não pode ser desfeita.`)) return;
+      try {
+        // Zera saldos mas preserva nome, email, avatar, is_mestre
+        await db.ref('usuarios/'+key).update({
+          saldo_energia: 0,
+          saldo_cristais: 0
+        });
+        // Apaga todas as transações do usuário
+        const email = _usuarios[key]?.email;
+        if (email) {
+          const tSnap = await db.ref('transacoes').get();
+          if (tSnap.exists()) {
+            const updates = {};
+            Object.entries(tSnap.val()).forEach(([k, t]) => {
+              if (t.email === email) updates[k] = null;
+            });
+            if (Object.keys(updates).length > 0) {
+              await db.ref('transacoes').update(updates);
+            }
+          }
+          // Limpa notificações pendentes também
+          await db.ref('notificacoes/'+key).remove();
+        }
+        toast(`🔄 ${nome} resetado com sucesso!`, 'success');
+        await carregarDados();
+      } catch(e) { toast('❌ '+e.message, 'error'); }
     }
 
     async function criarUsuario() {
@@ -569,16 +623,73 @@
       if (filtroTipo!=='todos')   items=items.filter(t=>t.tipo===filtroTipo);
       items = items.slice(0,40);
       if (!items.length) { div.innerHTML='<div class="empty-msg">Nenhuma transação encontrada.</div>'; return; }
-      const ic={Leitura:'📖',Forja:'⚒️',Duolingo:'🦜',Gasto:'💸'};
-      div.innerHTML = items.map(t => `
-        <div class="trans-row" id="tr-${t._key}">
-          <div class="trans-info">
-            <div class="trans-nome">${ic[t.tipo]||'•'} ${nomeEmail(_usuarios,t.email)} — ${t.detalhes||t.tipo} ${t.tipo==='Gasto'?'−':'+'}${t.quantidade}</div>
-            <div class="trans-det">${fmtData(t.data)}</div>
+      const ic={Leitura:'📖',Forja:'⚒️',Duolingo:'🦜',Gasto:'💸',Bonus:'🎁'};
+      div.innerHTML = items.map(t => {
+        const dataAf = t.data_aferida ? t.data_aferida.substring(0,10) : (t.data||'').substring(0,10);
+        return `<div class="trans-expandable" id="tr-wrap-${t._key}">
+          <div class="trans-row" onclick="toggleEditTrans('${t._key}')">
+            <div class="trans-info">
+              <div class="trans-nome">${ic[t.tipo]||'•'} ${nomeEmail(_usuarios,t.email)} — ${t.detalhes||t.tipo} ${t.tipo==='Gasto'?'−':'+'}${t.quantidade}</div>
+              <div class="trans-det">${fmtData(t.data)}${t.data_aferida?' · Aferido: '+dataAf:''}</div>
+            </div>
+            <span class="trans-status s-status-${t.status}">${t.status}</span>
+            <button class="trans-del" onclick="event.stopPropagation();deletarTrans('${t._key}')">🗑</button>
           </div>
-          <span class="trans-status s-status-${t.status}">${t.status}</span>
-          <button class="trans-del" onclick="deletarTrans('${t._key}')">🗑</button>
-        </div>`).join('');
+          <div class="trans-edit-form" id="te-${t._key}">
+            <div class="trans-edit-row">
+              <span class="trans-edit-lbl">📅 Data</span>
+              <input type="date" id="te-data-${t._key}" value="${dataAf}">
+            </div>
+            <div class="trans-edit-row">
+              <span class="trans-edit-lbl">⚡ Quantidade</span>
+              <input type="number" id="te-qtd-${t._key}" value="${t.quantidade}" min="0">
+            </div>
+            <div class="trans-edit-row">
+              <span class="trans-edit-lbl">📝 Detalhes</span>
+              <input type="text" id="te-det-${t._key}" value="${t.detalhes||''}">
+            </div>
+            <div class="trans-edit-row">
+              <span class="trans-edit-lbl">✅ Status</span>
+              <select id="te-st-${t._key}">
+                <option value="Pendente"  ${t.status==='Pendente' ?'selected':''}>Pendente</option>
+                <option value="Aprovado"  ${t.status==='Aprovado' ?'selected':''}>Aprovado</option>
+                <option value="Reprovado" ${t.status==='Reprovado'?'selected':''}>Reprovado</option>
+              </select>
+            </div>
+            <div class="trans-edit-btns">
+              <button class="btn btn-save" onclick="salvarTrans('${t._key}')">💾 Salvar</button>
+              <button class="btn btn-del"  onclick="deletarTrans('${t._key}')">🗑 Deletar</button>
+              <button class="btn"          onclick="toggleEditTrans('${t._key}')" style="background:#ccc;color:#333">✕ Fechar</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function toggleEditTrans(key) {
+      const form = document.getElementById('te-'+key);
+      if (form) form.classList.toggle('open');
+    }
+
+    async function salvarTrans(key) {
+      try {
+        const data    = document.getElementById('te-data-'+key).value;
+        const qtd     = Number(document.getElementById('te-qtd-'+key).value);
+        const det     = document.getElementById('te-det-'+key).value.trim();
+        const status  = document.getElementById('te-st-'+key).value;
+        const updates = {
+          quantidade: qtd,
+          detalhes:   det,
+          status:     status,
+          data_aferida: data ? data + 'T12:00:00' : null
+        };
+        await db.ref('transacoes/'+key).update(updates);
+        // Update local state
+        const idx = _trans.findIndex(t => t._key === key);
+        if (idx >= 0) Object.assign(_trans[idx], updates);
+        toast('✅ Transação salva!', 'success');
+        renderTransacoes();
+      } catch(e) { toast('❌ '+e.message, 'error'); }
     }
 
     async function deletarTrans(key) {
@@ -628,7 +739,7 @@
       } catch(e) { toast('❌ '+e.message,'error'); }
     }
 
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw-mestre.js').catch(()=>{});
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
   </script>
 </body>
 </html>
