@@ -549,6 +549,8 @@
       const dataAferida = dataEl.value || new Date().toISOString().substring(0,10);
       if (!email) { toast('⚠️ Selecione um Guardião!','error'); return; }
       if (!min||min<1) { toast('⚠️ Informe os minutos.','error'); return; }
+      const minDuo = Number(_config.min_duolingo_diario) || 15;
+      if (min < minDuo) { toast(`⚠️ Mínimo de ${minDuo} minutos para registrar Duolingo.`,'error'); return; }
       try {
         const snap=await db.ref('usuarios/'+san(email)).get(), u=snap.val();
         await db.ref('usuarios/'+san(email)).update({saldo_energia:Number(u.saldo_energia)+min});
