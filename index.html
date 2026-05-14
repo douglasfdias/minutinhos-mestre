@@ -296,6 +296,22 @@
       <button class="btn btn-del btn-wide" onclick="addGasto()">💎 Remover Cristais</button>
     </div>
 
+    <!-- CONCEDER ARTEFATO -->
+    <div class="card">
+      <h3>⚔️ Conceder Artefato</h3>
+      <p class="card-hint">Dê um booster ao Guardião como recompensa por uma tarefa.</p>
+      <select id="sel-arf-guard"><option value="">Selecione o Guardião...</option></select>
+      <select id="sel-arf-tipo">
+        <option value="">Escolha o Artefato...</option>
+        <option value="elixir_ferreiro">⚗️ Elixir do Ferreiro — ×2 por 24h</option>
+        <option value="pocao_essencia">🧪 Poção de Essência — ×3 por 6h</option>
+        <option value="cristal_arcano">💠 Cristal Arcano — ×2 por 48h</option>
+        <option value="tocha_sagrada">🔥 Tocha Sagrada — ×4 por 2h</option>
+        <option value="bendicao_mestre">🏅 Bênção do Mestre — ×5 por 1h</option>
+      </select>
+      <button class="btn btn-ok btn-wide" onclick="concederArtefato()" style="background:#27ae60;">⚔️ Conceder Artefato</button>
+    </div>
+
     <!-- GESTÃO DE DADOS -->
     <div class="card">
       <h3>🗂️ Gestão de Dados</h3>
@@ -511,11 +527,46 @@
 
     /* ── SELECTS ── */
     function renderSels(gs) {
-      ['sel-duo','sel-gasto'].forEach(id => {
+      ['sel-duo','sel-gasto','sel-arf-guard'].forEach(id => {
         const s=document.getElementById(id);
+        if (!s) return;
         s.innerHTML='<option value="">Selecione o Guardião...</option>';
         gs.forEach(g => s.innerHTML += `<option value="${g.email}">${g.nome}</option>`);
       });
+    }
+
+    /* ── ARTEFATOS ── */
+    const ARTEFATOS_CATALOG = {
+      elixir_ferreiro: { nome:'Elixir do Ferreiro', icone:'⚗️', multiplicador:2, duracao_horas:24, descricao:'Dobra os cristais forjados por 24 horas' },
+      pocao_essencia:  { nome:'Poção de Essência',  icone:'🧪', multiplicador:3, duracao_horas:6,  descricao:'Triplica os cristais forjados por 6 horas' },
+      cristal_arcano:  { nome:'Cristal Arcano',     icone:'💠', multiplicador:2, duracao_horas:48, descricao:'Dobra os cristais forjados por 48 horas' },
+      tocha_sagrada:   { nome:'Tocha Sagrada',      icone:'🔥', multiplicador:4, duracao_horas:2,  descricao:'Quadruplica os cristais por 2 horas' },
+      bendicao_mestre: { nome:'Bênção do Mestre',   icone:'🏅', multiplicador:5, duracao_horas:1,  descricao:'Cristais ×5 por 1 hora — poder máximo!' },
+    };
+
+    async function concederArtefato() {
+      const email  = document.getElementById('sel-arf-guard').value;
+      const tipo   = document.getElementById('sel-arf-tipo').value;
+      if (!email) { toast('⚠️ Selecione um Guardião!','error'); return; }
+      if (!tipo)  { toast('⚠️ Escolha um Artefato!','error'); return; }
+      const artefato = ARTEFATOS_CATALOG[tipo];
+      if (!artefato) { toast('⚠️ Artefato inválido.','error'); return; }
+      try {
+        const emailKey = san(email);
+        const snap = await db.ref('usuarios/'+emailKey).get();
+        const u = snap.val();
+        await db.ref('usuarios/'+emailKey+'/artefatos').push({
+          ...artefato, ativo: false, expira_em: null,
+          concedido_em: new Date().toISOString()
+        });
+        await db.ref('notificacoes/'+emailKey).push({
+          tipo: 'artefato', titulo: '⚔️ Novo Artefato!',
+          mensagem: `O Mestre concedeu "${artefato.nome}" para você! ${artefato.icone} Abra o Baú de Artefatos para ativar!`,
+          quantidade: 0, timestamp: new Date().toISOString()
+        });
+        toast(`⚔️ ${artefato.nome} concedido a ${u.nome}!`,'success');
+        document.getElementById('sel-arf-tipo').value = '';
+      } catch(e) { toast('❌ '+e.message,'error'); }
     }
 
     /* ── DECIDIR ── */
