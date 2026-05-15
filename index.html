@@ -296,20 +296,11 @@
       <button class="btn btn-del btn-wide" onclick="addGasto()">💎 Remover Cristais</button>
     </div>
 
-    <!-- CONCEDER ARTEFATO -->
+    <!-- MISSÕES PENDENTES -->
     <div class="card">
-      <h3>⚔️ Conceder Artefato</h3>
-      <p class="card-hint">Dê um booster ao Guardião como recompensa por uma tarefa.</p>
-      <select id="sel-arf-guard"><option value="">Selecione o Guardião...</option></select>
-      <select id="sel-arf-tipo">
-        <option value="">Escolha o Artefato...</option>
-        <option value="elixir_ferreiro">⚗️ Elixir do Ferreiro — ×2 por 24h</option>
-        <option value="pocao_essencia">🧪 Poção de Essência — ×3 por 6h</option>
-        <option value="cristal_arcano">💠 Cristal Arcano — ×2 por 48h</option>
-        <option value="tocha_sagrada">🔥 Tocha Sagrada — ×4 por 2h</option>
-        <option value="bendicao_mestre">🏅 Bênção do Mestre — ×5 por 1h</option>
-      </select>
-      <button class="btn btn-ok btn-wide" onclick="concederArtefato()" style="background:#27ae60;">⚔️ Conceder Artefato</button>
+      <h3>⚔️ Missões Pendentes <span class="badge" id="badge-missoes" style="display:none">0</span></h3>
+      <p class="card-hint">Guardiões que completaram tarefas e aguardam sua aprovação.</p>
+      <div id="lista-missoes-pend"><div class="empty-msg">Clique em "Atualizar Tudo".</div></div>
     </div>
 
     <!-- GESTÃO DE DADOS -->
@@ -320,6 +311,7 @@
         <button class="tab-btn active" onclick="aba('usuarios')">👤 Usuários</button>
         <button class="tab-btn" onclick="aba('transacoes')">📋 Transações</button>
         <button class="tab-btn" onclick="aba('config')">⚙️ Config</button>
+        <button class="tab-btn" onclick="aba('missoes')">⚔️ Missões</button>
       </div>
 
       <!-- ABA USUÁRIOS -->
@@ -376,6 +368,19 @@
         <div class="config-row"><span class="config-lbl">🎯 Meta semanal (dias)</span><input id="cfg-meta-duo-dias" type="number" min="1" max="7"></div>
         <div class="config-row"><span class="config-lbl">💎 Recompensa semanal</span><input id="cfg-recompensa-duo" type="number" min="0"></div>
         <button class="btn btn-save btn-wide" onclick="salvarConfig()">💾 Salvar Configurações</button>
+      </div>
+
+      <!-- ABA MISSÕES -->
+      <div class="tab-panel" id="tab-missoes">
+        <p style="font-size:0.72rem;font-weight:700;color:#8e44ad;margin-bottom:10px">⚔️ MISSÕES DISPONÍVEIS</p>
+        <div id="lista-missoes-config"><div class="empty-msg">Carregando...</div></div>
+        <hr class="divider">
+        <p class="section-label">➕ Nova Missão</p>
+        <div class="field-row"><span class="field-lbl">Ícone</span><input id="nm-icone" type="text" placeholder="⚔️" style="width:60px"></div>
+        <div class="field-row"><span class="field-lbl">Nome</span><input id="nm-nome" type="text" placeholder="Purificar a Carruagem"></div>
+        <div class="field-row"><span class="field-lbl">Descrição</span><input id="nm-desc" type="text" placeholder="Lavar o carro da família"></div>
+        <div class="field-row"><span class="field-lbl">💎 Recompensa</span><input id="nm-recomp" type="number" min="1" placeholder="40"></div>
+        <button class="btn btn-ok btn-wide" onclick="criarMissao()">⚔️ Criar Missão</button>
       </div>
     </div>
   </div>
@@ -478,6 +483,7 @@
         renderUsuarios();
         renderTransacoes();
         renderConfig();
+        renderMissoesPendentes(_usuarios);
       } catch(e) { toast('❌ '+e.message,'error'); }
       finally { btn.disabled=false; btn.textContent='🔄 Atualizar Tudo'; }
     }
@@ -640,9 +646,204 @@
 
     /* ── ABAS ── */
     function aba(nome) {
-      document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active',['usuarios','transacoes','config'][i]===nome));
+      const nomes = ['usuarios','transacoes','config','missoes'];
+      document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', nomes[i]===nome));
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       document.getElementById('tab-'+nome).classList.add('active');
+      if (nome === 'missoes') renderMissoesConfig();
+    }
+
+    /* ══════════════════════════════════════
+       MISSÕES — Gestão (aba Missões)
+    ══════════════════════════════════════ */
+    const MISSOES_PADRAO = [
+      { icone:'🛡️', nome:'Purificar a Carruagem',     descricao:'Lavar o carro da família',           recompensa:40 },
+      { icone:'🏰', nome:'Organizar os Aposentos',    descricao:'Arrumar o quarto',                    recompensa:20 },
+      { icone:'⚗️', nome:'Limpar os Caldeirões',      descricao:'Lavar as louças',                     recompensa:15 },
+      { icone:'🌀', nome:'Purificar os Corredores',   descricao:'Varrer/limpar a casa',                recompensa:25 },
+      { icone:'⚔️', nome:'Expulsar os Detritos',      descricao:'Tirar o lixo',                        recompensa:10 },
+      { icone:'👘', nome:'Preparar as Vestes',        descricao:'Dobrar e guardar roupas',             recompensa:15 },
+      { icone:'💧', nome:'Purificar a Câmara Sagrada',descricao:'Limpar o banheiro',                   recompensa:30 },
+      { icone:'🐾', nome:'Escoltar o Familiar',       descricao:'Passear com o pet',                   recompensa:20 },
+      { icone:'🗺️', nome:'Missão de Abastecimento',   descricao:'Ajudar nas compras',                  recompensa:25 },
+      { icone:'🏅', nome:'Missão Especial da Ordem',  descricao:'Tarefa especial definida pelo Mestre',recompensa:50 },
+    ];
+
+    async function iniciarMissoesPadrao() {
+      try {
+        const snap = await db.ref('config/missoes').get();
+        if (snap.exists()) return; // Já tem missões, não sobrescreve
+        const batch = {};
+        MISSOES_PADRAO.forEach((m, i) => {
+          batch['missao_' + String(i+1).padStart(2,'0')] = { ...m, ativo: true };
+        });
+        await db.ref('config/missoes').set(batch);
+        toast('⚔️ Missões padrão criadas!','success');
+        renderMissoesConfig();
+      } catch(e) { toast('❌ Erro ao criar missões: '+e.message,'error'); }
+    }
+
+    async function renderMissoesConfig() {
+      const div = document.getElementById('lista-missoes-config');
+      div.innerHTML = '<div class="empty-msg">Carregando...</div>';
+      try {
+        const snap = await db.ref('config/missoes').get();
+        if (!snap.exists()) {
+          div.innerHTML = `<div class="empty-msg" style="text-align:center">
+            Nenhuma missão configurada ainda.<br>
+            <button class="btn btn-ok" style="margin-top:8px" onclick="iniciarMissoesPadrao()">⚔️ Criar Missões Padrão</button>
+          </div>`;
+          return;
+        }
+        const missoes = Object.entries(snap.val());
+        div.innerHTML = missoes.map(([key, m]) => `
+          <div class="user-card" style="margin-bottom:8px" id="mc-${key}">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <span style="font-size:1.5rem">${m.icone||'⚔️'}</span>
+              <div style="flex:1">
+                <div style="font-weight:700;font-size:0.85rem">${m.nome}</div>
+                <div style="font-size:0.72rem;color:#666">${m.descricao||''}</div>
+              </div>
+              <div style="font-weight:900;color:#2980b9;font-size:0.9rem">+${m.recompensa}💎</div>
+            </div>
+            <div class="field-row"><span class="field-lbl">💎 Recompensa</span>
+              <input id="mr-${key}" type="number" value="${m.recompensa}" min="1" style="width:80px">
+            </div>
+            <div class="btn-row">
+              <button class="btn ${m.ativo!==false?'btn-ok':'btn-reset'}" onclick="toggleMissao('${key}',${m.ativo!==false})">
+                ${m.ativo!==false?'✅ Ativa':'❌ Inativa'}
+              </button>
+              <button class="btn btn-save" onclick="salvarMissao('${key}')">💾 Salvar</button>
+              <button class="btn btn-del" onclick="deletarMissao('${key}','${m.nome}')">🗑</button>
+            </div>
+          </div>`).join('');
+      } catch(e) { div.innerHTML = '<div class="empty-msg">Erro ao carregar.</div>'; }
+    }
+
+    async function salvarMissao(key) {
+      const recomp = parseInt(document.getElementById('mr-'+key).value);
+      if (!recomp||recomp<1) { toast('⚠️ Recompensa inválida.','error'); return; }
+      try {
+        await db.ref('config/missoes/'+key).update({ recompensa: recomp });
+        toast('💾 Missão salva!','success');
+        renderMissoesConfig();
+      } catch(e) { toast('❌ '+e.message,'error'); }
+    }
+
+    async function toggleMissao(key, ativa) {
+      try {
+        await db.ref('config/missoes/'+key).update({ ativo: !ativa });
+        renderMissoesConfig();
+      } catch(e) { toast('❌ '+e.message,'error'); }
+    }
+
+    async function deletarMissao(key, nome) {
+      if (!confirm(`Apagar missão "${nome}"?`)) return;
+      try {
+        await db.ref('config/missoes/'+key).remove();
+        toast('🗑 Missão removida.','success');
+        renderMissoesConfig();
+      } catch(e) { toast('❌ '+e.message,'error'); }
+    }
+
+    async function criarMissao() {
+      const icone  = document.getElementById('nm-icone').value.trim() || '⚔️';
+      const nome   = document.getElementById('nm-nome').value.trim();
+      const desc   = document.getElementById('nm-desc').value.trim();
+      const recomp = parseInt(document.getElementById('nm-recomp').value);
+      if (!nome)        { toast('⚠️ Informe o nome da missão.','error'); return; }
+      if (!recomp||recomp<1) { toast('⚠️ Informe a recompensa.','error'); return; }
+      try {
+        await db.ref('config/missoes').push({ icone, nome, descricao:desc, recompensa:recomp, ativo:true });
+        toast(`⚔️ Missão "${nome}" criada!`,'success');
+        document.getElementById('nm-icone').value = '';
+        document.getElementById('nm-nome').value = '';
+        document.getElementById('nm-desc').value = '';
+        document.getElementById('nm-recomp').value = '';
+        renderMissoesConfig();
+      } catch(e) { toast('❌ '+e.message,'error'); }
+    }
+
+    /* ══════════════════════════════════════
+       MISSÕES PENDENTES — Aprovar / Negar
+    ══════════════════════════════════════ */
+    async function renderMissoesPendentes(usuariosData) {
+      const div = document.getElementById('lista-missoes-pend');
+      const badge = document.getElementById('badge-missoes');
+      div.innerHTML = '<div class="empty-msg">Carregando...</div>';
+      try {
+        const pendentes = [];
+        for (const [emailKey, u] of Object.entries(usuariosData)) {
+          if (!u.boosters) continue;
+          for (const [bKey, b] of Object.entries(u.boosters)) {
+            if (b.status === 'solicitado') {
+              pendentes.push({ emailKey, bKey, email: u.email||emailKey, nome: u.nome||emailKey, booster: b });
+            }
+          }
+        }
+        if (!pendentes.length) {
+          div.innerHTML = '<div class="empty-msg" style="color:#27ae60">✅ Nenhuma missão aguardando!</div>';
+          badge.style.display = 'none';
+          return;
+        }
+        badge.textContent = pendentes.length;
+        badge.style.display = 'inline-block';
+        div.innerHTML = pendentes.map(p => `
+          <div class="pendente-item" id="pm-${p.bKey}" style="margin-bottom:10px">
+            <div style="font-size:0.82rem;font-weight:700;color:#555;margin-bottom:4px">
+              <strong>${p.nome}</strong>
+              <span style="font-size:0.7rem;color:#888;margin-left:6px">${new Date(p.booster.solicitado_em||'').toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span style="font-size:1.4rem">${p.booster.icone||'⚔️'}</span>
+              <div style="flex:1">
+                <div style="font-weight:700;font-size:0.85rem">${p.booster.nome}</div>
+                <div style="font-size:0.7rem;color:#666">${p.booster.descricao||''}</div>
+              </div>
+              <div style="font-weight:900;color:#2980b9">+${p.booster.recompensa}💎</div>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-ok" onclick="decidirMissao('${p.emailKey}','${p.bKey}','${p.email}','${p.nome}','APROVAR',${p.booster.recompensa},'${(p.booster.nome||'').replace(/'/g,"\\'")}')">✓ Aprovar</button>
+              <button class="btn btn-del" onclick="decidirMissao('${p.emailKey}','${p.bKey}','${p.email}','${p.nome}','NEGAR',0,'')">✗ Negar</button>
+            </div>
+          </div>`).join('');
+      } catch(e) { div.innerHTML = '<div class="empty-msg">Erro ao carregar.</div>'; }
+    }
+
+    async function decidirMissao(emailKey, bKey, email, nomeGuardiao, acao, recompensa, nomeMissao) {
+      const row = document.getElementById('pm-'+bKey);
+      if (row) row.querySelectorAll('button').forEach(b=>b.disabled=true);
+      try {
+        if (acao === 'APROVAR') {
+          await db.ref('usuarios/'+emailKey+'/boosters/'+bKey).update({
+            status: 'pronto', concedido_em: new Date().toISOString()
+          });
+          await db.ref('notificacoes/'+emailKey).push({
+            tipo: 'booster_pronto',
+            titulo: '🎁 Missão Aprovada!',
+            mensagem: `O Mestre aprovou "${nomeMissao}"! Abra o Baú de Artefatos e colete +${recompensa} 💎!`,
+            quantidade: recompensa,
+            timestamp: new Date().toISOString()
+          });
+          toast(`✅ Missão aprovada para ${nomeGuardiao}!`,'success');
+        } else {
+          await db.ref('usuarios/'+emailKey+'/boosters/'+bKey).update({ status: 'negado' });
+          await db.ref('notificacoes/'+emailKey).push({
+            tipo: 'booster_negado',
+            titulo: '❌ Missão não aprovada',
+            mensagem: `O Mestre não aprovou a missão desta vez. Tente novamente, Guardião!`,
+            quantidade: 0,
+            timestamp: new Date().toISOString()
+          });
+          toast(`❌ Missão negada para ${nomeGuardiao}.`,'error');
+        }
+        if (row) row.remove();
+        const remaining = document.getElementById('lista-missoes-pend').querySelectorAll('[id^="pm-"]');
+        if (!remaining.length) {
+          document.getElementById('lista-missoes-pend').innerHTML = '<div class="empty-msg" style="color:#27ae60">✅ Nenhuma missão aguardando!</div>';
+          document.getElementById('badge-missoes').style.display = 'none';
+        }
+      } catch(e) { toast('❌ '+e.message,'error'); if(row) row.querySelectorAll('button').forEach(b=>b.disabled=false); }
     }
 
     /* ── GESTÃO: USUÁRIOS ── */
