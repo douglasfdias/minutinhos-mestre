@@ -15,7 +15,7 @@
   <style>
     :root { --gold:#e67e22; --blue:#1a1a2e; --green:#2ecc71; --red:#e74c3c; --bg:#f0f2f5; --crystal:#00bcd4; }
     * { box-sizing:border-box; margin:0; padding:0; }
-    body { font-family:'Segoe UI',sans-serif; background:var(--bg); }
+    body { font-family:'Segoe UI',sans-serif; background:var(--bg); padding-bottom:64px; }
 
     /* ── SENHA ── */
     #senha-screen { position:fixed; inset:0; background:#1a1a2e; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999; gap:14px; padding:30px; }
@@ -28,24 +28,52 @@
     #senha-erro { color:#e74c3c; font-size:0.85rem; display:none; }
 
     /* ── LAYOUT ── */
-    #app { display:none; padding:12px; max-width:600px; margin:0 auto; padding-bottom:30px; }
-    h2 { color:var(--blue); border-left:5px solid var(--gold); padding-left:10px; margin:8px 0 14px; font-size:1.15rem; }
+    #app { display:none; max-width:600px; margin:0 auto; }
+    .page { display:none; padding:12px; padding-bottom:20px; }
+    .page.active { display:block; }
+    .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+    .page-title { color:var(--blue); font-size:1.1rem; font-weight:800; border-left:4px solid var(--gold); padding-left:10px; }
+    .btn-refresh-sm { background:var(--blue); color:white; border:none; border-radius:8px; padding:8px 14px; font-size:0.82rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px; }
+    .btn-refresh-sm:disabled { opacity:0.6; cursor:default; }
     h3 { font-size:0.95rem; color:var(--blue); margin-bottom:8px; display:flex; align-items:center; gap:6px; }
     .card { background:white; border-radius:12px; padding:14px; box-shadow:0 2px 10px rgba(0,0,0,0.08); margin-bottom:14px; }
     .card-hint { font-size:0.75rem; color:#999; margin-bottom:10px; }
 
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position:fixed; bottom:0; left:0; right:0; height:56px; z-index:200;
+      background:#1a1a2e; border-top:1px solid rgba(230,126,34,0.25);
+      display:flex; max-width:600px; margin:0 auto;
+    }
+    /* trick: fixed doesn't obey max-width, so we center with left/right calc */
+    @media (min-width:600px) {
+      .bottom-nav { left:50%; right:auto; transform:translateX(-50%); width:600px; }
+    }
+    .nav-item {
+      flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:2px; cursor:pointer; color:rgba(255,255,255,0.35); font-size:0.62rem; font-weight:700;
+      letter-spacing:0.3px; transition:color 0.2s; position:relative; padding:4px 2px;
+      border:none; background:none; -webkit-tap-highlight-color:transparent;
+    }
+    .nav-item.active { color:#e67e22; }
+    .nav-item .nav-icon { font-size:1.3rem; line-height:1; }
+    .nav-badge {
+      position:absolute; top:4px; right:calc(50% - 16px);
+      background:#e74c3c; color:white; border-radius:10px;
+      font-size:0.6rem; font-weight:800; padding:1px 5px; min-width:16px; text-align:center;
+      border:1.5px solid #1a1a2e;
+    }
+
     /* ── TOAST ── */
-    #toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(60px); background:#1a1a2e; color:white; padding:12px 22px; border-radius:30px; font-weight:bold; font-size:0.9rem; z-index:9999; box-shadow:0 4px 20px rgba(0,0,0,0.3); transition:transform 0.3s,opacity 0.3s; opacity:0; }
+    #toast { position:fixed; bottom:70px; left:50%; transform:translateX(-50%) translateY(60px); background:#1a1a2e; color:white; padding:12px 22px; border-radius:30px; font-weight:bold; font-size:0.9rem; z-index:9999; box-shadow:0 4px 20px rgba(0,0,0,0.3); transition:transform 0.3s,opacity 0.3s; opacity:0; white-space:nowrap; }
     #toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
     #toast.success { background:#27ae60; } #toast.error { background:#c0392b; }
 
     /* ── BOTÕES ── */
-    .btn-refresh { background:var(--blue); color:white; width:100%; height:48px; border:none; border-radius:10px; font-size:1rem; font-weight:bold; cursor:pointer; margin-bottom:14px; display:flex; align-items:center; justify-content:center; gap:8px; }
-    .btn-refresh:disabled { opacity:0.6; cursor:default; }
     .btn { padding:8px 14px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; font-size:0.85rem; transition:opacity 0.15s,transform 0.1s; }
     .btn:active { transform:scale(0.94); }
-    .btn-ok  { background:var(--green); color:white; }
-    .btn-del { background:var(--red); color:white; }
+    .btn-ok   { background:var(--green); color:white; }
+    .btn-del  { background:var(--red); color:white; }
     .btn-save { background:#2980b9; color:white; }
     .btn-warn { background:#f39c12; color:white; }
     .btn-wide { width:100%; height:44px; margin-top:8px; border-radius:10px; font-size:0.95rem; }
@@ -88,22 +116,21 @@
     .s-pend { color:#e67e22; } .s-apro { color:#27ae60; } .s-repr { color:#e74c3c; }
 
     /* ── SELECTS / INPUTS ── */
-    select, input[type="number"], input[type="text"], input[type="email"] {
+    select, input[type="number"], input[type="text"], input[type="email"], input[type="date"] {
       padding:11px 12px; border:1.5px solid #ddd; border-radius:9px; width:100%;
       font-size:1rem; margin:5px 0; background:white; outline:none; transition:border-color 0.2s;
     }
     select:focus, input:focus { border-color:var(--gold); }
 
-    /* ── ABAS DA GESTÃO ── */
-    .tabs { display:flex; gap:6px; margin-bottom:12px; }
-    .tab-btn { flex:1; padding:9px 4px; border:1.5px solid #ddd; border-radius:8px; font-size:0.8rem; font-weight:700; background:white; color:#555; cursor:pointer; transition:background 0.15s; }
+    /* ── ABAS (gestão) ── */
+    .tabs { display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+    .tab-btn { flex:1; min-width:70px; padding:9px 4px; border:1.5px solid #ddd; border-radius:8px; font-size:0.78rem; font-weight:700; background:white; color:#555; cursor:pointer; transition:background 0.15s; }
     .tab-btn.active { background:var(--blue); color:white; border-color:var(--blue); }
     .tab-panel { display:none; }
     .tab-panel.active { display:block; }
 
     /* ── GESTÃO: USUÁRIOS ── */
     .user-card { background:#f8f8f8; border-radius:10px; padding:12px; margin-bottom:10px; border:1.5px solid #e8e8e8; }
-    .user-card:last-child { margin-bottom:0; }
     .user-card-nome { font-weight:800; color:var(--blue); font-size:0.95rem; margin-bottom:8px; }
     .user-card-email { font-size:0.72rem; color:#999; font-weight:400; margin-left:6px; }
     .field-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
@@ -117,7 +144,7 @@
     /* ── GESTÃO: TRANSAÇÕES ── */
     .trans-filter { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
     .trans-filter select { margin:0; flex:1; min-width:120px; padding:8px 10px; font-size:0.85rem; }
-    .trans-row { display:flex; align-items:center; gap:6px; padding:9px 0; border-bottom:1px solid #f0f0f0; }
+    .trans-row { display:flex; align-items:center; gap:6px; padding:9px 0; border-bottom:1px solid #f0f0f0; cursor:pointer; }
     .trans-row:last-child { border-bottom:none; }
     .trans-info { flex:1; }
     .trans-nome { font-size:0.82rem; font-weight:700; color:var(--blue); }
@@ -128,6 +155,16 @@
     .s-status-Reprovado { background:#f8d7da; color:#721c24; }
     .trans-del { background:none; border:none; font-size:1rem; cursor:pointer; color:#ccc; padding:4px; flex-shrink:0; }
     .trans-del:hover { color:#e74c3c; }
+    .trans-edit-form { display:none; background:#f8f0ff; border:1.5px solid #d7bde2; border-radius:8px; padding:10px; margin-top:6px; }
+    .trans-edit-form.open { display:block; }
+    .trans-edit-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+    .trans-edit-lbl { font-size:0.72rem; font-weight:700; color:#555; width:80px; flex-shrink:0; }
+    .trans-edit-row input, .trans-edit-row select { margin:0; flex:1; padding:7px 9px; font-size:0.85rem; border:1.5px solid #ddd; border-radius:7px; background:white; outline:none; }
+    .trans-edit-row input:focus, .trans-edit-row select:focus { border-color:#8e44ad; }
+    .trans-edit-btns { display:flex; gap:6px; margin-top:6px; }
+    .trans-edit-btns .btn { flex:1; height:34px; font-size:0.8rem; }
+    .trans-expandable { border-bottom:1px solid #f0f0f0; padding-bottom:6px; margin-bottom:0; }
+    .trans-expandable:last-child { border-bottom:none; }
 
     /* ── GESTÃO: CONFIG ── */
     .config-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid #f0f0f0; }
@@ -135,30 +172,22 @@
     .config-lbl { font-size:0.85rem; font-weight:700; color:#333; flex:1; }
     .config-row input { width:90px; flex-shrink:0; margin:0; padding:8px 10px; text-align:right; font-size:0.95rem; }
 
-    .empty-msg { text-align:center; color:#bbb; font-size:0.88rem; padding:18px 0; }
     /* ── RANKINGS ── */
-    .rank-section { margin-top: 12px; }
-    .rank-nav-wrap { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
-    .rank-nav-1 { display: flex; gap: 8px; }
-    .rank-tab-1 { flex:1; padding:8px 4px; border-radius:8px; border:1.5px solid #ddd;
-      background:white; color:#666; font-size:0.82rem; font-weight:700; cursor:pointer; }
+    .rank-nav-wrap { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+    .rank-nav-1 { display:flex; gap:8px; }
+    .rank-tab-1 { flex:1; padding:8px 4px; border-radius:8px; border:1.5px solid #ddd; background:white; color:#666; font-size:0.82rem; font-weight:700; cursor:pointer; }
     .rank-tab-1.active { background:var(--blue); color:white; border-color:var(--blue); }
-    .rank-nav-2 { display: flex; gap: 6px; }
-    .rank-tab-2 { flex:1; padding:6px 4px; border-radius:7px; border:1px solid #ddd;
-      background:transparent; color:#aaa; font-size:0.78rem; font-weight:700; cursor:pointer; }
+    .rank-nav-2 { display:flex; gap:6px; }
+    .rank-tab-2 { flex:1; padding:6px 4px; border-radius:7px; border:1px solid #ddd; background:transparent; color:#aaa; font-size:0.78rem; font-weight:700; cursor:pointer; }
     .rank-tab-2.active { background:#f0f2f5; border-color:#999; color:#333; }
-    .rank-titulo { font-family:'Segoe UI',sans-serif; font-size:0.88rem; font-weight:800;
-      color:var(--blue); text-align:center; margin-bottom:4px; }
+    .rank-titulo { font-size:0.88rem; font-weight:800; color:var(--blue); text-align:center; margin-bottom:4px; }
     .rank-subtitulo { font-size:0.72rem; color:#999; text-align:center; margin-bottom:10px; }
-    .rank-card { display:flex; align-items:center; gap:10px; padding:10px 0;
-      border-bottom:1px solid #f0f0f0; }
+    .rank-card { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid #f0f0f0; }
     .rank-card:last-child { border-bottom:none; }
-    .rank-card.lider { background:linear-gradient(135deg,rgba(230,126,34,0.06),transparent);
-      border-radius:8px; padding:10px 8px; margin:-2px -8px; }
+    .rank-card.lider { background:linear-gradient(135deg,rgba(230,126,34,0.06),transparent); border-radius:8px; padding:10px 8px; margin:-2px -8px; }
     .rank-pos { font-size:1.2rem; font-weight:800; color:#ddd; width:22px; flex-shrink:0; }
     .rank-card.lider .rank-pos { color:var(--gold); }
-    .rank-avatar { width:38px; height:38px; border-radius:50%; object-fit:contain;
-      border:2px solid #eee; flex-shrink:0; }
+    .rank-avatar { width:38px; height:38px; border-radius:50%; object-fit:contain; border:2px solid #eee; flex-shrink:0; }
     .rank-card.lider .rank-avatar { border-color:var(--gold); }
     .rank-info { flex:1; }
     .rank-nome { font-size:0.88rem; font-weight:700; color:var(--blue); }
@@ -167,55 +196,66 @@
     .rank-bar-fill { height:100%; border-radius:2px; background:var(--gold); transition:width 0.8s ease; }
     .rank-trophy { font-size:1.1rem; flex-shrink:0; }
     .rank-empty { text-align:center; color:#bbb; font-size:0.85rem; padding:16px 0; }
-    /* ── BANNER DE ATUALIZAÇÃO ── */
-    #update-banner {
-      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
-      background: linear-gradient(135deg, #1a1a2e, #2c3e50);
-      color: white; padding: 10px 16px; gap: 10px;
-      align-items: center; justify-content: space-between;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.4);
-      animation: banner-in 0.4s ease-out;
-    }
-    @keyframes banner-in { from{transform:translateY(-100%);opacity:0} to{transform:translateY(0);opacity:1} }
-    #update-banner.show { display: flex; }
-    .upd-txt { font-size: 0.82rem; font-weight: 700; flex: 1; }
-    .upd-btn { background: #e67e22; color: white; border: none; border-radius: 8px;
-               padding: 6px 14px; font-weight: 800; font-size: 0.8rem; cursor: pointer; }
-    .upd-btn:active { opacity: 0.85; }
-    .upd-x  { background: none; border: none; color: rgba(255,255,255,0.6);
-               font-size: 1.1rem; cursor: pointer; padding: 2px 4px; }
-    /* ── RESET BOTÃO ── */
-    .btn-reset { background: #8e44ad; color: white; }
-    .btn-reset:hover { background: #7d3c98; }
 
-    /* ── EDIÇÃO DE TRANSAÇÃO ── */
-    .trans-edit-form {
-      display: none; background: #f8f0ff; border: 1.5px solid #d7bde2;
-      border-radius: 8px; padding: 10px; margin-top: 6px;
-    }
-    .trans-edit-form.open { display: block; }
-    .trans-edit-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-    .trans-edit-lbl { font-size: 0.72rem; font-weight: 700; color: #555; width: 80px; flex-shrink: 0; }
-    .trans-edit-row input, .trans-edit-row select {
-      margin: 0; flex: 1; padding: 7px 9px; font-size: 0.85rem;
-      border: 1.5px solid #ddd; border-radius: 7px; background: white; outline: none;
-    }
-    .trans-edit-row input:focus, .trans-edit-row select:focus { border-color: #8e44ad; }
-    .trans-edit-btns { display: flex; gap: 6px; margin-top: 6px; }
-    .trans-edit-btns .btn { flex: 1; height: 34px; font-size: 0.8rem; }
-    .trans-row { cursor: pointer; }
-    .trans-row:hover .trans-info { opacity: 0.85; }
-    .trans-expandable { border-bottom: 1px solid #f0f0f0; padding-bottom: 6px; margin-bottom: 0; }
-    .trans-expandable:last-child { border-bottom: none; }
+    /* ── VOUCHERS ── */
+    .voucher-tabs { display:flex; gap:6px; margin-bottom:12px; }
+    .voucher-tab { flex:1; padding:8px 4px; border:1.5px solid #ddd; border-radius:8px; font-size:0.78rem; font-weight:700; background:white; color:#555; cursor:pointer; transition:background 0.15s; }
+    .voucher-tab.active { background:var(--blue); color:white; border-color:var(--blue); }
+    .vpanel { display:none; }
+    .vpanel.active { display:block; }
+    .voucher-pend-item { display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #f0f0f0; padding:10px 0; }
+    .voucher-pend-item:last-child { border-bottom:none; }
+    .vp-info { flex:1; }
+    .vp-nome { font-weight:700; color:var(--blue); font-size:0.9rem; }
+    .vp-det  { font-size:0.75rem; color:#777; margin-top:2px; }
+    .vp-btns { display:flex; gap:6px; margin-left:8px; }
+    .voucher-ativo-card { background:#e8f5e9; border-radius:10px; padding:12px 14px; margin-bottom:10px; border-left:4px solid #27ae60; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .voucher-ativo-card.warning { background:#fff3e0; border-left-color:#e67e22; }
+    .va-info { flex:1; }
+    .va-nome { font-weight:700; color:var(--blue); font-size:0.88rem; }
+    .va-det  { font-size:0.73rem; color:#666; margin-top:2px; }
+    .va-timer { font-weight:900; font-size:1.5rem; color:#27ae60; font-family:'Courier New',monospace; min-width:70px; text-align:right; }
+    .va-timer.warning { color:#e67e22; animation:mestre-blink 1s step-end infinite; }
+    @keyframes mestre-blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .va-btns { display:flex; flex-direction:column; gap:4px; }
+    .voucher-hist-item { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid #f0f0f0; font-size:0.82rem; }
+    .voucher-hist-item:last-child { border-bottom:none; }
+    .vh-nome { font-weight:700; color:var(--blue); flex-shrink:0; }
+    .vh-det  { color:#666; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .vh-status { font-size:0.7rem; font-weight:800; padding:2px 7px; border-radius:10px; flex-shrink:0; }
+    .vhs-ativo    { background:#d4edda; color:#155724; }
+    .vhs-expirado { background:#e2e3e5; color:#383d41; }
+    .vhs-recusado { background:#f8d7da; color:#721c24; }
+    .vhs-pendente { background:#fff3cd; color:#856404; }
+
+    /* ── ARTEFATOS ── */
+    .artefato-card { background:#f0f8ff; border-radius:10px; padding:12px; margin-bottom:8px; border:1.5px solid #bee3f8; display:flex; align-items:center; gap:10px; }
+    .art-icon { font-size:1.6rem; flex-shrink:0; }
+    .art-info { flex:1; }
+    .art-nome { font-weight:700; color:var(--blue); font-size:0.9rem; }
+    .art-det  { font-size:0.72rem; color:#666; margin-top:2px; }
+    .art-btns { display:flex; gap:4px; flex-shrink:0; }
+
+    /* ── BANNER ATUALIZAÇÃO ── */
+    #update-banner { display:none; position:fixed; top:0; left:0; right:0; z-index:9999; background:linear-gradient(135deg,#1a1a2e,#2c3e50); color:white; padding:10px 16px; gap:10px; align-items:center; justify-content:space-between; box-shadow:0 2px 12px rgba(0,0,0,0.4); animation:banner-in 0.4s ease-out; }
+    @keyframes banner-in { from{transform:translateY(-100%);opacity:0} to{transform:translateY(0);opacity:1} }
+    #update-banner.show { display:flex; }
+    .upd-txt { font-size:0.82rem; font-weight:700; flex:1; }
+    .upd-btn { background:#e67e22; color:white; border:none; border-radius:8px; padding:6px 14px; font-weight:800; font-size:0.8rem; cursor:pointer; }
+    .upd-btn:active { opacity:0.85; }
+    .upd-x  { background:none; border:none; color:rgba(255,255,255,0.6); font-size:1.1rem; cursor:pointer; padding:2px 4px; }
+    .btn-reset { background:#8e44ad; color:white; }
+
+    .empty-msg { text-align:center; color:#bbb; font-size:0.88rem; padding:18px 0; }
   </style>
 </head>
 <body>
 
-  <!-- BANNER DE ATUALIZAÇÃO -->
+  <!-- BANNER ATUALIZAÇÃO -->
   <div id="update-banner">
     <span class="upd-txt">✨ Nova versão disponível!</span>
     <button class="upd-btn" onclick="aplicarUpdate()">Atualizar</button>
-    <button class="upd-x"   onclick="this.parentElement.classList.remove('show')">✕</button>
+    <button class="upd-x" onclick="this.parentElement.classList.remove('show')">✕</button>
   </div>
 
   <!-- SENHA -->
@@ -223,8 +263,7 @@
     <div style="font-size:2.5rem">⚔️</div>
     <p class="title">Painel do Mestre</p>
     <p class="sub">Apenas os Mestres da Ordem podem entrar aqui.</p>
-    <input type="password" id="senha-input" placeholder="Senha da Ordem"
-           onkeydown="if(event.key==='Enter')verificarSenha()">
+    <input type="password" id="senha-input" placeholder="Senha da Ordem" onkeydown="if(event.key==='Enter')verificarSenha()">
     <p id="senha-erro">❌ Senha incorreta.</p>
     <button id="senha-btn" onclick="verificarSenha()">🔓 Entrar na Ordem</button>
   </div>
@@ -232,157 +271,233 @@
   <div id="toast"></div>
 
   <div id="app">
-    <h2>⚔ Painel do Mestre</h2>
 
-    <button class="btn-refresh" id="btn-refresh" onclick="carregarDados()">🔄 Atualizar Tudo</button>
-
-    <!-- DASHBOARD -->
-    <div class="card">
-      <h3>🏆 Guardiões da Ordem</h3>
-      <p class="card-hint">Saldos, progresso semanal, nível e sequência de leitura.</p>
-      <div id="dashboard"><div class="empty-msg">Clique em "Atualizar Tudo".</div></div>
-    </div>
-
-    <!-- RANKINGS -->
-    <div class="card">
-      <h3>🏆 Rankings</h3>
-      <p class="card-hint">Clique em "Atualizar Tudo" para carregar os dados.</p>
-      <div class="rank-nav-wrap">
-        <div class="rank-nav-1">
-          <button class="rank-tab-1 active" id="mrn1-leitura" onclick="mRankNav1('leitura')">📖 Leitura</button>
-          <button class="rank-tab-1" id="mrn1-duolingo" onclick="mRankNav1('duolingo')">🦉 Duolingo</button>
-        </div>
-        <div class="rank-nav-2">
-          <button class="rank-tab-2 active" id="mrn2-semanal" onclick="mRankNav2('semanal')">Semanal</button>
-          <button class="rank-tab-2" id="mrn2-geral" onclick="mRankNav2('geral')">Geral</button>
-        </div>
+    <!-- ══ PÁGINA: INÍCIO ══ -->
+    <div class="page active" id="page-inicio">
+      <div class="page-header">
+        <span class="page-title">🏠 Guardiões da Ordem</span>
+        <button class="btn-refresh-sm" id="btn-refresh-inicio" onclick="carregarDados()">🔄 Atualizar</button>
       </div>
-      <div class="rank-titulo" id="m-rank-titulo">⚔ Duelo dos Guardiões</div>
-      <div class="rank-subtitulo" id="m-rank-sub"></div>
-      <div id="m-ranking-lista"><div class="rank-empty">Clique em "Atualizar Tudo".</div></div>
-    </div>
-
-    <!-- PENDENTES -->
-    <div class="card">
-      <h3>📋 Aprovações Pendentes <span class="badge" id="badge-pend" style="display:none">0</span></h3>
-      <p class="card-hint">Leituras aguardando sua decisão, Mestre.</p>
-      <div id="lista-pendentes"><div class="empty-msg">Clique em "Atualizar Tudo".</div></div>
-    </div>
-
-    <!-- HISTÓRICO -->
-    <div class="card">
-      <h3>📜 Histórico Recente</h3>
-      <p class="card-hint">Últimas 15 atividades de todos os Guardiões.</p>
-      <div id="historico"><div class="empty-msg">Clique em "Atualizar Tudo".</div></div>
-    </div>
-
-    <!-- DUOLINGO -->
-    <div class="card">
-      <h3>🦉 Creditar Duolingo</h3>
-      <p class="card-hint">Use a data correta para não quebrar o streak do Guardião!</p>
-      <select id="sel-duo"><option value="">Selecione o Guardião...</option></select>
-      <input type="number" id="val-duo" placeholder="Minutos estudados (ex: 30)" min="1">
-      <label style="font-size:0.78rem;font-weight:700;color:#555;margin-top:6px;display:block;">📅 Data da atividade</label>
-      <input type="date" id="data-duo" style="padding:11px 12px;border:1.5px solid #ddd;border-radius:9px;width:100%;font-size:1rem;margin:5px 0;background:white;outline:none;">
-      <button class="btn btn-ok btn-wide" onclick="addDuo()">⚡ Creditar Energia</button>
-    </div>
-
-    <!-- GASTAR CRISTAIS -->
-    <div class="card">
-      <h3>💎 Debitar Cristais</h3>
-      <p class="card-hint">Remove cristais para tempo de tela + notifica o Guardião.</p>
-      <select id="sel-gasto"><option value="">Selecione o Guardião...</option></select>
-      <input type="number" id="val-gasto" placeholder="Quantidade de Cristais" min="1">
-      <button class="btn btn-del btn-wide" onclick="addGasto()">💎 Remover Cristais</button>
-    </div>
-
-    <!-- MISSÕES PENDENTES -->
-    <div class="card">
-      <h3>⚔️ Missões Pendentes <span class="badge" id="badge-missoes" style="display:none">0</span></h3>
-      <p class="card-hint">Guardiões que completaram tarefas e aguardam sua aprovação.</p>
-      <div id="lista-missoes-pend"><div class="empty-msg">Clique em "Atualizar Tudo".</div></div>
-    </div>
-
-    <!-- GESTÃO DE DADOS -->
-    <div class="card">
-      <h3>🗂️ Gestão de Dados</h3>
-      <p class="card-hint">Crie, edite ou apague usuários, transações e configurações.</p>
-      <div class="tabs">
-        <button class="tab-btn active" onclick="aba('usuarios')">👤 Usuários</button>
-        <button class="tab-btn" onclick="aba('transacoes')">📋 Transações</button>
-        <button class="tab-btn" onclick="aba('config')">⚙️ Config</button>
-        <button class="tab-btn" onclick="aba('missoes')">⚔️ Missões</button>
+      <div class="card">
+        <h3>🏆 Dashboard</h3>
+        <p class="card-hint">Saldos, progresso semanal, nível e sequência de leitura.</p>
+        <div id="dashboard"><div class="empty-msg">Toque em Atualizar.</div></div>
       </div>
+      <div class="card">
+        <h3>🏆 Rankings</h3>
+        <div class="rank-nav-wrap">
+          <div class="rank-nav-1">
+            <button class="rank-tab-1 active" id="mrn1-leitura" onclick="mRankNav1('leitura')">📖 Leitura</button>
+            <button class="rank-tab-1" id="mrn1-duolingo" onclick="mRankNav1('duolingo')">🦉 Duolingo</button>
+          </div>
+          <div class="rank-nav-2">
+            <button class="rank-tab-2 active" id="mrn2-semanal" onclick="mRankNav2('semanal')">Semanal</button>
+            <button class="rank-tab-2" id="mrn2-geral" onclick="mRankNav2('geral')">Geral</button>
+          </div>
+        </div>
+        <div class="rank-titulo" id="m-rank-titulo">⚔ Duelo dos Guardiões</div>
+        <div class="rank-subtitulo" id="m-rank-sub"></div>
+        <div id="m-ranking-lista"><div class="rank-empty">Toque em Atualizar.</div></div>
+      </div>
+    </div>
 
-      <!-- ABA USUÁRIOS -->
-      <div class="tab-panel active" id="tab-usuarios">
-        <div id="lista-usuarios"><div class="empty-msg">Clique em "Atualizar Tudo".</div></div>
+    <!-- ══ PÁGINA: PENDENTES ══ -->
+    <div class="page" id="page-pendentes">
+      <div class="page-header">
+        <span class="page-title">📋 Pendentes</span>
+        <button class="btn-refresh-sm" id="btn-refresh-pend" onclick="carregarDados()">🔄 Atualizar</button>
+      </div>
+      <div class="card">
+        <h3>📖 Aprovações de Leitura <span class="badge" id="badge-pend" style="display:none">0</span></h3>
+        <p class="card-hint">Leituras aguardando sua decisão, Mestre.</p>
+        <div id="lista-pendentes"><div class="empty-msg">Toque em Atualizar.</div></div>
+      </div>
+      <div class="card">
+        <h3>📜 Vouchers Pendentes <span class="badge" id="badge-vouchers-pend" style="display:none">0</span></h3>
+        <p class="card-hint">Pedidos de tempo de tela aguardando aprovação.</p>
+        <div id="lista-vouchers-pend-mini"><div class="empty-msg">Toque em Atualizar.</div></div>
+      </div>
+      <div class="card">
+        <h3>📜 Histórico Recente</h3>
+        <p class="card-hint">Últimas 15 atividades de todos os Guardiões.</p>
+        <div id="historico"><div class="empty-msg">Toque em Atualizar.</div></div>
+      </div>
+    </div>
+
+    <!-- ══ PÁGINA: CREDITAR ══ -->
+    <div class="page" id="page-creditar">
+      <div class="page-header">
+        <span class="page-title">⚡ Creditar</span>
+        <button class="btn-refresh-sm" id="btn-refresh-cred" onclick="carregarDados()">🔄 Atualizar</button>
+      </div>
+      <div class="card">
+        <h3>🦉 Creditar Duolingo</h3>
+        <p class="card-hint">Use a data correta para não quebrar o streak do Guardião!</p>
+        <select id="sel-duo"><option value="">Selecione o Guardião...</option></select>
+        <input type="number" id="val-duo" placeholder="Minutos estudados (ex: 30)" min="1">
+        <label style="font-size:0.78rem;font-weight:700;color:#555;margin-top:6px;display:block;">📅 Data da atividade</label>
+        <input type="date" id="data-duo">
+        <button class="btn btn-ok btn-wide" onclick="addDuo()">⚡ Creditar Energia</button>
+      </div>
+      <div class="card">
+        <h3>💎 Debitar Cristais</h3>
+        <p class="card-hint">Remove cristais para tempo de tela + notifica o Guardião.</p>
+        <select id="sel-gasto"><option value="">Selecione o Guardião...</option></select>
+        <input type="number" id="val-gasto" placeholder="Quantidade de Cristais" min="1">
+        <button class="btn btn-del btn-wide" onclick="addGasto()">💎 Remover Cristais</button>
+      </div>
+      <div class="card">
+        <h3>⚔️ Dar Artefato</h3>
+        <p class="card-hint">Recompense o Guardião por tarefas domésticas com um artefato.</p>
+        <select id="sel-artefato-guardiao"><option value="">Selecione o Guardião...</option></select>
+        <select id="sel-artefato-tipo">
+          <option value="">Selecione o Artefato...</option>
+        </select>
+        <div id="artefato-preview" style="display:none;background:#f0f8ff;border-radius:8px;padding:10px;margin:5px 0;font-size:0.82rem;color:#1a1a2e;"></div>
+        <button class="btn btn-warn btn-wide" onclick="darArtefato()">⚔️ Entregar Artefato</button>
+      </div>
+    </div>
+
+    <!-- ══ PÁGINA: VOUCHERS ══ -->
+    <div class="page" id="page-vouchers">
+      <div class="page-header">
+        <span class="page-title">⏱ Vouchers</span>
+        <button class="btn-refresh-sm" id="btn-refresh-vouch" onclick="carregarDados()">🔄 Atualizar</button>
+      </div>
+      <div class="card">
+        <h3>📜 Vouchers de Tela <span class="badge" id="badge-vouchers" style="display:none">0</span></h3>
+        <p class="card-hint">Pedidos de tempo de tela dos Guardiões.</p>
+        <div class="voucher-tabs">
+          <button class="voucher-tab active" id="vtab-pendentes" onclick="voucherTab('pendentes')">⏳ Pendentes</button>
+          <button class="voucher-tab" id="vtab-ativos" onclick="voucherTab('ativos')">▶ Ativos</button>
+          <button class="voucher-tab" id="vtab-hist" onclick="voucherTab('hist')">📋 Histórico</button>
+        </div>
+        <div id="vpanel-pendentes" class="vpanel active">
+          <div id="lista-vouchers-pend"><div class="empty-msg">Toque em Atualizar.</div></div>
+        </div>
+        <div id="vpanel-ativos" class="vpanel">
+          <div id="lista-vouchers-ativo"><div class="empty-msg">Nenhum voucher ativo.</div></div>
+        </div>
+        <div id="vpanel-hist" class="vpanel">
+          <div id="lista-vouchers-hist"><div class="empty-msg">Nenhum histórico.</div></div>
+        </div>
         <hr class="divider">
-        <p class="section-label">➕ Novo Usuário</p>
-        <div class="field-row"><span class="field-lbl">Email</span><input id="nu-email" type="email" placeholder="email@gmail.com"></div>
-        <div class="field-row"><span class="field-lbl">Nome</span><input id="nu-nome" type="text" placeholder="Nome"></div>
-        <div class="field-row"><span class="field-lbl">⚡ Energia</span><input id="nu-energia" type="number" value="0" min="0"></div>
-        <div class="field-row"><span class="field-lbl">💎 Cristais</span><input id="nu-cristais" type="number" value="0" min="0"></div>
-        <div class="field-row"><span class="field-lbl">Avatar URL</span><input id="nu-avatar" type="text" placeholder="https://..."></div>
-        <div class="field-row"><span class="field-lbl">Papel</span>
-          <select id="nu-mestre"><option value="false">Guardião</option><option value="true">Mestre</option></select>
-        </div>
-        <button class="btn btn-ok btn-wide" onclick="criarUsuario()">➕ Criar Usuário</button>
-      </div>
-
-      <!-- ABA TRANSAÇÕES -->
-      <div class="tab-panel" id="tab-transacoes">
-        <div class="trans-filter">
-          <select id="filtro-trans" onchange="renderTransacoes()">
-            <option value="todos">Todos</option>
-            <option value="Pendente">Pendentes</option>
-            <option value="Aprovado">Aprovados</option>
-            <option value="Reprovado">Reprovados</option>
-          </select>
-          <select id="filtro-tipo" onchange="renderTransacoes()">
-            <option value="todos">Todos os tipos</option>
-            <option value="Leitura">Leitura</option>
-            <option value="Duolingo">Duolingo</option>
-            <option value="Forja">Forja</option>
-            <option value="Gasto">Gasto</option>
-          </select>
-        </div>
-        <div id="lista-trans"><div class="empty-msg">Clique em "Atualizar Tudo".</div></div>
-      </div>
-
-      <!-- ABA CONFIG -->
-      <div class="tab-panel" id="tab-config">
-        <p style="font-size:0.72rem;font-weight:700;color:#e67e22;margin-bottom:8px">⚙️ ECONOMIA GERAL</p>
-        <div class="config-row"><span class="config-lbl">📖 Meta leitura semanal (min)</span><input id="cfg-leitura" type="number" min="0"></div>
-        <div class="config-row"><span class="config-lbl">🦉 Meta Duolingo semanal (min)</span><input id="cfg-duolingo" type="number" min="0"></div>
-        <div class="config-row"><span class="config-lbl">⚡ Custo da Forja (energia)</span><input id="cfg-custo-forja" type="number" min="0"></div>
-        <div class="config-row"><span class="config-lbl">💎 Ganho da Forja (cristais)</span><input id="cfg-ganho-forja" type="number" min="0"></div>
-        <p style="font-size:0.72rem;font-weight:700;color:#e67e22;margin:14px 0 8px">🔥 STREAK DE LEITURA</p>
-        <div class="config-row"><span class="config-lbl">📅 Mínimo diário (min)</span><input id="cfg-min-leitura" type="number" min="1"></div>
-        <div class="config-row"><span class="config-lbl">🎁 Bônus 3 dias (⚡)</span><input id="cfg-bonus-3d" type="number" min="0"></div>
-        <div class="config-row"><span class="config-lbl">🎁 Bônus 7 dias (⚡)</span><input id="cfg-bonus-7d" type="number" min="0"></div>
-        <div class="config-row"><span class="config-lbl">🎁 Bônus 14 dias (⚡)</span><input id="cfg-bonus-14d" type="number" min="0"></div>
-        <div class="config-row"><span class="config-lbl">🎁 Bônus 30 dias (⚡)</span><input id="cfg-bonus-30d" type="number" min="0"></div>
-        <p style="font-size:0.72rem;font-weight:700;color:#e67e22;margin:14px 0 8px">🦉 STREAK DE DUOLINGO</p>
-        <div class="config-row"><span class="config-lbl">📅 Mínimo diário (min)</span><input id="cfg-min-duo" type="number" min="1"></div>
-        <div class="config-row"><span class="config-lbl">🎯 Meta semanal (dias)</span><input id="cfg-meta-duo-dias" type="number" min="1" max="7"></div>
-        <div class="config-row"><span class="config-lbl">💎 Recompensa semanal</span><input id="cfg-recompensa-duo" type="number" min="0"></div>
-        <button class="btn btn-save btn-wide" onclick="salvarConfig()">💾 Salvar Configurações</button>
-      </div>
-
-      <!-- ABA MISSÕES -->
-      <div class="tab-panel" id="tab-missoes">
-        <p style="font-size:0.72rem;font-weight:700;color:#8e44ad;margin-bottom:10px">⚔️ MISSÕES DISPONÍVEIS</p>
-        <div id="lista-missoes-config"><div class="empty-msg">Carregando...</div></div>
-        <hr class="divider">
-        <p class="section-label">➕ Nova Missão</p>
-        <div class="field-row"><span class="field-lbl">Ícone</span><input id="nm-icone" type="text" placeholder="⚔️" style="width:60px"></div>
-        <div class="field-row"><span class="field-lbl">Nome</span><input id="nm-nome" type="text" placeholder="Purificar a Carruagem"></div>
-        <div class="field-row"><span class="field-lbl">Descrição</span><input id="nm-desc" type="text" placeholder="Lavar o carro da família"></div>
-        <div class="field-row"><span class="field-lbl">💎 Recompensa</span><input id="nm-recomp" type="number" min="1" placeholder="40"></div>
-        <button class="btn btn-ok btn-wide" onclick="criarMissao()">⚔️ Criar Missão</button>
+        <div class="section-label">✦ Criar Voucher Manualmente</div>
+        <p class="card-hint">Cria um voucher já ativo para o Guardião (cristais debitados na hora).</p>
+        <select id="sel-voucher-manual"><option value="">Selecione o Guardião...</option></select>
+        <input type="number" id="val-voucher-manual" placeholder="Cristais (= minutos de tela)" min="1">
+        <button class="btn btn-ok btn-wide" onclick="criarVoucherMestre()">📜 Criar e Ativar Imediatamente</button>
       </div>
     </div>
+
+    <!-- ══ PÁGINA: GESTÃO ══ -->
+    <div class="page" id="page-gestao">
+      <div class="page-header">
+        <span class="page-title">⚙️ Gestão</span>
+        <button class="btn-refresh-sm" id="btn-refresh-gest" onclick="carregarDados()">🔄 Atualizar</button>
+      </div>
+      <div class="card">
+        <h3>🗂️ Gestão de Dados</h3>
+        <p class="card-hint">Crie, edite ou apague usuários, transações, configurações e artefatos.</p>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="aba('usuarios')">👤 Usuários</button>
+          <button class="tab-btn" onclick="aba('transacoes')">📋 Transações</button>
+          <button class="tab-btn" onclick="aba('config')">⚙️ Config</button>
+          <button class="tab-btn" onclick="aba('artefatos')">⚔️ Artefatos</button>
+        </div>
+
+        <!-- ABA USUÁRIOS -->
+        <div class="tab-panel active" id="tab-usuarios">
+          <div id="lista-usuarios"><div class="empty-msg">Toque em Atualizar.</div></div>
+          <hr class="divider">
+          <p class="section-label">➕ Novo Usuário</p>
+          <div class="field-row"><span class="field-lbl">Email</span><input id="nu-email" type="email" placeholder="email@gmail.com"></div>
+          <div class="field-row"><span class="field-lbl">Nome</span><input id="nu-nome" type="text" placeholder="Nome"></div>
+          <div class="field-row"><span class="field-lbl">⚡ Energia</span><input id="nu-energia" type="number" value="0" min="0"></div>
+          <div class="field-row"><span class="field-lbl">💎 Cristais</span><input id="nu-cristais" type="number" value="0" min="0"></div>
+          <div class="field-row"><span class="field-lbl">Avatar URL</span><input id="nu-avatar" type="text" placeholder="https://..."></div>
+          <div class="field-row"><span class="field-lbl">Papel</span>
+            <select id="nu-mestre"><option value="false">Guardião</option><option value="true">Mestre</option></select>
+          </div>
+          <button class="btn btn-ok btn-wide" onclick="criarUsuario()">➕ Criar Usuário</button>
+        </div>
+
+        <!-- ABA TRANSAÇÕES -->
+        <div class="tab-panel" id="tab-transacoes">
+          <div class="trans-filter">
+            <select id="filtro-trans" onchange="renderTransacoes()">
+              <option value="todos">Todos</option>
+              <option value="Pendente">Pendentes</option>
+              <option value="Aprovado">Aprovados</option>
+              <option value="Reprovado">Reprovados</option>
+            </select>
+            <select id="filtro-tipo" onchange="renderTransacoes()">
+              <option value="todos">Todos os tipos</option>
+              <option value="Leitura">Leitura</option>
+              <option value="Duolingo">Duolingo</option>
+              <option value="Forja">Forja</option>
+              <option value="Gasto">Gasto</option>
+              <option value="Voucher">Voucher</option>
+            </select>
+          </div>
+          <div id="lista-trans"><div class="empty-msg">Toque em Atualizar.</div></div>
+        </div>
+
+        <!-- ABA CONFIG -->
+        <div class="tab-panel" id="tab-config">
+          <p style="font-size:0.72rem;font-weight:700;color:#e67e22;margin-bottom:8px">⚙️ ECONOMIA GERAL</p>
+          <div class="config-row"><span class="config-lbl">📖 Meta leitura semanal (min)</span><input id="cfg-leitura" type="number" min="0"></div>
+          <div class="config-row"><span class="config-lbl">🦉 Meta Duolingo semanal (min)</span><input id="cfg-duolingo" type="number" min="0"></div>
+          <div class="config-row"><span class="config-lbl">⚡ Custo da Forja (energia)</span><input id="cfg-custo-forja" type="number" min="0"></div>
+          <div class="config-row"><span class="config-lbl">💎 Ganho da Forja (cristais)</span><input id="cfg-ganho-forja" type="number" min="0"></div>
+          <p style="font-size:0.72rem;font-weight:700;color:#e67e22;margin:14px 0 8px">🔥 STREAK DE LEITURA</p>
+          <div class="config-row"><span class="config-lbl">📅 Mínimo diário (min)</span><input id="cfg-min-leitura" type="number" min="1"></div>
+          <div class="config-row"><span class="config-lbl">🎁 Bônus 3 dias (⚡)</span><input id="cfg-bonus-3d" type="number" min="0"></div>
+          <div class="config-row"><span class="config-lbl">🎁 Bônus 7 dias (⚡)</span><input id="cfg-bonus-7d" type="number" min="0"></div>
+          <div class="config-row"><span class="config-lbl">🎁 Bônus 14 dias (⚡)</span><input id="cfg-bonus-14d" type="number" min="0"></div>
+          <div class="config-row"><span class="config-lbl">🎁 Bônus 30 dias (⚡)</span><input id="cfg-bonus-30d" type="number" min="0"></div>
+          <p style="font-size:0.72rem;font-weight:700;color:#e67e22;margin:14px 0 8px">🦉 STREAK DE DUOLINGO</p>
+          <div class="config-row"><span class="config-lbl">📅 Mínimo diário (min)</span><input id="cfg-min-duo" type="number" min="1"></div>
+          <div class="config-row"><span class="config-lbl">🎯 Meta semanal (dias)</span><input id="cfg-meta-duo-dias" type="number" min="1" max="7"></div>
+          <div class="config-row"><span class="config-lbl">💎 Recompensa semanal</span><input id="cfg-recompensa-duo" type="number" min="0"></div>
+          <button class="btn btn-save btn-wide" onclick="salvarConfig()">💾 Salvar Configurações</button>
+        </div>
+
+        <!-- ABA ARTEFATOS -->
+        <div class="tab-panel" id="tab-artefatos">
+          <p class="card-hint" style="margin-bottom:10px">Defina as tarefas domésticas e os cristais que cada uma concede ao Guardião.</p>
+          <div id="lista-artefatos-config"><div class="empty-msg">Carregando artefatos...</div></div>
+          <hr class="divider">
+          <p class="section-label">➕ Novo Artefato</p>
+          <div class="field-row"><span class="field-lbl">Emoji</span><input id="na-emoji" type="text" placeholder="⚔️" style="max-width:70px"></div>
+          <div class="field-row"><span class="field-lbl">Nome</span><input id="na-nome" type="text" placeholder="Ex: Lavar louça"></div>
+          <div class="field-row"><span class="field-lbl">💎 Cristais</span><input id="na-cristais" type="number" min="1" placeholder="Ex: 10"></div>
+          <div class="field-row"><span class="field-lbl">Descrição</span><input id="na-desc" type="text" placeholder="Ex: Lavar toda a louça"></div>
+          <button class="btn btn-ok btn-wide" onclick="criarArtefato()">➕ Adicionar Artefato</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav" id="bottom-nav">
+      <button class="nav-item active" id="nav-inicio" onclick="navTo('inicio')">
+        <span class="nav-icon">🏠</span>Início
+      </button>
+      <button class="nav-item" id="nav-pendentes" onclick="navTo('pendentes')">
+        <span class="nav-icon">📋</span>Pendentes
+        <span class="nav-badge" id="nav-badge-pend" style="display:none">0</span>
+      </button>
+      <button class="nav-item" id="nav-creditar" onclick="navTo('creditar')">
+        <span class="nav-icon">⚡</span>Creditar
+      </button>
+      <button class="nav-item" id="nav-vouchers" onclick="navTo('vouchers')">
+        <span class="nav-icon">⏱</span>Vouchers
+        <span class="nav-badge" id="nav-badge-vouch" style="display:none">0</span>
+      </button>
+      <button class="nav-item" id="nav-gestao" onclick="navTo('gestao')">
+        <span class="nav-icon">⚙️</span>Gestão
+      </button>
+    </nav>
   </div>
 
   <script>
@@ -447,8 +562,8 @@
 
     async function carregarDados() {
       iniciarCamposData();
-      const btn = document.getElementById('btn-refresh');
-      btn.disabled = true; btn.textContent = '⏳ Carregando...';
+      // Desabilita todos os botões de refresh
+      document.querySelectorAll('.btn-refresh-sm').forEach(b => { b.disabled = true; b.textContent = '⏳'; });
       try {
         const [uS, tS, cS] = await Promise.all([
           db.ref('usuarios').get(),
@@ -480,12 +595,14 @@
         renderPend(pendentes);
         renderHist(historico);
         renderSels(guardioes);
+        renderSelArtefatos(guardioes);
         renderUsuarios();
         renderTransacoes();
         renderConfig();
-        renderMissoesPendentes(_usuarios);
+        await carregarVouchers();
+        await carregarArtefatos();
       } catch(e) { toast('❌ '+e.message,'error'); }
-      finally { btn.disabled=false; btn.textContent='🔄 Atualizar Tudo'; }
+      finally { document.querySelectorAll('.btn-refresh-sm').forEach(b => { b.disabled = false; b.textContent = '🔄 Atualizar'; }); }
     }
 
     /* ── DASHBOARD ── */
@@ -508,8 +625,10 @@
     /* ── PENDENTES ── */
     function renderPend(ps) {
       const d=document.getElementById('lista-pendentes'), b=document.getElementById('badge-pend');
-      if (!ps.length) { b.style.display='none'; d.innerHTML='<div class="empty-msg" style="color:#27ae60">✅ Nenhuma missão aguardando!</div>'; return; }
-      b.style.display='inline'; b.textContent=ps.length; d.innerHTML='';
+      if (!ps.length) { b.style.display='none'; const nb=document.getElementById('nav-badge-pend'); if(nb)nb.style.display='none'; d.innerHTML='<div class="empty-msg" style="color:#27ae60">✅ Nenhuma missão aguardando!</div>'; return; }
+      b.style.display='inline'; b.textContent=ps.length;
+      const nb=document.getElementById('nav-badge-pend'); if(nb){nb.textContent=ps.length;nb.style.display='block';}
+      d.innerHTML='';
       ps.forEach(p => {
         const el=document.createElement('div'); el.className='pendente-item'; el.id='pend-'+p.key;
         el.innerHTML=`<div class="p-info"><div class="p-nome">${p.nome}</div><div class="p-det">📖 ${p.det} · ${p.qtd} min</div></div><div class="p-btns"><button class="btn btn-ok">✓</button><button class="btn btn-del">✗</button></div>`;
@@ -533,46 +652,34 @@
 
     /* ── SELECTS ── */
     function renderSels(gs) {
-      ['sel-duo','sel-gasto','sel-arf-guard'].forEach(id => {
+      ['sel-duo','sel-gasto'].forEach(id => {
         const s=document.getElementById(id);
-        if (!s) return;
         s.innerHTML='<option value="">Selecione o Guardião...</option>';
         gs.forEach(g => s.innerHTML += `<option value="${g.email}">${g.nome}</option>`);
       });
     }
 
-    /* ── ARTEFATOS ── */
-    const ARTEFATOS_CATALOG = {
-      elixir_ferreiro: { nome:'Elixir do Ferreiro', icone:'⚗️', multiplicador:2, duracao_horas:24, descricao:'Dobra os cristais forjados por 24 horas' },
-      pocao_essencia:  { nome:'Poção de Essência',  icone:'🧪', multiplicador:3, duracao_horas:6,  descricao:'Triplica os cristais forjados por 6 horas' },
-      cristal_arcano:  { nome:'Cristal Arcano',     icone:'💠', multiplicador:2, duracao_horas:48, descricao:'Dobra os cristais forjados por 48 horas' },
-      tocha_sagrada:   { nome:'Tocha Sagrada',      icone:'🔥', multiplicador:4, duracao_horas:2,  descricao:'Quadruplica os cristais por 2 horas' },
-      bendicao_mestre: { nome:'Bênção do Mestre',   icone:'🏅', multiplicador:5, duracao_horas:1,  descricao:'Cristais ×5 por 1 hora — poder máximo!' },
-    };
-
-    async function concederArtefato() {
-      const email  = document.getElementById('sel-arf-guard').value;
-      const tipo   = document.getElementById('sel-arf-tipo').value;
-      if (!email) { toast('⚠️ Selecione um Guardião!','error'); return; }
-      if (!tipo)  { toast('⚠️ Escolha um Artefato!','error'); return; }
-      const artefato = ARTEFATOS_CATALOG[tipo];
-      if (!artefato) { toast('⚠️ Artefato inválido.','error'); return; }
-      try {
-        const emailKey = san(email);
-        const snap = await db.ref('usuarios/'+emailKey).get();
-        const u = snap.val();
-        await db.ref('usuarios/'+emailKey+'/artefatos').push({
-          ...artefato, ativo: false, expira_em: null,
-          concedido_em: new Date().toISOString()
-        });
-        await db.ref('notificacoes/'+emailKey).push({
-          tipo: 'artefato', titulo: '⚔️ Novo Artefato!',
-          mensagem: `O Mestre concedeu "${artefato.nome}" para você! ${artefato.icone} Abra o Baú de Artefatos para ativar!`,
-          quantidade: 0, timestamp: new Date().toISOString()
-        });
-        toast(`⚔️ ${artefato.nome} concedido a ${u.nome}!`,'success');
-        document.getElementById('sel-arf-tipo').value = '';
-      } catch(e) { toast('❌ '+e.message,'error'); }
+    /* ── SELECTS ARTEFATOS ── */
+    function renderSelArtefatos(gs) {
+      const s = document.getElementById('sel-artefato-guardiao');
+      if (!s) return;
+      const prev = s.value;
+      s.innerHTML = '<option value="">Selecione o Guardião...</option>';
+      gs.forEach(g => s.innerHTML += `<option value="${g.email}|${san(g.email)}">${g.nome} (${g.cristais} 💎)</option>`);
+      s.value = prev;
+      // Preview ao mudar artefato
+      const selTipo = document.getElementById('sel-artefato-tipo');
+      if (selTipo && !selTipo.onchange) {
+        selTipo.onchange = () => {
+          const key = selTipo.value;
+          const prev = document.getElementById('artefato-preview');
+          if (key && _artefatos[key]) {
+            const a = _artefatos[key];
+            prev.style.display = 'block';
+            prev.innerHTML = (a.emoji||'⚔️') + ' <strong>' + a.nome + '</strong> · +' + a.cristais + ' 💎<br><span style="color:#666">' + (a.descricao||'') + '</span>';
+          } else { prev.style.display = 'none'; }
+        };
+      }
     }
 
     /* ── DECIDIR ── */
@@ -646,204 +753,9 @@
 
     /* ── ABAS ── */
     function aba(nome) {
-      const nomes = ['usuarios','transacoes','config','missoes'];
-      document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', nomes[i]===nome));
+      document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active',['usuarios','transacoes','config','artefatos'][i]===nome));
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       document.getElementById('tab-'+nome).classList.add('active');
-      if (nome === 'missoes') renderMissoesConfig();
-    }
-
-    /* ══════════════════════════════════════
-       MISSÕES — Gestão (aba Missões)
-    ══════════════════════════════════════ */
-    const MISSOES_PADRAO = [
-      { icone:'🛡️', nome:'Purificar a Carruagem',     descricao:'Lavar o carro da família',           recompensa:40 },
-      { icone:'🏰', nome:'Organizar os Aposentos',    descricao:'Arrumar o quarto',                    recompensa:20 },
-      { icone:'⚗️', nome:'Limpar os Caldeirões',      descricao:'Lavar as louças',                     recompensa:15 },
-      { icone:'🌀', nome:'Purificar os Corredores',   descricao:'Varrer/limpar a casa',                recompensa:25 },
-      { icone:'⚔️', nome:'Expulsar os Detritos',      descricao:'Tirar o lixo',                        recompensa:10 },
-      { icone:'👘', nome:'Preparar as Vestes',        descricao:'Dobrar e guardar roupas',             recompensa:15 },
-      { icone:'💧', nome:'Purificar a Câmara Sagrada',descricao:'Limpar o banheiro',                   recompensa:30 },
-      { icone:'🐾', nome:'Escoltar o Familiar',       descricao:'Passear com o pet',                   recompensa:20 },
-      { icone:'🗺️', nome:'Missão de Abastecimento',   descricao:'Ajudar nas compras',                  recompensa:25 },
-      { icone:'🏅', nome:'Missão Especial da Ordem',  descricao:'Tarefa especial definida pelo Mestre',recompensa:50 },
-    ];
-
-    async function iniciarMissoesPadrao() {
-      try {
-        const snap = await db.ref('config/missoes').get();
-        if (snap.exists()) return; // Já tem missões, não sobrescreve
-        const batch = {};
-        MISSOES_PADRAO.forEach((m, i) => {
-          batch['missao_' + String(i+1).padStart(2,'0')] = { ...m, ativo: true };
-        });
-        await db.ref('config/missoes').set(batch);
-        toast('⚔️ Missões padrão criadas!','success');
-        renderMissoesConfig();
-      } catch(e) { toast('❌ Erro ao criar missões: '+e.message,'error'); }
-    }
-
-    async function renderMissoesConfig() {
-      const div = document.getElementById('lista-missoes-config');
-      div.innerHTML = '<div class="empty-msg">Carregando...</div>';
-      try {
-        const snap = await db.ref('config/missoes').get();
-        if (!snap.exists()) {
-          div.innerHTML = `<div class="empty-msg" style="text-align:center">
-            Nenhuma missão configurada ainda.<br>
-            <button class="btn btn-ok" style="margin-top:8px" onclick="iniciarMissoesPadrao()">⚔️ Criar Missões Padrão</button>
-          </div>`;
-          return;
-        }
-        const missoes = Object.entries(snap.val());
-        div.innerHTML = missoes.map(([key, m]) => `
-          <div class="user-card" style="margin-bottom:8px" id="mc-${key}">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-              <span style="font-size:1.5rem">${m.icone||'⚔️'}</span>
-              <div style="flex:1">
-                <div style="font-weight:700;font-size:0.85rem">${m.nome}</div>
-                <div style="font-size:0.72rem;color:#666">${m.descricao||''}</div>
-              </div>
-              <div style="font-weight:900;color:#2980b9;font-size:0.9rem">+${m.recompensa}💎</div>
-            </div>
-            <div class="field-row"><span class="field-lbl">💎 Recompensa</span>
-              <input id="mr-${key}" type="number" value="${m.recompensa}" min="1" style="width:80px">
-            </div>
-            <div class="btn-row">
-              <button class="btn ${m.ativo!==false?'btn-ok':'btn-reset'}" onclick="toggleMissao('${key}',${m.ativo!==false})">
-                ${m.ativo!==false?'✅ Ativa':'❌ Inativa'}
-              </button>
-              <button class="btn btn-save" onclick="salvarMissao('${key}')">💾 Salvar</button>
-              <button class="btn btn-del" onclick="deletarMissao('${key}','${m.nome}')">🗑</button>
-            </div>
-          </div>`).join('');
-      } catch(e) { div.innerHTML = '<div class="empty-msg">Erro ao carregar.</div>'; }
-    }
-
-    async function salvarMissao(key) {
-      const recomp = parseInt(document.getElementById('mr-'+key).value);
-      if (!recomp||recomp<1) { toast('⚠️ Recompensa inválida.','error'); return; }
-      try {
-        await db.ref('config/missoes/'+key).update({ recompensa: recomp });
-        toast('💾 Missão salva!','success');
-        renderMissoesConfig();
-      } catch(e) { toast('❌ '+e.message,'error'); }
-    }
-
-    async function toggleMissao(key, ativa) {
-      try {
-        await db.ref('config/missoes/'+key).update({ ativo: !ativa });
-        renderMissoesConfig();
-      } catch(e) { toast('❌ '+e.message,'error'); }
-    }
-
-    async function deletarMissao(key, nome) {
-      if (!confirm(`Apagar missão "${nome}"?`)) return;
-      try {
-        await db.ref('config/missoes/'+key).remove();
-        toast('🗑 Missão removida.','success');
-        renderMissoesConfig();
-      } catch(e) { toast('❌ '+e.message,'error'); }
-    }
-
-    async function criarMissao() {
-      const icone  = document.getElementById('nm-icone').value.trim() || '⚔️';
-      const nome   = document.getElementById('nm-nome').value.trim();
-      const desc   = document.getElementById('nm-desc').value.trim();
-      const recomp = parseInt(document.getElementById('nm-recomp').value);
-      if (!nome)        { toast('⚠️ Informe o nome da missão.','error'); return; }
-      if (!recomp||recomp<1) { toast('⚠️ Informe a recompensa.','error'); return; }
-      try {
-        await db.ref('config/missoes').push({ icone, nome, descricao:desc, recompensa:recomp, ativo:true });
-        toast(`⚔️ Missão "${nome}" criada!`,'success');
-        document.getElementById('nm-icone').value = '';
-        document.getElementById('nm-nome').value = '';
-        document.getElementById('nm-desc').value = '';
-        document.getElementById('nm-recomp').value = '';
-        renderMissoesConfig();
-      } catch(e) { toast('❌ '+e.message,'error'); }
-    }
-
-    /* ══════════════════════════════════════
-       MISSÕES PENDENTES — Aprovar / Negar
-    ══════════════════════════════════════ */
-    async function renderMissoesPendentes(usuariosData) {
-      const div = document.getElementById('lista-missoes-pend');
-      const badge = document.getElementById('badge-missoes');
-      div.innerHTML = '<div class="empty-msg">Carregando...</div>';
-      try {
-        const pendentes = [];
-        for (const [emailKey, u] of Object.entries(usuariosData)) {
-          if (!u.boosters) continue;
-          for (const [bKey, b] of Object.entries(u.boosters)) {
-            if (b.status === 'solicitado') {
-              pendentes.push({ emailKey, bKey, email: u.email||emailKey, nome: u.nome||emailKey, booster: b });
-            }
-          }
-        }
-        if (!pendentes.length) {
-          div.innerHTML = '<div class="empty-msg" style="color:#27ae60">✅ Nenhuma missão aguardando!</div>';
-          badge.style.display = 'none';
-          return;
-        }
-        badge.textContent = pendentes.length;
-        badge.style.display = 'inline-block';
-        div.innerHTML = pendentes.map(p => `
-          <div class="pendente-item" id="pm-${p.bKey}" style="margin-bottom:10px">
-            <div style="font-size:0.82rem;font-weight:700;color:#555;margin-bottom:4px">
-              <strong>${p.nome}</strong>
-              <span style="font-size:0.7rem;color:#888;margin-left:6px">${new Date(p.booster.solicitado_em||'').toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-              <span style="font-size:1.4rem">${p.booster.icone||'⚔️'}</span>
-              <div style="flex:1">
-                <div style="font-weight:700;font-size:0.85rem">${p.booster.nome}</div>
-                <div style="font-size:0.7rem;color:#666">${p.booster.descricao||''}</div>
-              </div>
-              <div style="font-weight:900;color:#2980b9">+${p.booster.recompensa}💎</div>
-            </div>
-            <div class="btn-row">
-              <button class="btn btn-ok" onclick="decidirMissao('${p.emailKey}','${p.bKey}','${p.email}','${p.nome}','APROVAR',${p.booster.recompensa},'${(p.booster.nome||'').replace(/'/g,"\\'")}')">✓ Aprovar</button>
-              <button class="btn btn-del" onclick="decidirMissao('${p.emailKey}','${p.bKey}','${p.email}','${p.nome}','NEGAR',0,'')">✗ Negar</button>
-            </div>
-          </div>`).join('');
-      } catch(e) { div.innerHTML = '<div class="empty-msg">Erro ao carregar.</div>'; }
-    }
-
-    async function decidirMissao(emailKey, bKey, email, nomeGuardiao, acao, recompensa, nomeMissao) {
-      const row = document.getElementById('pm-'+bKey);
-      if (row) row.querySelectorAll('button').forEach(b=>b.disabled=true);
-      try {
-        if (acao === 'APROVAR') {
-          await db.ref('usuarios/'+emailKey+'/boosters/'+bKey).update({
-            status: 'pronto', concedido_em: new Date().toISOString()
-          });
-          await db.ref('notificacoes/'+emailKey).push({
-            tipo: 'booster_pronto',
-            titulo: '🎁 Missão Aprovada!',
-            mensagem: `O Mestre aprovou "${nomeMissao}"! Abra o Baú de Artefatos e colete +${recompensa} 💎!`,
-            quantidade: recompensa,
-            timestamp: new Date().toISOString()
-          });
-          toast(`✅ Missão aprovada para ${nomeGuardiao}!`,'success');
-        } else {
-          await db.ref('usuarios/'+emailKey+'/boosters/'+bKey).update({ status: 'negado' });
-          await db.ref('notificacoes/'+emailKey).push({
-            tipo: 'booster_negado',
-            titulo: '❌ Missão não aprovada',
-            mensagem: `O Mestre não aprovou a missão desta vez. Tente novamente, Guardião!`,
-            quantidade: 0,
-            timestamp: new Date().toISOString()
-          });
-          toast(`❌ Missão negada para ${nomeGuardiao}.`,'error');
-        }
-        if (row) row.remove();
-        const remaining = document.getElementById('lista-missoes-pend').querySelectorAll('[id^="pm-"]');
-        if (!remaining.length) {
-          document.getElementById('lista-missoes-pend').innerHTML = '<div class="empty-msg" style="color:#27ae60">✅ Nenhuma missão aguardando!</div>';
-          document.getElementById('badge-missoes').style.display = 'none';
-        }
-      } catch(e) { toast('❌ '+e.message,'error'); if(row) row.querySelectorAll('button').forEach(b=>b.disabled=false); }
     }
 
     /* ── GESTÃO: USUÁRIOS ── */
@@ -1149,7 +1061,143 @@
       }).join('');
     }
 
-        if ('serviceWorker' in navigator) {
+    
+    /* ── NAVEGAÇÃO ── */
+    function navTo(page) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('page-' + page).classList.add('active');
+      document.getElementById('nav-' + page).classList.add('active');
+      window.scrollTo(0, 0);
+    }
+
+    /* ── RENDERIZAR VOUCHERS PENDENTES (mini, para página Pendentes) ── */
+    function _renderVouchersPendMini(pendentes, nomes) {
+      const el = document.getElementById('lista-vouchers-pend-mini');
+      const badge = document.getElementById('badge-vouchers-pend');
+      const navBadge = document.getElementById('nav-badge-vouch');
+      if (!pendentes.length) {
+        if (badge) badge.style.display = 'none';
+        if (navBadge) navBadge.style.display = 'none';
+        if (el) el.innerHTML = '<div class="empty-msg" style="color:#27ae60">✅ Nenhum voucher pendente!</div>';
+        return;
+      }
+      if (badge) { badge.textContent = pendentes.length; badge.style.display = 'inline'; }
+      if (navBadge) { navBadge.textContent = pendentes.length; navBadge.style.display = 'block'; }
+      if (el) {
+        el.innerHTML = pendentes.map(v => {
+          const nome = nomes[v.email] || v.email;
+          const data = new Date(v.timestamp_solicitacao).toLocaleDateString('pt-BR');
+          const hora = new Date(v.timestamp_solicitacao).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+          return '<div class="voucher-pend-item">'
+            + '<div class="vp-info"><div class="vp-nome">' + nome + ' · ' + v.cristais + ' 💎</div>'
+            + '<div class="vp-det">' + data + ' às ' + hora + ' · ' + v.cristais + ' min</div></div>'
+            + '<div class="vp-btns">'
+            + '<button class="btn btn-ok" onclick="aprovarVoucher('' + v.emailKey + '','' + v.key + '',' + v.cristais + ','' + v.email + '');navTo('vouchers')">✓</button>'
+            + '<button class="btn btn-del" onclick="recusarVoucher('' + v.emailKey + '','' + v.key + '','' + v.email + '')">✗</button>'
+            + '</div></div>';
+        }).join('');
+      }
+    }
+
+    /* ── ARTEFATOS ── */
+    let _artefatos = {};
+
+    async function carregarArtefatos() {
+      try {
+        const snap = await db.ref('config/artefatos').get();
+        _artefatos = snap.exists() ? snap.val() : {};
+        renderArtefatosConfig();
+        _populateArtefatoSelect();
+      } catch(e) { console.error('carregarArtefatos:', e); }
+    }
+
+    function renderArtefatosConfig() {
+      const el = document.getElementById('lista-artefatos-config');
+      const items = Object.entries(_artefatos);
+      if (!items.length) {
+        el.innerHTML = '<div class="empty-msg">Nenhum artefato definido ainda. Crie o primeiro abaixo!</div>';
+        return;
+      }
+      el.innerHTML = items.map(([key, a]) =>
+        '<div class="artefato-card">'
+        + '<span class="art-icon">' + (a.emoji || '⚔️') + '</span>'
+        + '<div class="art-info"><div class="art-nome">' + a.nome + ' · ' + a.cristais + ' 💎</div>'
+        + '<div class="art-det">' + (a.descricao || '') + '</div></div>'
+        + '<div class="art-btns">'
+        + '<button class="btn btn-del" style="padding:5px 9px;font-size:0.78rem;" onclick="deletarArtefato('' + key + '')">🗑</button>'
+        + '</div></div>'
+      ).join('');
+    }
+
+    function _populateArtefatoSelect() {
+      const sel = document.getElementById('sel-artefato-tipo');
+      if (!sel) return;
+      const prev = sel.value;
+      sel.innerHTML = '<option value="">Selecione o Artefato...</option>';
+      Object.entries(_artefatos).forEach(([key, a]) => {
+        sel.innerHTML += '<option value="' + key + '">' + (a.emoji||'⚔️') + ' ' + a.nome + ' (+' + a.cristais + ' 💎)</option>';
+      });
+      sel.value = prev;
+    }
+
+    async function criarArtefato() {
+      const emoji   = document.getElementById('na-emoji').value.trim() || '⚔️';
+      const nome    = document.getElementById('na-nome').value.trim();
+      const cristais= parseInt(document.getElementById('na-cristais').value);
+      const desc    = document.getElementById('na-desc').value.trim();
+      if (!nome) { toast('⚠️ Informe o nome do artefato.', 'error'); return; }
+      if (!cristais || cristais < 1) { toast('⚠️ Informe os cristais.', 'error'); return; }
+      try {
+        const key = nome.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now();
+        await db.ref('config/artefatos/' + key).set({ emoji, nome, cristais, descricao: desc });
+        toast('✅ Artefato "' + nome + '" criado!', 'success');
+        ['na-emoji','na-nome','na-desc'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('na-cristais').value = '';
+        await carregarArtefatos();
+      } catch(e) { toast('❌ ' + e.message, 'error'); }
+    }
+
+    async function deletarArtefato(key) {
+      if (!confirm('Deletar este artefato?')) return;
+      try {
+        await db.ref('config/artefatos/' + key).remove();
+        toast('🗑 Artefato removido.', 'success');
+        await carregarArtefatos();
+      } catch(e) { toast('❌ ' + e.message, 'error'); }
+    }
+
+    async function darArtefato() {
+      const guardiaoVal = document.getElementById('sel-artefato-guardiao').value;
+      const artefatoKey = document.getElementById('sel-artefato-tipo').value;
+      if (!guardiaoVal) { toast('⚠️ Selecione um Guardião.', 'error'); return; }
+      if (!artefatoKey || !_artefatos[artefatoKey]) { toast('⚠️ Selecione um artefato.', 'error'); return; }
+      const [email, emailKey] = guardiaoVal.split('|');
+      const art = _artefatos[artefatoKey];
+      try {
+        const snap = await db.ref('usuarios/' + emailKey).get();
+        const u = snap.val();
+        const novoCristais = (Number(u.saldo_cristais) || 0) + art.cristais;
+        await db.ref('usuarios/' + emailKey).update({ saldo_cristais: novoCristais });
+        await db.ref('transacoes').push({
+          data: new Date().toISOString(), email, tipo: 'Artefato',
+          quantidade: art.cristais,
+          detalhes: (art.emoji || '⚔️') + ' ' + art.nome + ' (Artefato)',
+          status: 'Aprovado'
+        });
+        await db.ref('notificacoes/' + emailKey).push({
+          tipo: 'artefato', titulo: '⚔️ Artefato Recebido!',
+          mensagem: 'O Mestre te deu o artefato ' + (art.emoji||'⚔️') + ' ' + art.nome + '! +' + art.cristais + ' 💎 creditados!',
+          quantidade: art.cristais, timestamp: new Date().toISOString()
+        });
+        toast('✅ ' + art.emoji + ' ' + art.nome + ' entregue a ' + u.nome + '! +' + art.cristais + ' 💎', 'success');
+        document.getElementById('sel-artefato-tipo').value = '';
+        document.getElementById('artefato-preview').style.display = 'none';
+        await carregarDados();
+      } catch(e) { toast('❌ ' + e.message, 'error'); }
+    }
+
+    if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw-mestre.js').then(reg => {
         _swReg = reg;
         if (reg.waiting) document.getElementById('update-banner').classList.add('show');
@@ -1167,6 +1215,326 @@
     function aplicarUpdate() {
       if (_swReg && _swReg.waiting) _swReg.waiting.postMessage('SKIP_WAITING');
     }
+
+    /* ══════════════════════════════════════════════════════
+       VOUCHERS — Painel do Mestre
+    ══════════════════════════════════════════════════════ */
+    let _mestreTimers = {}; // key → intervalId
+
+    function voucherTab(tab) {
+      ['pendentes','ativos','hist'].forEach(t => {
+        document.getElementById('vpanel-' + t).classList.toggle('active', t === tab);
+        document.getElementById('vtab-' + t).classList.toggle('active',  t === tab);
+      });
+    }
+
+    async function carregarVouchers() {
+      try {
+        const snapV = await db.ref('vouchers').get();
+        const snapU = await db.ref('usuarios').get();
+
+        const nomes = {};
+        if (snapU.exists()) snapU.forEach(u => { nomes[u.val().email] = u.val().nome; });
+
+        if (!snapV.exists()) {
+          document.getElementById('lista-vouchers-pend').innerHTML  = '<div class="empty-msg">Nenhum pedido pendente.</div>';
+          document.getElementById('lista-vouchers-ativo').innerHTML = '<div class="empty-msg">Nenhum voucher ativo.</div>';
+          document.getElementById('lista-vouchers-hist').innerHTML  = '<div class="empty-msg">Nenhum histórico.</div>';
+          document.getElementById('badge-vouchers').style.display   = 'none';
+          return;
+        }
+
+        const pendentes = [], ativos = [], historico = [];
+
+        snapV.forEach(userSnap => {
+          userSnap.forEach(v => {
+            const vd = { key: v.key, emailKey: userSnap.key, ...v.val() };
+            if      (vd.status === 'Pendente')                  pendentes.push(vd);
+            else if (vd.status === 'Ativo')                     ativos.push(vd);
+            else if (vd.status === 'Expirado' || vd.status === 'Recusado') historico.push(vd);
+          });
+        });
+
+        // Badge
+        const badgeV = document.getElementById('badge-vouchers');
+        if (pendentes.length) {
+          badgeV.textContent = pendentes.length;
+          badgeV.style.display = 'inline';
+        } else {
+          badgeV.style.display = 'none';
+        }
+
+        // Ordenar pendentes por data (mais antigos primeiro)
+        pendentes.sort((a,b) => new Date(a.timestamp_solicitacao) - new Date(b.timestamp_solicitacao));
+        historico.sort((a,b) => new Date(b.timestamp_solicitacao) - new Date(a.timestamp_solicitacao));
+
+        // ── PENDENTES ──
+        // também popula o mini-painel na página Pendentes
+        _renderVouchersPendMini(pendentes, nomes);
+
+        const pendEl = document.getElementById('lista-vouchers-pend');
+        if (!pendentes.length) {
+          pendEl.innerHTML = '<div class="empty-msg">Nenhum pedido pendente. ✓</div>';
+        } else {
+          pendEl.innerHTML = pendentes.map(v => {
+            const nome = nomes[v.email] || v.email;
+            const data = new Date(v.timestamp_solicitacao).toLocaleDateString('pt-BR');
+            const hora = new Date(v.timestamp_solicitacao).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+            return '<div class="voucher-pend-item">'
+              + '<div class="vp-info">'
+              + '<div class="vp-nome">' + nome + ' · ' + v.cristais + ' 💎</div>'
+              + '<div class="vp-det">' + data + ' às ' + hora + ' · ' + v.cristais + ' min de tela</div>'
+              + '</div>'
+              + '<div class="vp-btns">'
+              + '<button class="btn btn-ok" onclick="aprovarVoucher('' + v.emailKey + '','' + v.key + '',' + v.cristais + ','' + v.email + '')">✓</button>'
+              + '<button class="btn btn-del" onclick="recusarVoucher('' + v.emailKey + '','' + v.key + '','' + v.email + '')">✗</button>'
+              + '</div>'
+              + '</div>';
+          }).join('');
+        }
+
+        // ── ATIVOS ──
+        const ativoEl = document.getElementById('lista-vouchers-ativo');
+        // Para timers antigos, limpa intervals
+        Object.values(_mestreTimers).forEach(id => clearInterval(id));
+        _mestreTimers = {};
+
+        if (!ativos.length) {
+          ativoEl.innerHTML = '<div class="empty-msg">Nenhum voucher ativo no momento.</div>';
+        } else {
+          ativoEl.innerHTML = ativos.map(v => {
+            const nome = nomes[v.email] || v.email;
+            const timerId = 'vm-timer-' + v.key;
+            return '<div class="voucher-ativo-card" id="vacard-' + v.key + '">'
+              + '<div class="va-info">'
+              + '<div class="va-nome">' + nome + ' · ' + v.cristais + ' min</div>'
+              + '<div class="va-det">Aprovado: ' + new Date(v.timestamp_aprovacao || v.timestamp_solicitacao).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) + '</div>'
+              + '</div>'
+              + '<div id="' + timerId + '" class="va-timer">--:--</div>'
+              + '<div class="va-btns">'
+              + '<button class="btn btn-del" style="font-size:0.75rem;padding:5px 8px;" onclick="encerrarVoucher('' + v.emailKey + '','' + v.key + '','' + v.email + '',' + v.cristais + ')">⏹ Encerrar</button>'
+              + '</div>'
+              + '</div>';
+          }).join('');
+
+          // Inicia timers
+          ativos.forEach(v => {
+            _iniciarTimerMestre(v.key, v.timer_fim, v.emailKey);
+          });
+        }
+
+        // ── HISTÓRICO ──
+        const histEl = document.getElementById('lista-vouchers-hist');
+        if (!historico.length) {
+          histEl.innerHTML = '<div class="empty-msg">Nenhum histórico ainda.</div>';
+        } else {
+          histEl.innerHTML = historico.slice(0, 20).map(v => {
+            const nome = nomes[v.email] || v.email;
+            const data = new Date(v.timestamp_solicitacao).toLocaleDateString('pt-BR');
+            let scls = 'vhs-expirado', stxt = v.status;
+            if (v.status === 'Recusado') { scls = 'vhs-recusado'; }
+            return '<div class="voucher-hist-item">'
+              + '<span class="vh-nome">' + nome + '</span>'
+              + '<span class="vh-det">' + v.cristais + ' min · ' + data + '</span>'
+              + '<span class="vh-status ' + scls + '">' + stxt + '</span>'
+              + '</div>';
+          }).join('');
+        }
+
+        // Atualiza selects manuais com guardiões
+        const selV = document.getElementById('sel-voucher-manual');
+        const emailAtual = selV.value;
+        if (snapU.exists()) {
+          const optsV = ['<option value="">Selecione o Guardião...</option>'];
+          snapU.forEach(u => {
+            const ud = u.val();
+            if (!ud.is_mestre) {
+              optsV.push('<option value="' + ud.email + '|' + u.key + '">' + ud.nome + ' (' + (ud.saldo_cristais||0) + ' 💎)</option>');
+            }
+          });
+          selV.innerHTML = optsV.join('');
+          selV.value = emailAtual;
+        }
+
+      } catch(e) { console.error('carregarVouchers:', e); }
+    }
+
+    function _iniciarTimerMestre(vkey, timerFim, emailKey) {
+      if (!timerFim) return;
+      const id = setInterval(() => {
+        const el    = document.getElementById('vm-timer-' + vkey);
+        const card  = document.getElementById('vacard-' + vkey);
+        if (!el) { clearInterval(id); return; }
+
+        const resto = Math.max(0, new Date(timerFim).getTime() - Date.now());
+        const min   = Math.floor(resto / 60000);
+        const seg   = Math.floor((resto % 60000) / 1000);
+        el.textContent = String(min).padStart(2,'0') + ':' + String(seg).padStart(2,'0');
+        el.classList.toggle('warning', min < 5 && resto > 0);
+        if (card) card.classList.toggle('warning', min < 5 && resto > 0);
+
+        if (resto <= 0) {
+          clearInterval(id);
+          el.textContent = '00:00';
+          // Marca expirado
+          db.ref('vouchers/' + emailKey + '/' + vkey).update({ status: 'Expirado' })
+            .then(() => {
+              toast('⏱ Voucher expirado — tempo de tela encerrado!', 'success');
+              carregarVouchers();
+            });
+        }
+      }, 1000);
+      _mestreTimers[vkey] = id;
+    }
+
+    async function aprovarVoucher(emailKey, vkey, cristais, email) {
+      try {
+        const snapU = await db.ref('usuarios/' + emailKey).get();
+        const u = snapU.val();
+        const saldo = Number(u.saldo_cristais) || 0;
+        if (saldo < cristais) {
+          toast('⚠️ ' + u.nome + ' só tem ' + saldo + ' 💎 — insuficiente!', 'error'); return;
+        }
+
+        // Verifica se já tem ativo
+        const snapAtivos = await db.ref('vouchers/' + emailKey).orderByChild('status').equalTo('Ativo').get();
+        if (snapAtivos.exists()) {
+          toast('⚠️ ' + u.nome + ' já tem um voucher ativo!', 'error'); return;
+        }
+
+        const agora = new Date();
+        const timerFim = new Date(agora.getTime() + cristais * 60000).toISOString();
+
+        // Debita cristais
+        await db.ref('usuarios/' + emailKey).update({ saldo_cristais: saldo - cristais });
+
+        // Atualiza voucher → Ativo
+        await db.ref('vouchers/' + emailKey + '/' + vkey).update({
+          status:              'Ativo',
+          timestamp_aprovacao: agora.toISOString(),
+          timer_fim:           timerFim
+        });
+
+        // Registra transação
+        await db.ref('transacoes').push({
+          data: agora.toISOString(), email, tipo: 'Voucher',
+          quantidade: cristais, detalhes: 'Tempo de Tela (Voucher)', status: 'Aprovado'
+        });
+
+        // Notifica guardião
+        await db.ref('notificacoes/' + emailKey).push({
+          tipo: 'voucher_aprovado', titulo: '📜 Voucher Aprovado!',
+          mensagem: 'O Mestre aprovou ' + cristais + ' minutos de tela! Aproveite! ⏱',
+          quantidade: cristais, timestamp: agora.toISOString()
+        });
+
+        toast('✅ Voucher aprovado! ' + cristais + ' min de tela para ' + u.nome + '!', 'success');
+        carregarVouchers();
+      } catch(e) { toast('❌ ' + e.message, 'error'); }
+    }
+
+    async function recusarVoucher(emailKey, vkey, email) {
+      try {
+        await db.ref('vouchers/' + emailKey + '/' + vkey).update({ status: 'Recusado' });
+
+        await db.ref('notificacoes/' + emailKey).push({
+          tipo: 'voucher_recusado', titulo: '📜 Voucher Recusado',
+          mensagem: 'O Mestre não aprovou este voucher. Converse com ele!',
+          quantidade: 0, timestamp: new Date().toISOString()
+        });
+
+        toast('Voucher recusado.', 'success');
+        carregarVouchers();
+      } catch(e) { toast('❌ ' + e.message, 'error'); }
+    }
+
+    async function encerrarVoucher(emailKey, vkey, email, cristais) {
+      if (!confirm('Encerrar este voucher antecipadamente?')) return;
+      try {
+        if (_mestreTimers[vkey]) { clearInterval(_mestreTimers[vkey]); delete _mestreTimers[vkey]; }
+        await db.ref('vouchers/' + emailKey + '/' + vkey).update({ status: 'Expirado' });
+
+        await db.ref('notificacoes/' + emailKey).push({
+          tipo: 'voucher_encerrado', titulo: '⏱ Voucher Encerrado',
+          mensagem: 'O Mestre encerrou seu tempo de tela. Hora de estudar!',
+          quantidade: 0, timestamp: new Date().toISOString()
+        });
+
+        toast('Voucher encerrado pelo Mestre.', 'success');
+        carregarVouchers();
+      } catch(e) { toast('❌ ' + e.message, 'error'); }
+    }
+
+    async function criarVoucherMestre() {
+      const selVal = document.getElementById('sel-voucher-manual').value;
+      if (!selVal) { toast('⚠️ Selecione um Guardião.', 'error'); return; }
+      const [email, emailKey] = selVal.split('|');
+      const cristais = parseInt(document.getElementById('val-voucher-manual').value);
+      if (!cristais || cristais < 1) { toast('⚠️ Informe os cristais.', 'error'); return; }
+
+      try {
+        const snapU = await db.ref('usuarios/' + emailKey).get();
+        const u = snapU.val();
+        const saldo = Number(u.saldo_cristais) || 0;
+        if (saldo < cristais) { toast('⚠️ Só tem ' + saldo + ' 💎!', 'error'); return; }
+
+        // Verifica ativo
+        const snapAtivos = await db.ref('vouchers/' + emailKey).orderByChild('status').equalTo('Ativo').get();
+        if (snapAtivos.exists()) { toast('⚠️ ' + u.nome + ' já tem voucher ativo!', 'error'); return; }
+
+        const agora = new Date();
+        const timerFim = new Date(agora.getTime() + cristais * 60000).toISOString();
+
+        // Debita cristais
+        await db.ref('usuarios/' + emailKey).update({ saldo_cristais: saldo - cristais });
+
+        // Cria voucher já Ativo
+        await db.ref('vouchers/' + emailKey).push({
+          email, status: 'Ativo', cristais,
+          timestamp_solicitacao: agora.toISOString(),
+          timestamp_aprovacao:   agora.toISOString(),
+          timer_fim:             timerFim
+        });
+
+        // Transação
+        await db.ref('transacoes').push({
+          data: agora.toISOString(), email, tipo: 'Voucher',
+          quantidade: cristais, detalhes: 'Tempo de Tela (Voucher Mestre)', status: 'Aprovado'
+        });
+
+        // Notifica
+        await db.ref('notificacoes/' + emailKey).push({
+          tipo: 'voucher_aprovado', titulo: '📜 Voucher Criado!',
+          mensagem: 'O Mestre liberou ' + cristais + ' minutos de tela! Aproveite! ⏱',
+          quantidade: cristais, timestamp: agora.toISOString()
+        });
+
+        toast('✅ Voucher criado! ' + cristais + ' min para ' + u.nome, 'success');
+        document.getElementById('val-voucher-manual').value = '';
+        carregarVouchers();
+      } catch(e) { toast('❌ ' + e.message, 'error'); }
+    }
+
+    // Listener Firebase para novos pedidos (sino no Mestre)
+    function _iniciarListenerVouchersMestre() {
+      db.ref('vouchers').on('child_changed', snap => {
+        snap.forEach(v => {
+          if (v.val().status === 'Pendente') {
+            // Badge e atualização silenciosa
+            carregarVouchers();
+          }
+        });
+      });
+      db.ref('vouchers').on('child_added', snap => {
+        snap.forEach(v => {
+          if (v.val().status === 'Pendente') {
+            carregarVouchers();
+          }
+        });
+      });
+    }
+
   </script>
+
 </body>
 </html>
