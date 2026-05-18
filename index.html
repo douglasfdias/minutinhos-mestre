@@ -1147,7 +1147,7 @@
 
     async function carregarArtefatosConfig() {
       try {
-        const snap=await db.ref('config/artefatos').get();
+        const snap=await db.ref('config/missoes').get();
         _artefatos=snap.exists()?snap.val():{};
         _renderArtefatosConfig();
         _popularSelectArtefatos();
@@ -1185,7 +1185,7 @@
       if(!cristais||cristais<1){ toast('&#x26A0;&#xFE0F; Informe os cristais.','error'); return; }
       try {
         const key='art_'+Date.now();
-        await db.ref('config/artefatos/'+key).set({emoji,nome,cristais,descricao:desc});
+        await db.ref('config/missoes/'+key).set({emoji,nome,cristais,descricao:desc});
         toast('&#x2705; Artefato "'+nome+'" criado!','success');
         ['na-emoji','na-nome','na-desc'].forEach(id=>document.getElementById(id).value='');
         document.getElementById('na-cristais').value='';
@@ -1195,7 +1195,7 @@
 
     async function deletarArtefatoConfig(key) {
       if(!confirm('Deletar este artefato?')) return;
-      try { await db.ref('config/artefatos/'+key).remove(); toast('&#x1F5D1; Removido.','success'); await carregarArtefatosConfig(); }
+      try { await db.ref('config/missoes/'+key).remove(); toast('&#x1F5D1; Removido.','success'); await carregarArtefatosConfig(); }
       catch(e){ toast('&#x274C; '+e.message,'error'); }
     }
 
