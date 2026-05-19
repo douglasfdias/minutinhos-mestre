@@ -1207,12 +1207,15 @@
       const [email,emailKey]=guardiaoVal.split('|');
       const art=_artefatos[artefatoKey];
       try {
+        // Normaliza campo cristais/recompensa (suporte a dados legados)
+        const cristais = Number(art.cristais ?? art.recompensa ?? 0);
+        if (!cristais || isNaN(cristais)) { toast('⚠️ Valor inválido no artefato.','error'); return; }
         const snap=await db.ref('usuarios/'+emailKey).get(), u=snap.val();
-        const novoCristais=(Number(u.saldo_cristais)||0)+art.cristais;
+        const novoCristais=(Number(u.saldo_cristais)||0)+cristais;
         await db.ref('usuarios/'+emailKey).update({saldo_cristais:novoCristais});
-        await db.ref('transacoes').push({data:new Date().toISOString(),email,tipo:'Artefato',quantidade:art.cristais,detalhes:(art.emoji||'⚔️')+' '+art.nome+' (Artefato)',status:'Aprovado'});
-        await db.ref('notificacoes/'+emailKey).push({tipo:'artefato',titulo:'⚔️ Artefato Recebido!',mensagem:'O Mestre te deu '+( art.emoji||'⚔️')+' '+art.nome+'! +'+art.cristais+' &#x1F48E; creditados!',quantidade:art.cristais,timestamp:new Date().toISOString()});
-        toast('&#x2705; '+art.nome+' entregue a '+u.nome+'! +'+art.cristais+' &#x1F48E;','success');
+        await db.ref('transacoes').push({data:new Date().toISOString(),email,tipo:'Artefato',quantidade:cristais,detalhes:(art.emoji||'⚔️')+' '+art.nome+' (Artefato)',status:'Aprovado'});
+        await db.ref('notificacoes/'+emailKey).push({tipo:'artefato',titulo:'⚔️ Artefato Recebido!',mensagem:'O Mestre te deu '+(art.emoji||'⚔️')+' '+art.nome+'! +'+cristais+' 💎 creditados!',quantidade:cristais,timestamp:new Date().toISOString()});
+        toast('✅ '+art.nome+' entregue a '+u.nome+'! +'+cristais+' 💎','success');
         document.getElementById('sel-art-tipo').value='';
         document.getElementById('art-preview').style.display='none';
         await carregarDados();
@@ -1238,18 +1241,34 @@
     }
 
     async function aprovarMissao(emailKey,mkey,email,artefatoKey) {
-      const art=_artefatos[artefatoKey];
-      if(!art){ toast('&#x26A0;&#xFE0F; Artefato não encontrado.','error'); return; }
       try {
-        const snap=await db.ref('usuarios/'+emailKey).get(), u=snap.val();
-        const novoCristais=(Number(u.saldo_cristais)||0)+art.cristais;
-        await db.ref('usuarios/'+emailKey).update({saldo_cristais:novoCristais});
+        // Busca artefato direto do Firebase — não depende do cache _artefatos
+        const snapA = await db.ref('config/missoes/'+artefatoKey).get();
+        if (!snapA.exists()) { toast('⚠️ Artefato não encontrado no banco.','error'); return; }
+        const a = snapA.val();
+        // Suporte a campo 'cristais' (novo) ou 'recompensa' (dados legados)
+        const cristais = Number(a.cristais ?? a.recompensa ?? 0);
+        if (!cristais || isNaN(cristais)) { toast('⚠️ Valor de cristais inválido no artefato ('+artefatoKey+').','error'); return; }
+
+        const snapU = await db.ref('usuarios/'+emailKey).get(), u = snapU.val();
+        const novoCristais = (Number(u.saldo_cristais) || 0) + cristais;
+
+        await db.ref('usuarios/'+emailKey).update({saldo_cristais: novoCristais});
         await db.ref('missoes/'+emailKey+'/'+mkey).update({status:'Aprovado'});
-        await db.ref('transacoes').push({data:new Date().toISOString(),email,tipo:'Missao',quantidade:art.cristais,detalhes:(art.emoji||'⚔️')+' '+art.nome+' (Missão)',status:'Aprovado'});
-        await db.ref('notificacoes/'+emailKey).push({tipo:'artefato',titulo:'⚔️ Missão Aprovada!',mensagem:'O Mestre aprovou '+art.emoji+' '+art.nome+'! +'+art.cristais+' +cristais+ &#x1F48E; na sua conta!',quantidade:art.cristais,timestamp:new Date().toISOString()});
-        toast('&#x2705; Missão aprovada! +'+art.cristais+' &#x1F48E; para '+u.nome,'success');
-        await carregarDados();
-      } catch(e){ toast('&#x274C; '+e.message,'error'); }
+        await db.ref('transacoes').push({
+          data: new Date().toISOString(), email, tipo:'Missao',
+          quantidade: cristais,
+          detalhes: (a.emoji||'⚔️')+' '+(a.nome||'Artefato')+' (Missão)',
+          status: 'Aprovado'
+        });
+        await db.ref('notificacoes/'+emailKey).push({
+          tipo:'artefato', titulo:'⚔️ Missão Aprovada!',
+          mensagem: 'O Mestre aprovou '+(a.emoji||'⚔️')+' '+(a.nome||'Artefato')+'! +'+cristais+' 💎 na sua conta!',
+          quantidade: cristais, timestamp: new Date().toISOString()
+        });
+        toast('✅ Missão aprovada! +'+cristais+' 💎 para '+u.nome,'success');
+        await carregarVouchers(); // atualiza só o painel, não recarrega tudo
+      } catch(e){ toast('❌ '+e.message,'error'); }
     }
 
     async function recusarMissao(emailKey,mkey,email) {
