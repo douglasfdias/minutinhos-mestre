@@ -1,5 +1,5 @@
 // sw-mestre.js — Service Worker — Painel do Mestre
-const CACHE_NAME = 'minutinhos-mestre-v10';
+const CACHE_NAME = 'minutinhos-mestre-v11';
 
 const ASSETS = [
   '/minutinhos-mestre/',
