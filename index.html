@@ -283,8 +283,8 @@
   <div id="senha-screen">
     <div style="font-size:2.5rem">⚔️</div>
     <p class="title">Painel do Mestre</p>
-    <p class="sub">Entre com o email e a senha do Mestre da Ordem.</p>
-    <input type="email" id="login-email" placeholder="Email do Mestre" autocomplete="username"
+    <p class="sub">Entre com o email e a senha da Mestre da Ordem.</p>
+    <input type="email" id="login-email" placeholder="Email da Mestre" autocomplete="username"
            style="padding:13px 18px;border-radius:10px;border:2px solid #333;background:#111;color:white;font-size:1rem;width:100%;max-width:300px;text-align:center;outline:none;">
     <input type="password" id="senha-input" placeholder="Senha" autocomplete="current-password"
            onkeydown="if(event.key==='Enter')verificarSenha()">
@@ -293,7 +293,7 @@
            onkeydown="if(event.key==='Enter')verificarSenha()">
     <p id="senha-erro">❌ Email ou senha incorretos.</p>
     <button id="senha-btn" onclick="verificarSenha()">🔓 Entrar na Ordem</button>
-    <p style="color:#666;font-size:0.72rem;text-align:center;max-width:300px;">Primeiro acesso? Digite o email e a senha que você quer usar — a conta do Mestre é criada automaticamente na primeira vez. Se já existe uma Mestre cadastrada, peça a ela um código de convite e cole no campo acima.</p>
+    <p style="color:#666;font-size:0.72rem;text-align:center;max-width:300px;">Primeiro acesso? Digite o email e a senha que você quer usar — a conta da Mestre é criada automaticamente na primeira vez. Se já existe uma Mestre cadastrada, peça a ela um código de convite e cole no campo acima.</p>
   </div>
 
   <div id="toast"></div>
@@ -441,7 +441,7 @@
           <button class="btn btn-ok" onclick="enviarMensagemMestre()">📨</button>
         </div>
       </div>
-      <button class="btn-logout" onclick="sairDaOrdem()">🚪 Sair da conta do Mestre</button>
+      <button class="btn-logout" onclick="sairDaOrdem()">🚪 Sair da conta da Mestre</button>
     </div>
 
     <!-- ══ PAGE: GESTÃO ══ -->
@@ -649,9 +649,21 @@
           const cred = await auth.signInWithEmailAndPassword(email, senha);
           user = cred.user;
         } catch (e) {
-          if (e.code === 'auth/user-not-found') {
-            const cred = await auth.createUserWithEmailAndPassword(email, senha);
-            user = cred.user;
+          // O Firebase passou a devolver um erro genérico ('invalid-credential')
+          // tanto para "conta não existe" quanto para "senha errada", por segurança.
+          // Então tentamos criar a conta; se ela já existir de verdade, a própria
+          // criação falha com 'email-already-in-use' e aí sabemos que era senha errada.
+          const podeSerContaNova = ['auth/user-not-found', 'auth/invalid-credential', 'auth/invalid-login-credentials'].includes(e.code);
+          if (podeSerContaNova) {
+            try {
+              const cred = await auth.createUserWithEmailAndPassword(email, senha);
+              user = cred.user;
+            } catch (e2) {
+              if (e2.code === 'auth/email-already-in-use') {
+                throw { code: 'auth/wrong-password' };
+              }
+              throw e2;
+            }
           } else {
             throw e;
           }
@@ -726,8 +738,8 @@
        (funciona com o app das crianças fechado). O envio passa por
        um Worker externo que guarda a credencial secreta.
     ============================================================ */
-    const PUSH_WORKER_URL = 'https://minutinhos-push.SEU-SUBDOMINIO.workers.dev';
-    const VAPID_PUBLIC_KEY = 'COLE_AQUI_A_CHAVE_PUBLICA_VAPID_DO_FIREBASE';
+    const PUSH_WORKER_URL = 'https://minutinhos-push.douglasdias-dfd.workers.dev';
+    const VAPID_PUBLIC_KEY = 'z5xzWg5-0wdwAdrKdgajvrY6JP6B6YQA_FzIrxcK3eI';
 
     async function enviarPush(destinoKey, titulo, mensagem, tipo, dados) {
       try {
