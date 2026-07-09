@@ -226,7 +226,7 @@
 
     /* ══ BOTTOM NAV ══ */
     .bottom-nav { position:fixed; bottom:0; left:0; right:0; height:56px; z-index:200; background:#1a1a2e; border-top:1px solid rgba(230,126,34,0.25); display:flex; }
-    .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; cursor:pointer; color:rgba(255,255,255,0.35); font-size:0.6rem; font-weight:700; letter-spacing:0.3px; transition:color 0.2s; position:relative; border:none; background:none; -webkit-tap-highlight-color:transparent; }
+    .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; cursor:pointer; color:rgba(255,255,255,0.35); font-size:0.6rem; font-weight:700; letter-spacing:0.3px; transition:color 0.2s; position:relative; border:none; background:none; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
     .nav-item.active { color:#e67e22; }
     .nav-item .nav-icon { font-size:1.25rem; line-height:1; }
     .nav-badge { position:absolute; top:4px; right:calc(50% - 18px); background:#e74c3c; color:white; border-radius:10px; font-size:0.58rem; font-weight:800; padding:1px 5px; min-width:16px; text-align:center; border:1.5px solid #1a1a2e; }
@@ -504,12 +504,12 @@
     </div>
 
     <!-- ══ PAGE: MENSAGENS ══ -->
-    <div class="page" id="page-mensagens" style="position:relative; overflow:hidden; padding:0; height:calc(100vh - 56px - 56px);">
+    <div class="page" id="page-mensagens" style="position:relative; overflow:hidden; padding:0;">
       <div class="page-header" style="flex-shrink:0;">
         <span class="page-title">💬 Mensagens</span>
         <button class="btn-refresh-sm" onclick="carregarDados()">🔄</button>
       </div>
-      <div class="msg-contact-list" id="msg-contact-list">
+      <div class="msg-contact-list" id="msg-contact-list" style="flex:1; overflow-y:auto;">
         <div style="text-align:center;color:#aaa;padding:30px;font-size:0.85rem;">Carregando...</div>
       </div>
 
@@ -835,8 +835,8 @@
        (funciona com o app das crianças fechado). O envio passa por
        um Worker externo que guarda a credencial secreta.
     ============================================================ */
-    const PUSH_WORKER_URL = 'https://minutinhos-push.SEU-SUBDOMINIO.workers.dev';
-    const VAPID_PUBLIC_KEY = 'COLE_AQUI_A_CHAVE_PUBLICA_VAPID_DO_FIREBASE';
+    const PUSH_WORKER_URL = 'https://minutinhos-push.douglasdias-dfd.workers.dev';
+    const VAPID_PUBLIC_KEY = 'BAFX4PUHmQ4qT_Fyk9n9entF-RiEZaoIMki3FrqAQS_0tBiyFLes7C-bpZqr7eW0C5UYzlCQwho6sre3WTbMGPs';
 
     async function enviarPush(destinoKey, titulo, mensagem, tipo, dados) {
       try {
