@@ -63,43 +63,73 @@
     .nome-custom-input { flex: 1; padding: 10px 12px; border: 1.5px solid #ddd; border-radius: 10px; font-size: 0.9rem; }
     .nome-confirmar { width: 100%; margin-top: 16px; background: var(--orange); color: white; border: none; border-radius: 10px; padding: 13px; font-size: 0.95rem; font-weight: 700; cursor: pointer; }
 
-    /* ── MENSAGENS (WhatsApp-style) ── */
-    .msg-contact-list { flex: 1; overflow-y: auto; }
+    /* ── MENSAGENS (WhatsApp-style — igual ao app das crianças) ── */
+    .msg-contact-list { flex: 1; overflow-y: auto; background: white; scrollbar-width: none; }
     .msg-contact-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 13px 16px; border-bottom: 0.5px solid var(--border);
-      cursor: pointer; transition: background 0.15s;
+      display: flex; align-items: center; gap: 13px;
+      padding: 11px 16px; border-bottom: 1px solid #f0f0f0;
+      cursor: pointer; background: white;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none; user-select: none;
     }
-    .msg-contact-item:hover { background: var(--surface-1); }
+    .msg-contact-item:active { background: #f5f5f5; }
     .msg-contact-avatar {
-      width: 48px; height: 48px; border-radius: 50%;
-      background: var(--bg-accent); border: 1.5px solid var(--border-accent);
+      width: 50px; height: 50px; border-radius: 50%; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.4rem; flex-shrink: 0;
+      font-size: 1rem; font-weight: 700; color: white; overflow: hidden;
+      background: #25D366;
     }
+    .msg-contact-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .msg-contact-info { flex: 1; min-width: 0; }
-    .msg-contact-name { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
-    .msg-contact-preview { font-size: 0.78rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .msg-contact-name { font-size: 0.92rem; font-weight: 700; color: #111; margin-bottom: 3px; }
+    .msg-contact-preview { font-size: 0.8rem; color: #667781; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .msg-contact-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
-    .msg-contact-time { font-size: 0.7rem; color: var(--text-muted); }
-    .msg-contact-unread { background: var(--fill-accent); color: white; border-radius: 10px; font-size: 0.68rem; font-weight: 700; padding: 2px 6px; min-width: 18px; text-align: center; }
-    .msg-thread-page { display: none; flex-direction: column; height: 100%; position: absolute; inset: 0; background: var(--surface-0); }
-    .msg-thread-page.open { display: flex; }
-    .msg-thread-back { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--surface-2); border-bottom: 0.5px solid var(--border); flex-shrink: 0; }
-    .msg-thread-back button { background: none; border: none; color: var(--text-accent); font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 4px; }
-    .msg-thread-messages { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 7px; background: #f0f0f0; }
-    .msg-date-sep { display: flex; justify-content: center; margin: 8px 0 4px; }
-    .msg-date-pill { background: rgba(0,0,0,0.15); color: #555; font-size: 0.7rem; padding: 3px 14px; border-radius: 12px; }
-    .msg-bbl { max-width: 75%; padding: 8px 12px; border-radius: 16px; font-size: 0.84rem; line-height: 1.4; word-wrap: break-word; }
-    .msg-bbl.del { background: white; color: #333; border-bottom-left-radius: 4px; border: 0.5px solid #e0e0e0; align-self: flex-start; }
-    .msg-bbl.min { background: #DCF8C6; color: #111; border-bottom-right-radius: 4px; align-self: flex-end; }
-    .msg-row-del { display: flex; justify-content: flex-start; }
-    .msg-row-min { display: flex; justify-content: flex-end; }
-    .msg-bbl-time { font-size: 0.62rem; opacity: 0.5; display: block; margin-top: 4px; text-align: right; }
-    .msg-bbl-empty { text-align: center; color: #aaa; font-size: 0.82rem; padding: 30px 0; }
-    .msg-thread-input { display: flex; gap: 8px; padding: 10px 12px; background: var(--surface-2); border-top: 0.5px solid var(--border); flex-shrink: 0; }
-    .msg-thread-input input { flex: 1; border-radius: 22px; font-size: 0.88rem; padding: 9px 16px; }
-    .msg-thread-input .btn { padding: 9px 16px; border-radius: 22px; }
+    .msg-contact-time { font-size: 0.72rem; color: #667781; }
+    .msg-contact-unread { background: #25D366; color: white; border-radius: 50%; font-size: 0.7rem; font-weight: 800; min-width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
+    .msg-thread-page {
+      display: none; flex-direction: column; position: absolute; inset: 0;
+      background: white; z-index: 10;
+      transform: translateX(100%);
+      transition: transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+    .msg-thread-page.open { display: flex; transform: translateX(0); }
+    .msg-thread-back {
+      display: flex; align-items: center; gap: 8px; min-height: 56px;
+      padding: 0 8px 0 4px; background: #075E54; flex-shrink: 0;
+      -webkit-user-select: none; user-select: none;
+    }
+    .msg-thread-back button {
+      background: none; border: none; color: white; font-size: 0.9rem;
+      cursor: pointer; display: flex; align-items: center; gap: 8px;
+      padding: 10px 6px; flex: 1;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .msg-thread-back-avatar {
+      width: 36px; height: 36px; border-radius: 50%; overflow: hidden;
+      background: rgba(255,255,255,0.25); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .msg-thread-back-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .msg-thread-back-name { font-size: 0.92rem; font-weight: 700; color: white; }
+    .msg-thread-messages {
+      flex: 1; overflow-y: auto; padding: 8px 10px;
+      display: flex; flex-direction: column; gap: 3px; background: #e5ddd5;
+      scrollbar-width: none;
+    }
+    .msg-date-sep { display: flex; justify-content: center; margin: 10px 0 6px; }
+    .msg-date-pill { background: rgba(255,255,255,0.92); color: #667781; font-size: 0.72rem; padding: 4px 14px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.12); }
+    .msg-bbl { max-width: 75%; padding: 6px 10px 4px; font-size: 0.88rem; line-height: 1.4; word-wrap: break-word; }
+    .msg-bbl.del { background: white; color: #303030; border-radius: 0 8px 8px 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.13); }
+    .msg-bbl.min { background: #dcf8c6; color: #303030; border-radius: 8px 0 8px 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.13); }
+    .msg-row-del { display: flex; justify-content: flex-start; margin: 1px 0; }
+    .msg-row-min { display: flex; justify-content: flex-end; margin: 1px 0; }
+    .msg-bbl-time { font-size: 0.65rem; color: #667781; display: block; margin-top: 2px; text-align: right; }
+    .msg-bbl-empty { text-align: center; color: #667781; font-size: 0.85rem; padding: 40px 20px; }
+    .msg-thread-input { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #f0f0f0; flex-shrink: 0; }
+    .msg-thread-input input { flex: 1; border: none; border-radius: 24px; font-size: 0.9rem; padding: 10px 15px; background: white; color: #303030; outline: none; }
+    .msg-thread-input input::placeholder { color: #aaa; }
+    .msg-thread-send { background: #25D366; border: none; border-radius: 50%; width: 44px; height: 44px; color: white; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .msg-thread-send:active { transform: scale(0.92); }
     #senha-input { padding:13px 18px; border-radius:10px; border:2px solid #333; background:#111; color:white; font-size:1.1rem; width:100%; max-width:300px; text-align:center; outline:none; transition:border-color 0.2s; }
     #senha-input:focus { border-color:#e67e22; }
     #senha-btn { background:linear-gradient(135deg,#e67e22,#d35400); color:white; border:none; border-radius:10px; padding:14px 32px; font-size:1rem; font-weight:bold; cursor:pointer; width:100%; max-width:300px; box-shadow:0 4px 0 #a04000; }
@@ -505,24 +535,26 @@
 
     <!-- ══ PAGE: MENSAGENS ══ -->
     <div class="page" id="page-mensagens" style="position:relative; overflow:hidden; padding:0;">
-      <div class="page-header" style="flex-shrink:0;">
-        <span class="page-title">💬 Mensagens</span>
-        <button class="btn-refresh-sm" onclick="carregarDados()">🔄</button>
+      <div style="display:flex; align-items:center; padding:14px 16px; border-bottom:1px solid #f0f0f0; background:white; flex-shrink:0;">
+        <span style="font-size:1rem; font-weight:800; color:#111; flex:1;">💬 Mensagens</span>
       </div>
-      <div class="msg-contact-list" id="msg-contact-list" style="flex:1; overflow-y:auto;">
-        <div style="text-align:center;color:#aaa;padding:30px;font-size:0.85rem;">Carregando...</div>
+      <div class="msg-contact-list" id="msg-contact-list">
+        <div class="msg-bbl-empty">Carregando...</div>
       </div>
 
-      <!-- Thread (desliza por cima) -->
+      <!-- Thread (desliza por cima, cobre tudo incluindo o header) -->
       <div class="msg-thread-page" id="msg-thread-page">
         <div class="msg-thread-back">
-          <button onclick="voltarParaListaMestre()">‹ <span id="msg-thread-title-mestre">Conversa</span></button>
+          <button onclick="voltarParaListaMestre()" id="msg-back-btn">
+            <div class="msg-thread-back-avatar" id="msg-back-avatar">⚔️</div>
+            <span class="msg-thread-back-name" id="msg-thread-title-mestre">Conversa</span>
+          </button>
         </div>
         <div class="msg-thread-messages" id="msg-thread-messages"></div>
         <div class="msg-thread-input">
-          <input type="text" id="msg-input-mestre" placeholder="Escreva uma mensagem..."
+          <input type="text" id="msg-input-mestre" placeholder="Mensagem"
                  maxlength="500" onkeydown="if(event.key==='Enter') enviarMensagemMestre()">
-          <button class="btn btn-ok" onclick="enviarMensagemMestre()">📨</button>
+          <button class="msg-thread-send" onclick="enviarMensagemMestre()">➤</button>
         </div>
       </div>
     </div>
@@ -1012,7 +1044,7 @@
       });
       // Armazena cache de usuários para lista de contatos de mensagens
       window._usuariosCache = {};
-      gs.forEach(g => { window._usuariosCache[san(g.email)] = { nome: g.nome, email: g.email }; });
+      gs.forEach(g => { window._usuariosCache[san(g.email)] = { nome: g.nome, email: g.email, avatar_url: g.avatar_url || null }; });
     }
 
     /* ── SETUP DE NOME DO MESTRE ── */
@@ -1067,38 +1099,38 @@
       if (diff === 0) return 'Hoje';
       if (diff === 1) return 'Ontem';
       if (diff < 7) return ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'][d.getDay()];
-      return d.toLocaleDateString('pt-BR');
+      return d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
     }
 
     function renderContactListMestre() {
       const list = document.getElementById('msg-contact-list');
       if (!list) return;
-      // Guardiões conhecidos vêm do cache de mensagens + os que estão em /usuarios
-      const guardians = Object.keys(msgCacheMestre);
-      // Adicionar guardians que existem em /usuarios mas ainda não mandaram mensagem
-      if (window._usuariosCache) {
-        Object.keys(window._usuariosCache).forEach(k => { if (!guardians.includes(k)) guardians.push(k); });
-      }
+      const guardians = [...new Set([...Object.keys(msgCacheMestre), ...Object.keys(window._usuariosCache || {})])];
       if (!guardians.length) {
-        list.innerHTML = '<div style="text-align:center;color:#aaa;padding:30px;font-size:0.85rem;">Nenhuma conversa ainda.</div>';
+        list.innerHTML = '<div class="msg-bbl-empty">Nenhuma conversa ainda.</div>';
         return;
       }
       list.innerHTML = guardians.map(gk => {
         const msgs = (msgCacheMestre[gk] || []).sort((a,b) => new Date(a.timestamp)-new Date(b.timestamp));
         const last = msgs[msgs.length-1];
-        const nome = (window._usuariosCache?.[gk]?.nome) || gk;
-        const preview = last ? _escapeM(last.texto||'') : 'Sem mensagens ainda';
+        const u = window._usuariosCache?.[gk] || {};
+        const nome = u.nome || gk;
+        const avatarUrl = u.avatar_url;
+        const preview = last ? _escapeM(last.texto||'') : '<i style="color:#aaa">Toque para iniciar</i>';
         const time = last ? _formatContactTimeMestre(last.timestamp) : '';
         const unread = _msgNaoLidas[gk] || 0;
+        const avatarHtml = avatarUrl
+          ? `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'">`
+          : nome.charAt(0).toUpperCase();
         return `<div class="msg-contact-item" onclick="abrirConversaMestre('${gk}')">
-          <div class="msg-contact-avatar">⚔️</div>
+          <div class="msg-contact-avatar" style="background:#25D366;">${avatarHtml}</div>
           <div class="msg-contact-info">
             <div class="msg-contact-name">${_escapeM(nome)}</div>
             <div class="msg-contact-preview">${preview}</div>
           </div>
           <div class="msg-contact-meta">
             <span class="msg-contact-time">${time}</span>
-            ${unread > 0 ? `<span class="msg-contact-unread">${unread}</span>` : '<span style="width:18px"></span>'}
+            ${unread > 0 ? `<span class="msg-contact-unread">${unread > 9 ? '9+' : unread}</span>` : '<span style="width:20px"></span>'}
           </div>
         </div>`;
       }).join('');
@@ -1108,8 +1140,19 @@
       conversaAtualKey = guardianKey;
       _msgNaoLidas[guardianKey] = 0;
       _atualizarBadgeMsg();
-      const nome = (window._usuariosCache?.[guardianKey]?.nome) || guardianKey;
-      document.getElementById('msg-thread-title-mestre').textContent = '⚔️ ' + nome;
+      const u = window._usuariosCache?.[guardianKey] || {};
+      const nome = u.nome || guardianKey;
+      const avatarUrl = u.avatar_url;
+      const avatarEl = document.getElementById('msg-back-avatar');
+      const titleEl  = document.getElementById('msg-thread-title-mestre');
+      if (titleEl) titleEl.textContent = nome;
+      if (avatarEl) {
+        if (avatarUrl) {
+          avatarEl.innerHTML = `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentNode.textContent='${nome.charAt(0).toUpperCase()}'">`;
+        } else {
+          avatarEl.textContent = nome.charAt(0).toUpperCase();
+        }
+      }
       renderThreadMestre(guardianKey);
       document.getElementById('msg-thread-page').classList.add('open');
 
