@@ -420,6 +420,8 @@
         <button class="btn-refresh-sm" onclick="carregarDados()">🔄 Atualizar</button>
       </div>
       <button class="btn-refresh" id="btn-ativar-push-mestre" style="background:#8e44ad;margin-bottom:14px;" onclick="ativarNotificacoesPushMestre()">🔔 Ativar Notificações no Celular</button>
+      <button class="btn-refresh" style="background:#5a3d8a;margin-bottom:8px;font-size:0.8rem;" onclick="diagnosticarPushMestre()">🩺 Diagnosticar Notificações</button>
+      <pre id="diag-push-out-mestre" style="display:none;white-space:pre-wrap;word-break:break-word;font-size:0.62rem;line-height:1.35;background:rgba(0,0,0,0.55);color:#d8d8e8;padding:8px;border-radius:8px;max-height:210px;overflow:auto;margin:0 0 14px;"></pre>
       <div class="card">
         <h3>🏆 Dashboard</h3>
         <p class="card-hint">Saldos, progresso semanal e sequência de leitura.</p>
@@ -822,7 +824,7 @@
         document.getElementById('app').style.display = 'block';
         _iniciarListenerVouchersMestre();
         carregarDados();
-        registrarTokenFCMMestre();
+        registrarTokenFCMMestre(true);
         // Checar se o nome ainda não foi personalizado
         const adminVal = (await db.ref('admins/' + user.uid).get().catch(() => null))?.val();
         if (!adminVal || adminVal === true || adminVal.nome === 'Mestre') {
@@ -856,7 +858,7 @@
         document.getElementById('app').style.display = 'block';
         _iniciarListenerVouchersMestre();
         carregarDados();
-        registrarTokenFCMMestre();
+        registrarTokenFCMMestre(true);
         const adminVal = adminSnap.val();
         if (!adminVal || adminVal === true || adminVal.nome === 'Mestre') {
           setTimeout(() => mostrarSetupNome(user.uid), 600);
@@ -888,37 +890,51 @@
     }
 
     async function ativarNotificacoesPushMestre() {
+      const btn = document.getElementById('btn-ativar-push-mestre');
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Ativando...'; }
       try {
-        if (!('serviceWorker' in navigator) || !('Notification' in window)) {
-          toast('⚠️ Este navegador não suporta notificações.', 'error'); return;
-        }
         const permissao = await Notification.requestPermission();
-        if (permissao !== 'granted') { toast('🔔 Notificações não autorizadas.', 'error'); return; }
+        if (permissao !== 'granted') {
+          throw new Error('Permissão negada. Autorize notificações para este site nas Configurações do aparelho.');
+        }
         await registrarTokenFCMMestre();
         toast('🔔 Notificações ativadas neste celular!', 'success');
-        const btn = document.getElementById('btn-ativar-push-mestre');
         if (btn) btn.textContent = '🔔 Notificações ativadas';
       } catch (e) {
-        toast('⚠️ Não foi possível ativar: ' + e.message, 'error');
+        // NÃO engolir: o botão antes dizia "ativadas" mesmo tendo falhado.
+        if (btn) btn.textContent = '🔔 Ativar Notificações no Celular';
+        toast('⚠️ Falhou: ' + (e && e.message ? e.message : e), 'error');
+        console.error('ativarNotificacoesPushMestre:', e);
+      } finally {
+        if (btn) btn.disabled = false;
       }
     }
 
     /* ============================================================
-       RENOVAÇÃO DE TOKEN FCM DO MESTRE (Metade B do item 2)
-       Mesmo racional do app das crianças: o token FCM rotaciona, então
-       renovamos a cada carregamento (se já autorizado) e gravamos sob um
-       ID de dispositivo estável, sobrescrevendo o próprio registro. Como
-       o Mestre é admin, aqui a leitura de /fcm_tokens/_mestre é permitida,
-       então a limpeza de tokens duplicados funciona por completo.
+       REGISTRO / RENOVAÇÃO DE TOKEN FCM DO MESTRE
+       Sem token em /fcm_tokens/_mestre, o Worker retorna {enviados:0} e
+       NENHUM push sai. Erros agora são propagados (antes morriam em
+       console.warn). Token renovado a cada carregamento (o Firebase o
+       rotaciona) sob um ID de dispositivo estável.
     ============================================================ */
-    async function registrarTokenFCMMestre() {
+    async function registrarTokenFCMMestre(silencioso) {
       try {
-        if (!('serviceWorker' in navigator) || !('Notification' in window)) return;
-        if (Notification.permission !== 'granted') return;
+        if (!('serviceWorker' in navigator)) throw new Error('Navegador sem suporte a Service Worker.');
+        if (!('Notification' in window)) throw new Error('Navegador sem suporte a notificações.');
+        if (!('PushManager' in window)) throw new Error('Navegador sem suporte a Push (iPhone: instale na Tela de Início).');
+        if (Notification.permission !== 'granted') {
+          if (silencioso) return null;
+          throw new Error('Permissão de notificação não concedida.');
+        }
+        if (firebase.messaging && firebase.messaging.isSupported) {
+          const ok = await firebase.messaging.isSupported();
+          if (!ok) throw new Error('FCM não é suportado neste navegador/dispositivo.');
+        }
+
         const reg = await navigator.serviceWorker.ready;
         const messaging = firebase.messaging();
         const token = await messaging.getToken({ vapidKey: VAPID_PUBLIC_KEY, serviceWorkerRegistration: reg });
-        if (!token) return;
+        if (!token) throw new Error('getToken() retornou vazio (verifique a chave VAPID no Firebase Console).');
 
         let deviceId = localStorage.getItem('fcm_device_id_mestre');
         if (!deviceId) {
@@ -926,22 +942,59 @@
           localStorage.setItem('fcm_device_id_mestre', deviceId);
         }
 
-        const base = db.ref('fcm_tokens/_mestre');
-        try {
-          const snap = await base.get();
-          if (snap.exists()) {
-            const updates = {};
-            snap.forEach(c => { if (c.key !== deviceId && c.val() && c.val().token === token) updates[c.key] = null; });
-            if (Object.keys(updates).length) await base.update(updates);
-          }
-        } catch (_) { /* segue e sobrescreve o nó */ }
-
-        await base.child(deviceId).set({
+        await db.ref('fcm_tokens/_mestre/' + deviceId).set({
           token, criadoEm: new Date().toISOString(), ua: navigator.userAgent.substring(0, 120)
         });
+        return token;
       } catch (e) {
-        console.warn('registrarTokenFCMMestre:', e.message);
+        if (silencioso) { console.warn('registrarTokenFCMMestre:', e.message); return null; }
+        throw e;
       }
+    }
+
+    /* ── DIAGNÓSTICO DE PUSH DO MESTRE (visível no celular) ── */
+    async function diagnosticarPushMestre() {
+      const L = [];
+      const ok = t => L.push('✅ ' + t), no = t => L.push('❌ ' + t), inf = t => L.push('•  ' + t);
+
+      inf('UA: ' + navigator.userAgent.substring(0, 80));
+      (location.protocol === 'https:' || location.hostname === 'localhost')
+        ? ok('HTTPS (contexto seguro)') : no('NÃO está em HTTPS — push exige HTTPS');
+      const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      inf('Instalado na Tela de Início (PWA): ' + (standalone ? 'SIM' : 'NÃO'));
+      'serviceWorker' in navigator ? ok('Service Worker suportado') : no('Service Worker NÃO suportado');
+      'PushManager' in window ? ok('PushManager suportado')
+        : no('PushManager NÃO suportado (iPhone: instale na Tela de Início)');
+      inf('Permissão atual: ' + (window.Notification ? Notification.permission : 'n/d'));
+
+      try {
+        if (firebase.messaging && firebase.messaging.isSupported) {
+          (await firebase.messaging.isSupported()) ? ok('FCM suportado') : no('FCM NÃO suportado aqui');
+        }
+      } catch (e) { no('isSupported() erro: ' + e.message); }
+
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        ok('Service Worker ativo (scope: ' + reg.scope + ')');
+      } catch (e) { no('Service Worker não ficou pronto: ' + e.message); }
+
+      inf('Mestre uid: ' + (mestreUid ? mestreUid.substring(0, 10) + '…' : '(não logado)'));
+
+      if (window.Notification && Notification.permission === 'granted') {
+        try {
+          const t = await registrarTokenFCMMestre();
+          ok('Token FCM obtido e GRAVADO em /fcm_tokens/_mestre');
+          inf('Token: ' + String(t).substring(0, 28) + '…');
+        } catch (e) { no('FALHOU AQUI → ' + e.message); }
+      } else {
+        no('Permissão não concedida — toque em "Ativar Notificações" primeiro');
+      }
+
+      const texto = L.join('\n');
+      const box = document.getElementById('diag-push-out-mestre');
+      if (box) { box.style.display = 'block'; box.textContent = texto; }
+      try { await navigator.clipboard.writeText(texto); } catch (e) {}
+      return texto;
     }
 
     /* ── TOAST ── */
