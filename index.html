@@ -822,6 +822,7 @@
         document.getElementById('app').style.display = 'block';
         _iniciarListenerVouchersMestre();
         carregarDados();
+        registrarTokenFCMMestre();
         // Checar se o nome ainda não foi personalizado
         const adminVal = (await db.ref('admins/' + user.uid).get().catch(() => null))?.val();
         if (!adminVal || adminVal === true || adminVal.nome === 'Mestre') {
@@ -855,6 +856,7 @@
         document.getElementById('app').style.display = 'block';
         _iniciarListenerVouchersMestre();
         carregarDados();
+        registrarTokenFCMMestre();
         const adminVal = adminSnap.val();
         if (!adminVal || adminVal === true || adminVal.nome === 'Mestre') {
           setTimeout(() => mostrarSetupNome(user.uid), 600);
@@ -892,19 +894,53 @@
         }
         const permissao = await Notification.requestPermission();
         if (permissao !== 'granted') { toast('🔔 Notificações não autorizadas.', 'error'); return; }
+        await registrarTokenFCMMestre();
+        toast('🔔 Notificações ativadas neste celular!', 'success');
+        const btn = document.getElementById('btn-ativar-push-mestre');
+        if (btn) btn.textContent = '🔔 Notificações ativadas';
+      } catch (e) {
+        toast('⚠️ Não foi possível ativar: ' + e.message, 'error');
+      }
+    }
+
+    /* ============================================================
+       RENOVAÇÃO DE TOKEN FCM DO MESTRE (Metade B do item 2)
+       Mesmo racional do app das crianças: o token FCM rotaciona, então
+       renovamos a cada carregamento (se já autorizado) e gravamos sob um
+       ID de dispositivo estável, sobrescrevendo o próprio registro. Como
+       o Mestre é admin, aqui a leitura de /fcm_tokens/_mestre é permitida,
+       então a limpeza de tokens duplicados funciona por completo.
+    ============================================================ */
+    async function registrarTokenFCMMestre() {
+      try {
+        if (!('serviceWorker' in navigator) || !('Notification' in window)) return;
+        if (Notification.permission !== 'granted') return;
         const reg = await navigator.serviceWorker.ready;
         const messaging = firebase.messaging();
         const token = await messaging.getToken({ vapidKey: VAPID_PUBLIC_KEY, serviceWorkerRegistration: reg });
-        if (token) {
-          await db.ref('fcm_tokens/_mestre').push({
-            token: token, criadoEm: new Date().toISOString(), ua: navigator.userAgent.substring(0, 120)
-          });
-          toast('🔔 Notificações ativadas neste celular!', 'success');
-          const btn = document.getElementById('btn-ativar-push-mestre');
-          if (btn) btn.textContent = '🔔 Notificações ativadas';
+        if (!token) return;
+
+        let deviceId = localStorage.getItem('fcm_device_id_mestre');
+        if (!deviceId) {
+          deviceId = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+          localStorage.setItem('fcm_device_id_mestre', deviceId);
         }
+
+        const base = db.ref('fcm_tokens/_mestre');
+        try {
+          const snap = await base.get();
+          if (snap.exists()) {
+            const updates = {};
+            snap.forEach(c => { if (c.key !== deviceId && c.val() && c.val().token === token) updates[c.key] = null; });
+            if (Object.keys(updates).length) await base.update(updates);
+          }
+        } catch (_) { /* segue e sobrescreve o nó */ }
+
+        await base.child(deviceId).set({
+          token, criadoEm: new Date().toISOString(), ua: navigator.userAgent.substring(0, 120)
+        });
       } catch (e) {
-        toast('⚠️ Não foi possível ativar: ' + e.message, 'error');
+        console.warn('registrarTokenFCMMestre:', e.message);
       }
     }
 
