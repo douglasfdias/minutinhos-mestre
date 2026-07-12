@@ -421,6 +421,7 @@
       </div>
       <button class="btn-refresh" id="btn-ativar-push-mestre" style="background:#8e44ad;margin-bottom:14px;" onclick="ativarNotificacoesPushMestre()">🔔 Ativar Notificações no Celular</button>
       <button class="btn-refresh" style="background:#5a3d8a;margin-bottom:8px;font-size:0.8rem;" onclick="diagnosticarPushMestre()">🩺 Diagnosticar Notificações</button>
+      <button class="btn-refresh" style="background:#2c7a5a;margin-bottom:8px;font-size:0.8rem;" onclick="testarPushMestre()">🧪 Enviar push de teste para mim</button>
       <pre id="diag-push-out-mestre" style="display:none;white-space:pre-wrap;word-break:break-word;font-size:0.62rem;line-height:1.35;background:rgba(0,0,0,0.55);color:#d8d8e8;padding:8px;border-radius:8px;max-height:210px;overflow:auto;margin:0 0 14px;"></pre>
       <div class="card">
         <h3>🏆 Dashboard</h3>
@@ -949,6 +950,46 @@
       } catch (e) {
         if (silencioso) { console.warn('registrarTokenFCMMestre:', e.message); return null; }
         throw e;
+      }
+    }
+
+    /* ── TESTE PONTA-A-PONTA: chama o Worker e mostra a resposta crua ──
+       Interpretação:
+         {ok:true, enviados:1}  -> Worker OK e FCM aceitou. Se mesmo assim a
+                                   notificação não aparece, o problema é o SW/aparelho.
+         {ok:true, enviados:0}  -> NÃO HÁ TOKEN gravado no banco. O elo quebrado
+                                   é o registro (getToken/gravação), não o envio.
+         {erro: "..."}          -> O Worker rejeitou; a mensagem diz o motivo. */
+    async function testarPushMestre() {
+      const box = document.getElementById('diag-push-out-mestre');
+      const mostra = t => { if (box) { box.style.display='block'; box.textContent = t; } };
+      mostra('⏳ Chamando o Worker...');
+      try {
+        const user = auth.currentUser;
+        if (!user) throw new Error('Não está logado.');
+        const idToken = await user.getIdToken();
+        const resp = await fetch(PUSH_WORKER_URL + '/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + idToken },
+          body: JSON.stringify({
+            destinoKey: '_mestre',
+            titulo: '🧪 Teste de push',
+            mensagem: 'Se você está vendo isto, o push funciona!',
+            tipo: 'teste', dados: {}
+          })
+        });
+        const texto = await resp.text();
+        let diag = 'HTTP ' + resp.status + '\n' + texto + '\n\n';
+        try {
+          const j = JSON.parse(texto);
+          if (j.erro) diag += '=> O Worker RECUSOU: ' + j.erro;
+          else if (j.enviados === 0) diag += '=> enviados:0 — NÃO HÁ TOKEN em /fcm_tokens/_mestre.\n   O elo quebrado é o REGISTRO do token, não o envio.\n   Rode o 🩺 Diagnóstico e veja o erro do getToken().';
+          else diag += '=> enviados:' + j.enviados + ' — o FCM ACEITOU o envio!\n   Se a notificação não apareceu, o problema está no aparelho/Service Worker.';
+        } catch (e) { diag += '=> Resposta não é JSON.'; }
+        mostra(diag);
+        try { await navigator.clipboard.writeText(diag); } catch (e) {}
+      } catch (e) {
+        mostra('❌ Falha ao chamar o Worker: ' + e.message);
       }
     }
 
