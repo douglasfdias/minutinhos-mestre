@@ -720,6 +720,12 @@
         <button class="btn-refresh-sm" onclick="carregarDados()">🔄 Atualizar</button>
       </div>
       <div class="card">
+        <h3>🔄 Versão do App</h3>
+        <p class="card-hint">Build carregado agora neste aparelho. Se a versão não bater com a que você publicou, use o botão abaixo.</p>
+        <div class="aud-g-row"><span class="aud-g-nome">Versão</span><span class="aud-g-val" id="app-versao">—</span></div>
+        <button class="btn btn-del btn-wide" onclick="forcarAtualizacao()">🧹 Limpar Cache e Recarregar</button>
+      </div>
+      <div class="card">
         <h3>👥 Outros Mestres</h3>
         <p class="card-hint">Gere um código de uso único para outra pessoa (ex: o pai) entrar com a conta própria dela e ter os mesmos poderes de Mestre — sem precisar editar nada no Firebase.</p>
         <button class="btn btn-ok btn-wide" onclick="gerarConviteMestre()">➕ Gerar Código de Convite</button>
@@ -1091,7 +1097,12 @@
     const nomeEmail = (usuarios, email) => Object.values(usuarios).find(u=>u.email===email)?.nome || email;
 
     /* ── ESTADO GLOBAL ── */
+    const APP_VERSAO = 'v16 · Auditoria';
     let _usuarios = {}, _trans = [], _config = {};
+    document.addEventListener('DOMContentLoaded', () => {
+      const el = document.getElementById('app-versao');
+      if (el) el.textContent = APP_VERSAO;
+    });
 
     /* ── CARREGAR DADOS ── */
     function iniciarCamposData() {
@@ -2565,22 +2576,57 @@
     }
 
         if ('serviceWorker' in navigator) {
+      let _recarregando = false;
+
       navigator.serviceWorker.register('./sw-mestre.js').then(reg => {
         _swReg = reg;
-        if (reg.waiting) document.getElementById('update-banner').classList.add('show');
+
+        // Se já existe uma versão esperando, aplica na hora.
+        if (reg.waiting) reg.waiting.postMessage('SKIP_WAITING');
+
         reg.addEventListener('updatefound', () => {
           const nw = reg.installing;
           if (!nw) return;
           nw.addEventListener('statechange', () => {
-            if (nw.state === 'installed' && navigator.serviceWorker.controller)
-              document.getElementById('update-banner').classList.add('show');
+            if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+              // Mostra o aviso E aplica automaticamente.
+              const b = document.getElementById('update-banner');
+              if (b) b.classList.add('show');
+              nw.postMessage('SKIP_WAITING');
+            }
           });
         });
+
+        // Procura versão nova ao abrir, ao voltar para o app e a cada 30 min.
+        const checar = () => reg.update().catch(()=>{});
+        checar();
+        setInterval(checar, 30 * 60 * 1000);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) checar(); });
       }).catch(()=>{});
-      navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
+
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (_recarregando) return;      // evita laço de recarregamento
+        _recarregando = true;
+        window.location.reload();
+      });
     }
     function aplicarUpdate() {
       if (_swReg && _swReg.waiting) _swReg.waiting.postMessage('SKIP_WAITING');
+      else window.location.reload();
+    }
+    /* Botão de emergência: limpa tudo e recarrega do servidor */
+    async function forcarAtualizacao() {
+      try {
+        if (navigator.serviceWorker && navigator.serviceWorker.controller)
+          navigator.serviceWorker.controller.postMessage('LIMPAR_CACHE');
+        if (window.caches) {
+          const ks = await caches.keys();
+          await Promise.all(ks.map(k => caches.delete(k)));
+        }
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+      } catch(e) {}
+      window.location.replace(window.location.pathname + '?v=' + Date.now());
     }
   </script>
 </body>
