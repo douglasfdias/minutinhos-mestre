@@ -245,6 +245,76 @@
     .config-row input { width:90px; flex-shrink:0; margin:0; padding:8px 10px; text-align:right; font-size:0.95rem; }
 
 
+    /* ══ AUDITORIA ══ */
+    .aud-datebar { display:flex; align-items:center; gap:6px; margin-bottom:12px; }
+    .aud-datebar input[type="date"] { flex:1; margin:0; height:40px; }
+    .aud-nav-btn { background:var(--blue); color:#fff; border:none; border-radius:8px; width:38px; height:40px; font-size:1rem; font-weight:800; cursor:pointer; flex-shrink:0; }
+    .aud-hoje-btn { background:var(--gold); color:#fff; border:none; border-radius:8px; padding:0 12px; height:40px; font-size:0.78rem; font-weight:800; cursor:pointer; flex-shrink:0; }
+    .aud-hero { text-align:center; padding:6px 0 14px; }
+    .aud-hero-num { font-size:2.7rem; font-weight:900; color:var(--crystal); line-height:1; }
+    .aud-hero-lbl { font-size:0.78rem; color:#888; font-weight:700; margin-top:5px; }
+    .aud-hero-sub { font-size:0.72rem; color:#b0b0b0; margin-top:3px; }
+    .aud-g-row { display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid #f2f2f2; }
+    .aud-g-row:last-child { border-bottom:none; }
+    .aud-g-nome { flex:1; font-size:0.86rem; font-weight:700; color:var(--blue); }
+    .aud-g-val { font-size:1.05rem; font-weight:900; color:var(--crystal); text-align:right; }
+    .aud-g-min { font-size:0.68rem; color:#999; font-weight:600; }
+
+    .aud-tl-item { display:flex; align-items:center; gap:10px; padding:9px 10px; margin-bottom:6px; background:#fafbfc; border-left:4px solid var(--crystal); border-radius:6px; }
+    .aud-tl-item.parcial { border-left-color:#e67e22; background:#fff8f0; }
+    .aud-tl-item.ativo   { border-left-color:#2ecc71; background:#f0fbf4; }
+    .aud-tl-item.manual  { border-left-color:#9b59b6; background:#faf5fd; }
+    .aud-tl-time { font-family:'Courier New',monospace; font-size:0.82rem; font-weight:800; color:var(--blue); flex-shrink:0; text-align:center; line-height:1.25; }
+    .aud-tl-time small { display:block; font-size:0.7rem; font-weight:600; color:#999; }
+    .aud-tl-info { flex:1; min-width:0; }
+    .aud-tl-nome { font-size:0.85rem; font-weight:700; color:var(--blue); }
+    .aud-tl-det  { font-size:0.7rem; color:#777; margin-top:2px; }
+    .aud-tl-badge { flex-shrink:0; text-align:right; }
+    .aud-tl-badge b { font-size:1.15rem; font-weight:900; color:var(--crystal); display:block; line-height:1; }
+    .aud-tl-badge small { font-size:0.62rem; color:#aaa; font-weight:700; }
+
+    .aud-fl-row { display:flex; align-items:center; gap:8px; padding:10px 0; border-bottom:1px solid #f2f2f2; flex-wrap:wrap; }
+    .aud-fl-row:last-of-type { border-bottom:none; }
+    .aud-fl-nome { flex:1; min-width:90px; font-size:0.85rem; font-weight:700; color:var(--blue); }
+    .aud-fl-sist { font-size:0.72rem; color:#888; font-weight:600; }
+    .aud-fl-row input[type="number"] { width:74px; margin:0; padding:8px; text-align:center; flex-shrink:0; }
+    .aud-diff { font-size:0.7rem; font-weight:800; padding:3px 8px; border-radius:10px; flex-shrink:0; min-width:52px; text-align:center; }
+    .aud-diff.ok   { background:#d1f2e1; color:#155724; }
+    .aud-diff.over { background:#f8d7da; color:#721c24; }
+    .aud-diff.under{ background:#fff3cd; color:#856404; }
+    .aud-diff.none { background:#eee; color:#999; }
+
+    .aud-chart { display:flex; align-items:flex-end; gap:3px; height:110px; padding:6px 0 0; }
+    .aud-bar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+    .aud-bar-val { font-size:0.55rem; font-weight:800; color:#888; margin-bottom:2px; }
+    .aud-bar { width:100%; background:var(--crystal); border-radius:3px 3px 0 0; min-height:3px; transition:height 0.2s; }
+    .aud-bar-wrap.sel .aud-bar { background:var(--gold); }
+    .aud-bar-lbl { font-size:0.52rem; color:#aaa; margin-top:3px; font-weight:700; }
+    .aud-bar-wrap.sel .aud-bar-lbl { color:var(--gold); }
+
+    .aud-led-row { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid #f5f5f5; }
+    .aud-led-row:last-child { border-bottom:none; }
+    .aud-led-hora { font-family:'Courier New',monospace; font-size:0.72rem; color:#999; font-weight:700; flex-shrink:0; width:38px; }
+    .aud-led-info { flex:1; min-width:0; }
+    .aud-led-nome { font-size:0.8rem; font-weight:700; color:var(--blue); }
+    .aud-led-det { font-size:0.68rem; color:#999; margin-top:1px; }
+    .aud-led-qtd { font-size:0.85rem; font-weight:900; flex-shrink:0; }
+    .aud-led-qtd.pos { color:#2ecc71; } .aud-led-qtd.neg { color:#e74c3c; } .aud-led-qtd.neu { color:#95a5a6; }
+
+    .aud-alert { display:flex; gap:8px; align-items:flex-start; padding:9px 10px; border-radius:8px; margin-bottom:6px; font-size:0.76rem; line-height:1.35; }
+    .aud-alert.warn { background:#fff8e6; border-left:3px solid #f0ad4e; color:#7a5b00; }
+    .aud-alert.err  { background:#fdecea; border-left:3px solid #e74c3c; color:#7d1f18; }
+    .aud-alert.info { background:#eef6fd; border-left:3px solid #3498db; color:#1c4f75; }
+    .aud-alert.okk  { background:#eafaf1; border-left:3px solid #2ecc71; color:#186a3b; }
+
+    .aud-int-row { display:flex; align-items:center; gap:8px; padding:9px 0; border-bottom:1px solid #f2f2f2; }
+    .aud-int-row:last-child { border-bottom:none; }
+    .aud-int-nome { flex:1; font-size:0.84rem; font-weight:700; color:var(--blue); }
+    .aud-int-num { font-size:0.75rem; font-weight:700; color:#666; text-align:right; }
+    .aud-int-num small { display:block; font-size:0.6rem; color:#aaa; font-weight:600; }
+
+    .aud-obs { width:100%; margin-top:8px; padding:9px 10px; border:1.5px solid #ddd; border-radius:8px; font-size:0.82rem; font-family:inherit; resize:vertical; min-height:56px; }
+
     /* ══ PAGES ══ */
     .page { display:none; padding-bottom:20px; }
     .page.active { display:block; }
@@ -256,9 +326,9 @@
 
     /* ══ BOTTOM NAV ══ */
     .bottom-nav { position:fixed; bottom:0; left:0; right:0; height:56px; z-index:200; background:#1a1a2e; border-top:1px solid rgba(230,126,34,0.25); display:flex; }
-    .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; cursor:pointer; color:rgba(255,255,255,0.35); font-size:0.6rem; font-weight:700; letter-spacing:0.3px; transition:color 0.2s; position:relative; border:none; background:none; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+    .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; cursor:pointer; color:rgba(255,255,255,0.35); font-size:0.53rem; font-weight:700; letter-spacing:0; padding:0 1px; text-align:center; line-height:1.1; transition:color 0.2s; position:relative; border:none; background:none; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
     .nav-item.active { color:#e67e22; }
-    .nav-item .nav-icon { font-size:1.25rem; line-height:1; }
+    .nav-item .nav-icon { font-size:1.15rem; line-height:1; }
     .nav-badge { position:absolute; top:4px; right:calc(50% - 18px); background:#e74c3c; color:white; border-radius:10px; font-size:0.58rem; font-weight:800; padding:1px 5px; min-width:16px; text-align:center; border:1.5px solid #1a1a2e; }
 
     /* ══ VOUCHERS ══ */
@@ -420,9 +490,6 @@
         <button class="btn-refresh-sm" onclick="carregarDados()">🔄 Atualizar</button>
       </div>
       <button class="btn-refresh" id="btn-ativar-push-mestre" style="background:#8e44ad;margin-bottom:14px;" onclick="ativarNotificacoesPushMestre()">🔔 Ativar Notificações no Celular</button>
-      <button class="btn-refresh" style="background:#5a3d8a;margin-bottom:8px;font-size:0.8rem;" onclick="diagnosticarPushMestre()">🩺 Diagnosticar Notificações</button>
-      <button class="btn-refresh" style="background:#2c7a5a;margin-bottom:8px;font-size:0.8rem;" onclick="testarPushMestre()">🧪 Enviar push de teste para mim</button>
-      <pre id="diag-push-out-mestre" style="display:none;white-space:pre-wrap;word-break:break-word;font-size:0.62rem;line-height:1.35;background:rgba(0,0,0,0.55);color:#d8d8e8;padding:8px;border-radius:8px;max-height:210px;overflow:auto;margin:0 0 14px;"></pre>
       <div class="card">
         <h3>🏆 Dashboard</h3>
         <p class="card-hint">Saldos, progresso semanal e sequência de leitura.</p>
@@ -562,6 +629,90 @@
       </div>
     </div>
 
+    <!-- ══ PAGE: AUDITORIA ══ -->
+    <div class="page" id="page-auditoria">
+      <div class="page-header">
+        <span class="page-title">🔍 Auditoria</span>
+        <button class="btn-refresh-sm" onclick="carregarAuditoria()">🔄 Atualizar</button>
+      </div>
+
+      <div class="aud-datebar">
+        <button class="aud-nav-btn" onclick="audMudarDia(-1)">◀</button>
+        <input type="date" id="aud-data" onchange="renderAuditoria()">
+        <button class="aud-nav-btn" onclick="audMudarDia(1)">▶</button>
+        <button class="aud-hoje-btn" onclick="audIrHoje()">Hoje</button>
+      </div>
+
+      <!-- Resumo do dia -->
+      <div class="card">
+        <h3>💎 Tempo de tela liberado</h3>
+        <p class="card-hint" id="aud-data-label">—</p>
+        <div class="aud-hero">
+          <div class="aud-hero-num" id="aud-total-min">0</div>
+          <div class="aud-hero-lbl">MINUTOS AUTORIZADOS NO DIA</div>
+          <div class="aud-hero-sub" id="aud-total-sub">—</div>
+        </div>
+        <div id="aud-por-guardiao"><div class="empty-msg">Sem dados.</div></div>
+      </div>
+
+      <!-- Linha do tempo -->
+      <div class="card">
+        <h3>⏱ Linha do tempo</h3>
+        <p class="card-hint">Cada janela de tela liberada. Compare os horários com o relatório do Family Link.</p>
+        <div id="aud-timeline"><div class="empty-msg">Sem vouchers neste dia.</div></div>
+      </div>
+
+      <!-- Conferência Family Link -->
+      <div class="card">
+        <h3>✅ Conferência · Family Link</h3>
+        <p class="card-hint">Digite os minutos que o Family Link registrou para cada Guardião neste dia e salve a conferência.</p>
+        <div id="aud-familylink"><div class="empty-msg">Sem dados.</div></div>
+        <textarea class="aud-obs" id="aud-obs" placeholder="Observações da conferência (ex: 12 min a mais no YouTube, verificado com o Israel)..."></textarea>
+        <button class="btn btn-ok btn-wide" onclick="salvarConferencia()">💾 Salvar Conferência do Dia</button>
+        <div id="aud-conf-status" style="text-align:center;font-size:0.72rem;color:#999;margin-top:6px;"></div>
+      </div>
+
+      <!-- Alertas -->
+      <div class="card">
+        <h3>⚠️ Alertas e Anomalias</h3>
+        <p class="card-hint">Pontos que merecem sua atenção.</p>
+        <div id="aud-alertas"><div class="empty-msg">Sem dados.</div></div>
+      </div>
+
+      <!-- Gráfico 14 dias -->
+      <div class="card">
+        <h3>📊 Últimos 14 dias</h3>
+        <p class="card-hint">Minutos de tela por dia. Toque em uma barra para abrir aquele dia.</p>
+        <div class="aud-chart" id="aud-chart"></div>
+        <hr class="divider">
+        <div class="aud-g-row"><span class="aud-g-nome">Média diária</span><span class="aud-g-val" id="aud-media">0</span></div>
+        <div class="aud-g-row"><span class="aud-g-nome">Total no período</span><span class="aud-g-val" id="aud-periodo-total">0</span></div>
+        <div class="aud-g-row"><span class="aud-g-nome">Maior dia</span><span class="aud-g-val" id="aud-pico">0</span></div>
+      </div>
+
+      <!-- Razão do dia -->
+      <div class="card">
+        <h3>📒 Movimentações do dia</h3>
+        <p class="card-hint">Tudo que entrou e saiu — cristais e energia.</p>
+        <div id="aud-ledger"><div class="empty-msg">Sem movimentações.</div></div>
+      </div>
+
+      <!-- Integridade -->
+      <div class="card">
+        <h3>🧮 Integridade dos Saldos</h3>
+        <p class="card-hint">Saldo calculado a partir do histórico × saldo real gravado. Diferença indica edição manual ou registro perdido.</p>
+        <div id="aud-integridade"><div class="empty-msg">Sem dados.</div></div>
+      </div>
+
+      <!-- Exportar -->
+      <div class="card">
+        <h3>📤 Exportar</h3>
+        <p class="card-hint">Baixe os dados para conferir na planilha.</p>
+        <button class="btn btn-ok btn-wide" onclick="exportarAuditoriaCSV('dia')">📄 CSV — Dia selecionado</button>
+        <button class="btn btn-warn btn-wide" onclick="exportarAuditoriaCSV('tudo')">📚 CSV — Histórico completo</button>
+      </div>
+    </div>
+
     <!-- ══ PAGE: GESTÃO ══ -->
     <div class="page" id="page-gestao">
       <div class="page-header">
@@ -637,6 +788,8 @@
           <div class="config-row"><span class="config-lbl">📅 Mínimo diário (min)</span><input id="cfg-min-duo" type="number" min="1"></div>
           <div class="config-row"><span class="config-lbl">🎯 Meta semanal (dias)</span><input id="cfg-meta-duo-dias" type="number" min="1" max="7"></div>
           <div class="config-row"><span class="config-lbl">💎 Recompensa semanal</span><input id="cfg-recompensa-duo" type="number" min="0"></div>
+          <p style="font-size:0.72rem;font-weight:700;color:#e67e22;margin:14px 0 8px">🔍 AUDITORIA</p>
+          <div class="config-row"><span class="config-lbl">📵 Limite de tela/dia (min)</span><input id="cfg-limite-tela" type="number" min="0"></div>
           <button class="btn btn-save btn-wide" onclick="salvarConfig()">💾 Salvar Configurações</button>
         </div>
         <div class="tab-panel" id="tab-artefatos">
@@ -672,6 +825,9 @@
       <button class="nav-item" id="nav-mensagens" onclick="navTo('mensagens')">
         <span class="nav-icon">💬</span>Msgs
         <span class="nav-badge" id="nav-badge-msg" style="display:none">0</span>
+      </button>
+      <button class="nav-item" id="nav-auditoria" onclick="navTo('auditoria')">
+        <span class="nav-icon">🔍</span>Auditoria
       </button>
       <button class="nav-item" id="nav-gestao" onclick="navTo('gestao')">
         <span class="nav-icon">⚙️</span>Gestão
@@ -825,7 +981,6 @@
         document.getElementById('app').style.display = 'block';
         _iniciarListenerVouchersMestre();
         carregarDados();
-        registrarTokenFCMMestre(true);
         // Checar se o nome ainda não foi personalizado
         const adminVal = (await db.ref('admins/' + user.uid).get().catch(() => null))?.val();
         if (!adminVal || adminVal === true || adminVal.nome === 'Mestre') {
@@ -859,7 +1014,6 @@
         document.getElementById('app').style.display = 'block';
         _iniciarListenerVouchersMestre();
         carregarDados();
-        registrarTokenFCMMestre(true);
         const adminVal = adminSnap.val();
         if (!adminVal || adminVal === true || adminVal.nome === 'Mestre') {
           setTimeout(() => mostrarSetupNome(user.uid), 600);
@@ -891,151 +1045,26 @@
     }
 
     async function ativarNotificacoesPushMestre() {
-      const btn = document.getElementById('btn-ativar-push-mestre');
-      if (btn) { btn.disabled = true; btn.textContent = '⏳ Ativando...'; }
       try {
+        if (!('serviceWorker' in navigator) || !('Notification' in window)) {
+          toast('⚠️ Este navegador não suporta notificações.', 'error'); return;
+        }
         const permissao = await Notification.requestPermission();
-        if (permissao !== 'granted') {
-          throw new Error('Permissão negada. Autorize notificações para este site nas Configurações do aparelho.');
-        }
-        await registrarTokenFCMMestre();
-        toast('🔔 Notificações ativadas neste celular!', 'success');
-        if (btn) btn.textContent = '🔔 Notificações ativadas';
-      } catch (e) {
-        // NÃO engolir: o botão antes dizia "ativadas" mesmo tendo falhado.
-        if (btn) btn.textContent = '🔔 Ativar Notificações no Celular';
-        toast('⚠️ Falhou: ' + (e && e.message ? e.message : e), 'error');
-        console.error('ativarNotificacoesPushMestre:', e);
-      } finally {
-        if (btn) btn.disabled = false;
-      }
-    }
-
-    /* ============================================================
-       REGISTRO / RENOVAÇÃO DE TOKEN FCM DO MESTRE
-       Sem token em /fcm_tokens/_mestre, o Worker retorna {enviados:0} e
-       NENHUM push sai. Erros agora são propagados (antes morriam em
-       console.warn). Token renovado a cada carregamento (o Firebase o
-       rotaciona) sob um ID de dispositivo estável.
-    ============================================================ */
-    async function registrarTokenFCMMestre(silencioso) {
-      try {
-        if (!('serviceWorker' in navigator)) throw new Error('Navegador sem suporte a Service Worker.');
-        if (!('Notification' in window)) throw new Error('Navegador sem suporte a notificações.');
-        if (!('PushManager' in window)) throw new Error('Navegador sem suporte a Push (iPhone: instale na Tela de Início).');
-        if (Notification.permission !== 'granted') {
-          if (silencioso) return null;
-          throw new Error('Permissão de notificação não concedida.');
-        }
-        if (firebase.messaging && firebase.messaging.isSupported) {
-          const ok = await firebase.messaging.isSupported();
-          if (!ok) throw new Error('FCM não é suportado neste navegador/dispositivo.');
-        }
-
+        if (permissao !== 'granted') { toast('🔔 Notificações não autorizadas.', 'error'); return; }
         const reg = await navigator.serviceWorker.ready;
         const messaging = firebase.messaging();
         const token = await messaging.getToken({ vapidKey: VAPID_PUBLIC_KEY, serviceWorkerRegistration: reg });
-        if (!token) throw new Error('getToken() retornou vazio (verifique a chave VAPID no Firebase Console).');
-
-        let deviceId = localStorage.getItem('fcm_device_id_mestre');
-        if (!deviceId) {
-          deviceId = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-          localStorage.setItem('fcm_device_id_mestre', deviceId);
+        if (token) {
+          await db.ref('fcm_tokens/_mestre').push({
+            token: token, criadoEm: new Date().toISOString(), ua: navigator.userAgent.substring(0, 120)
+          });
+          toast('🔔 Notificações ativadas neste celular!', 'success');
+          const btn = document.getElementById('btn-ativar-push-mestre');
+          if (btn) btn.textContent = '🔔 Notificações ativadas';
         }
-
-        await db.ref('fcm_tokens/_mestre/' + deviceId).set({
-          token, criadoEm: new Date().toISOString(), ua: navigator.userAgent.substring(0, 120)
-        });
-        return token;
       } catch (e) {
-        if (silencioso) { console.warn('registrarTokenFCMMestre:', e.message); return null; }
-        throw e;
+        toast('⚠️ Não foi possível ativar: ' + e.message, 'error');
       }
-    }
-
-    /* ── TESTE PONTA-A-PONTA: chama o Worker e mostra a resposta crua ──
-       Interpretação:
-         {ok:true, enviados:1}  -> Worker OK e FCM aceitou. Se mesmo assim a
-                                   notificação não aparece, o problema é o SW/aparelho.
-         {ok:true, enviados:0}  -> NÃO HÁ TOKEN gravado no banco. O elo quebrado
-                                   é o registro (getToken/gravação), não o envio.
-         {erro: "..."}          -> O Worker rejeitou; a mensagem diz o motivo. */
-    async function testarPushMestre() {
-      const box = document.getElementById('diag-push-out-mestre');
-      const mostra = t => { if (box) { box.style.display='block'; box.textContent = t; } };
-      mostra('⏳ Chamando o Worker...');
-      try {
-        const user = auth.currentUser;
-        if (!user) throw new Error('Não está logado.');
-        const idToken = await user.getIdToken();
-        const resp = await fetch(PUSH_WORKER_URL + '/notify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + idToken },
-          body: JSON.stringify({
-            destinoKey: '_mestre',
-            titulo: '🧪 Teste de push',
-            mensagem: 'Se você está vendo isto, o push funciona!',
-            tipo: 'teste', dados: {}
-          })
-        });
-        const texto = await resp.text();
-        let diag = 'HTTP ' + resp.status + '\n' + texto + '\n\n';
-        try {
-          const j = JSON.parse(texto);
-          if (j.erro) diag += '=> O Worker RECUSOU: ' + j.erro;
-          else if (j.enviados === 0) diag += '=> enviados:0 — NÃO HÁ TOKEN em /fcm_tokens/_mestre.\n   O elo quebrado é o REGISTRO do token, não o envio.\n   Rode o 🩺 Diagnóstico e veja o erro do getToken().';
-          else diag += '=> enviados:' + j.enviados + ' — o FCM ACEITOU o envio!\n   Se a notificação não apareceu, o problema está no aparelho/Service Worker.';
-        } catch (e) { diag += '=> Resposta não é JSON.'; }
-        mostra(diag);
-        try { await navigator.clipboard.writeText(diag); } catch (e) {}
-      } catch (e) {
-        mostra('❌ Falha ao chamar o Worker: ' + e.message);
-      }
-    }
-
-    /* ── DIAGNÓSTICO DE PUSH DO MESTRE (visível no celular) ── */
-    async function diagnosticarPushMestre() {
-      const L = [];
-      const ok = t => L.push('✅ ' + t), no = t => L.push('❌ ' + t), inf = t => L.push('•  ' + t);
-
-      inf('UA: ' + navigator.userAgent.substring(0, 80));
-      (location.protocol === 'https:' || location.hostname === 'localhost')
-        ? ok('HTTPS (contexto seguro)') : no('NÃO está em HTTPS — push exige HTTPS');
-      const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-      inf('Instalado na Tela de Início (PWA): ' + (standalone ? 'SIM' : 'NÃO'));
-      'serviceWorker' in navigator ? ok('Service Worker suportado') : no('Service Worker NÃO suportado');
-      'PushManager' in window ? ok('PushManager suportado')
-        : no('PushManager NÃO suportado (iPhone: instale na Tela de Início)');
-      inf('Permissão atual: ' + (window.Notification ? Notification.permission : 'n/d'));
-
-      try {
-        if (firebase.messaging && firebase.messaging.isSupported) {
-          (await firebase.messaging.isSupported()) ? ok('FCM suportado') : no('FCM NÃO suportado aqui');
-        }
-      } catch (e) { no('isSupported() erro: ' + e.message); }
-
-      try {
-        const reg = await navigator.serviceWorker.ready;
-        ok('Service Worker ativo (scope: ' + reg.scope + ')');
-      } catch (e) { no('Service Worker não ficou pronto: ' + e.message); }
-
-      inf('Mestre uid: ' + (mestreUid ? mestreUid.substring(0, 10) + '…' : '(não logado)'));
-
-      if (window.Notification && Notification.permission === 'granted') {
-        try {
-          const t = await registrarTokenFCMMestre();
-          ok('Token FCM obtido e GRAVADO em /fcm_tokens/_mestre');
-          inf('Token: ' + String(t).substring(0, 28) + '…');
-        } catch (e) { no('FALHOU AQUI → ' + e.message); }
-      } else {
-        no('Permissão não concedida — toque em "Ativar Notificações" primeiro');
-      }
-
-      const texto = L.join('\n');
-      const box = document.getElementById('diag-push-out-mestre');
-      if (box) { box.style.display = 'block'; box.textContent = texto; }
-      try { await navigator.clipboard.writeText(texto); } catch (e) {}
-      return texto;
     }
 
     /* ── TOAST ── */
@@ -1043,128 +1072,6 @@
       const t = document.getElementById('toast');
       t.textContent = msg; t.className = 'show ' + (tipo||'');
       setTimeout(() => t.className = '', 3200);
-    }
-
-    /* ============================================================
-       CENTRAL DE ALERTA EM FOREGROUND (Metade A do item 2)
-       Antes: com o painel ABERTO, novos pedidos das crianças não
-       faziam som nem alerta — e algumas listas nem eram real-time.
-       Agora: listeners no banco (funcionam mesmo sem push ativado)
-       tocam um bip + vibração + toast quando chega leitura, voucher,
-       missão ou mensagem nova. Espelha o padrão anti-tempestade do
-       app das crianças (§9.2): drena o backlog em SILÊNCIO no boot e
-       só alerta o que for genuinamente novo, com debounce.
-    ============================================================ */
-    let _alertaPronto = false;                 // gate: só alerta depois do boot
-    const _bootTs = Date.now();                // marco temporal do boot
-    // Um registro só alerta se for mais novo que o boot (imune a drenagem lenta
-    // e a re-disparos de child_added em reconexões).
-    function _ehNovo(iso) {
-      if (!iso) return false;
-      const t = new Date(iso).getTime();
-      return !isNaN(t) && t > (_bootTs - 2000);
-    }
-    const _nomePorKey = gk => {
-      const u = Object.values(_usuarios).find(u => u.email && u.email.replace(/\./g,'_') === gk);
-      return u ? u.nome : '';
-    };
-
-    // Bip curto de dois tons via Web Audio (sem arquivo externo, funciona offline).
-    let _audioCtx = null;
-    function _bipMestre() {
-      try {
-        _audioCtx = _audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-        if (_audioCtx.state === 'suspended') _audioCtx.resume();
-        const now = _audioCtx.currentTime;
-        [880, 1174.66].forEach((freq, i) => {
-          const o = _audioCtx.createOscillator(), g = _audioCtx.createGain();
-          o.type = 'sine'; o.frequency.value = freq;
-          o.connect(g); g.connect(_audioCtx.destination);
-          const t0 = now + i * 0.12;
-          g.gain.setValueAtTime(0.0001, t0);
-          g.gain.exponentialRampToValueAtTime(0.22, t0 + 0.02);
-          g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.11);
-          o.start(t0); o.stop(t0 + 0.12);
-        });
-      } catch (e) { /* áudio bloqueado antes de interação — ignora */ }
-    }
-
-    // Debounce: uma rajada de eventos em <1,4s vira UM único alerta.
-    let _alertaTimer = null, _alertaFila = [];
-    function _alertarMestre(titulo, corpo) {
-      if (!_alertaPronto) return;
-      _alertaFila.push({ titulo, corpo });
-      if (_alertaTimer) return;
-      _alertaTimer = setTimeout(() => {
-        const n = _alertaFila.length;
-        const ult = _alertaFila[_alertaFila.length - 1];
-        _alertaFila = []; _alertaTimer = null;
-        _bipMestre();
-        if (navigator.vibrate) navigator.vibrate([60, 30, 60, 30, 120]);
-        const msg = n > 1
-          ? `🔔 ${n} novidades — a última: ${ult.titulo}`
-          : `${ult.titulo}${ult.corpo ? ' de ' + ult.corpo : ''}`;
-        toast(msg, 'success');
-      }, 1400);
-    }
-
-    // Listeners real-time para os fluxos criança→Mestre que faltavam alerta.
-    let _alertasIniciados = false;
-    const _transSeen = new Set(), _vouchRefs = {}, _vouchSeen = new Set(),
-          _missoesRefs = {}, _missoesSeen = new Set();
-    function _iniciarAlertasForegroundMestre() {
-      if (_alertasIniciados) return;
-      _alertasIniciados = true;
-
-      // 1) LEITURAS — /transacoes (tipo Leitura, status Pendente). Antes não era real-time.
-      db.ref('transacoes').on('child_added', snap => {
-        const t = snap.val(); if (!t || _transSeen.has(snap.key)) return;
-        _transSeen.add(snap.key);
-        if (t.status === 'Pendente' && t.tipo === 'Leitura' && _ehNovo(t.data)) {
-          _alertarMestre('📖 Nova leitura', nomeEmail(_usuarios, t.email));
-          _recarregarPendencias();
-        }
-      });
-
-      // 2) VOUCHERS — /vouchers/{criança}/{vid} (status Pendente). Alerta dedicado
-      //    (o listener existente já recarrega a lista; este só toca o alerta).
-      db.ref('vouchers').on('child_added', userSnap => {
-        const gk = userSnap.key;
-        if (_vouchRefs[gk]) return;
-        _vouchRefs[gk] = db.ref('vouchers/' + gk);
-        _vouchRefs[gk].on('child_added', s => {
-          const v = s.val(); if (!v || _vouchSeen.has(s.key)) return;
-          _vouchSeen.add(s.key);
-          if (v.status === 'Pendente' && _ehNovo(v.timestamp_solicitacao)) {
-            _alertarMestre('📜 Novo voucher', nomeEmail(_usuarios, v.email));
-          }
-        });
-      });
-
-      // 3) MISSÕES — /missoes/{criança}/{mid} (status Pendente). Antes só sob demanda.
-      db.ref('missoes').on('child_added', userSnap => {
-        const gk = userSnap.key;
-        if (_missoesRefs[gk]) return;
-        _missoesRefs[gk] = db.ref('missoes/' + gk);
-        _missoesRefs[gk].on('child_added', s => {
-          const m = s.val(); if (!m || _missoesSeen.has(s.key)) return;
-          _missoesSeen.add(s.key);
-          if (m.status === 'Pendente' && _ehNovo(m.timestamp)) {
-            _alertarMestre('⚔️ Nova missão', nomeEmail(_usuarios, m.email));
-            _recarregarPendencias();
-          }
-        });
-      });
-
-      // Libera os alertas depois que o backlog do boot foi drenado em silêncio.
-      setTimeout(() => { _alertaPronto = true; }, 3000);
-    }
-
-    // Recarrega leituras + missões pendentes com debounce (coalesce de rajadas).
-    let _reloadTimer = null;
-    function _recarregarPendencias() {
-      if (_reloadTimer) return;
-      _reloadTimer = setTimeout(() => { _reloadTimer = null; carregarDados(); }, 1200);
     }
 
     /* ── HELPERS ── */
@@ -1782,6 +1689,7 @@
       document.getElementById('cfg-min-duo').value        = _config.min_duolingo_diario    || 15;
       document.getElementById('cfg-meta-duo-dias').value  = _config.meta_duo_semanal_dias  || 7;
       document.getElementById('cfg-recompensa-duo').value = _config.recompensa_duo_semanal || 20;
+      document.getElementById('cfg-limite-tela').value    = _config.limite_tela_diario     || 120;
     }
 
     async function salvarConfig() {
@@ -1799,6 +1707,7 @@
           min_duolingo_diario:    Number(document.getElementById('cfg-min-duo').value),
           meta_duo_semanal_dias:  Number(document.getElementById('cfg-meta-duo-dias').value),
           recompensa_duo_semanal: Number(document.getElementById('cfg-recompensa-duo').value),
+          limite_tela_diario:     Number(document.getElementById('cfg-limite-tela').value),
         });
         toast('✅ Configurações salvas!','success');
         await carregarDados();
@@ -1817,6 +1726,408 @@
         _msgNaoLidas = {}; _atualizarBadgeMsg();
         renderContactListMestre();
       }
+      if (page === 'auditoria') {
+        if (!document.getElementById('aud-data').value) audIrHoje();
+        carregarAuditoria();
+      }
+    }
+
+    /* ═══════════════════ AUDITORIA ═══════════════════ */
+    let _audVouchers = [];   // vouchers achatados
+    let _audTrans    = [];   // transações
+    let _audConf     = {};   // /auditoria/{dia}
+    let _audCarregado = false;
+
+    /* Data local (não UTC) no formato YYYY-MM-DD */
+    function _audDiaISO(d) {
+      const dt = (d instanceof Date) ? d : new Date(d);
+      if (isNaN(dt)) return '';
+      return new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().substring(0,10);
+    }
+    function _audHora(iso) {
+      if (!iso) return '--:--';
+      const d = new Date(iso);
+      return isNaN(d) ? '--:--' : d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    }
+    function _audDataBonita(dia) {
+      if (!dia) return '—';
+      const [a,m,d] = dia.split('-').map(Number);
+      const dt = new Date(a, m-1, d);
+      return dt.toLocaleDateString('pt-BR',{weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+    }
+    function _audDiaSel() { return document.getElementById('aud-data').value; }
+
+    function audIrHoje() {
+      document.getElementById('aud-data').value = _audDiaISO(new Date());
+      if (_audCarregado) renderAuditoria();
+    }
+    function audMudarDia(delta) {
+      const atual = _audDiaSel() || _audDiaISO(new Date());
+      const [a,m,d] = atual.split('-').map(Number);
+      const dt = new Date(a, m-1, d);
+      dt.setDate(dt.getDate() + delta);
+      const novo = _audDiaISO(dt);
+      if (novo > _audDiaISO(new Date())) return;   // não navega para o futuro
+      document.getElementById('aud-data').value = novo;
+      renderAuditoria();
+    }
+    function audAbrirDia(dia) {
+      document.getElementById('aud-data').value = dia;
+      renderAuditoria();
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+
+    /* Minutos realmente consumidos por um voucher */
+    function _audMinReais(v) {
+      const aut = Number(v.cristais) || 0;
+      const ini = new Date(v.timestamp_aprovacao || v.timestamp_solicitacao);
+      if (isNaN(ini)) return aut;
+      if (v.timestamp_fim) {
+        const m = Math.round((new Date(v.timestamp_fim) - ini) / 60000);
+        return Math.max(0, Math.min(aut, m));
+      }
+      if (v.status === 'Ativo') {
+        const m = Math.round((Date.now() - ini) / 60000);
+        return Math.max(0, Math.min(aut, m));
+      }
+      return aut;   // Expirado sem registro de fim → assume uso integral
+    }
+
+    /* Classifica o efeito de uma transação */
+    function _audFluxo(t) {
+      const q = Number(t.quantidade) || 0;
+      const det = (t.detalhes || '').toLowerCase();
+      switch (t.tipo) {
+        case 'Voucher':
+        case 'Gasto':    return { moeda:'💎', sinal:-1, q };
+        case 'Forja':
+        case 'Artefato':
+        case 'Missao':   return { moeda:'💎', sinal: 1, q };
+        case 'Bonus':    return (det.includes('duolingo') || det.includes('🦉'))
+                                ? { moeda:'💎', sinal:1, q }
+                                : { moeda:'⚡', sinal:1, q };
+        case 'Leitura':  return { moeda:'⚡', sinal: t.status==='Aprovado' ? 1 : 0, q };
+        case 'Duolingo': return { moeda:'⚡', sinal: 1, q };
+        default:         return { moeda:'',  sinal: 0, q };
+      }
+    }
+
+    async function carregarAuditoria() {
+      document.querySelectorAll('.btn-refresh-sm').forEach(b=>{b.disabled=true;b.textContent='⏳';});
+      try {
+        const [vS, tS, uS, cfgS] = await Promise.all([
+          db.ref('vouchers').get(),
+          db.ref('transacoes').get(),
+          db.ref('usuarios').get(),
+          db.ref('config').get()
+        ]);
+        _usuarios = uS.exists() ? uS.val() : _usuarios;
+        if (cfgS.exists()) _config = cfgS.val();
+        _audTrans = tS.exists()
+          ? Object.entries(tS.val()).map(([k,v]) => ({...v, _key:k})).filter(t=>t.email && t.data)
+          : [];
+        _audVouchers = [];
+        if (vS.exists()) {
+          vS.forEach(userSnap => {
+            const ek = userSnap.key;
+            userSnap.forEach(vSnap => {
+              const v = vSnap.val();
+              _audVouchers.push({ ...v, _key:vSnap.key, emailKey:ek });
+            });
+          });
+        }
+        try {
+          const cS = await db.ref('auditoria').get();
+          _audConf = cS.exists() ? cS.val() : {};
+        } catch(e) { _audConf = {}; }
+        _audCarregado = true;
+        if (!_audDiaSel()) document.getElementById('aud-data').value = _audDiaISO(new Date());
+        renderAuditoria();
+      } catch(e) { toast('❌ '+e.message,'error'); }
+      finally { document.querySelectorAll('.btn-refresh-sm').forEach(b=>{b.disabled=false;b.textContent='🔄 Atualizar';}); }
+    }
+
+    /* Guardiões (exclui mestres) */
+    function _audGuardioes() {
+      return Object.entries(_usuarios)
+        .filter(([,u]) => u.email && !u.is_mestre)
+        .map(([k,u]) => ({ emailKey:k, email:u.email, nome:u.nome || u.email,
+                           cristais:Math.floor(Number(u.saldo_cristais)||0),
+                           energia:Math.floor(Number(u.saldo_energia)||0) }));
+    }
+
+    /* Vouchers que consumiram cristais em um dia */
+    function _audVouchersDoDia(dia) {
+      return _audVouchers
+        .filter(v => (v.status==='Ativo' || v.status==='Expirado') &&
+                     _audDiaISO(v.timestamp_aprovacao || v.timestamp_solicitacao) === dia)
+        .sort((a,b) => new Date(a.timestamp_aprovacao||a.timestamp_solicitacao) - new Date(b.timestamp_aprovacao||b.timestamp_solicitacao));
+    }
+    /* Débitos manuais de cristais (Mestre removeu direto) */
+    function _audGastosManuais(dia) {
+      return _audTrans
+        .filter(t => t.tipo==='Gasto' && _audDiaISO(t.data)===dia)
+        .sort((a,b) => new Date(a.data) - new Date(b.data));
+    }
+    /* Total de minutos autorizados num dia (vouchers + gasto manual) */
+    function _audTotalDia(dia) {
+      const v = _audVouchersDoDia(dia).reduce((s,x)=>s+(Number(x.cristais)||0),0);
+      const g = _audGastosManuais(dia).reduce((s,x)=>s+(Number(x.quantidade)||0),0);
+      return v + g;
+    }
+
+    function renderAuditoria() {
+      const dia = _audDiaSel();
+      if (!dia) return;
+      document.getElementById('aud-data-label').textContent = _audDataBonita(dia);
+
+      const guardioes = _audGuardioes();
+      const vsDia = _audVouchersDoDia(dia);
+      const gsDia = _audGastosManuais(dia);
+
+      /* ── 1. RESUMO ── */
+      const totalAut = _audTotalDia(dia);
+      const totalReal = vsDia.reduce((s,v)=>s+_audMinReais(v),0) + gsDia.reduce((s,t)=>s+(Number(t.quantidade)||0),0);
+      document.getElementById('aud-total-min').textContent = totalAut;
+      document.getElementById('aud-total-sub').textContent =
+        `${vsDia.length + gsDia.length} liberação(ões) · uso estimado ${totalReal} min` +
+        (totalReal < totalAut ? ` (${totalAut-totalReal} min não usados)` : '');
+
+      const porG = guardioes.map(g => {
+        const vs = vsDia.filter(v => v.email === g.email);
+        const gs = gsDia.filter(t => t.email === g.email);
+        const aut = vs.reduce((s,v)=>s+(Number(v.cristais)||0),0) + gs.reduce((s,t)=>s+(Number(t.quantidade)||0),0);
+        const real = vs.reduce((s,v)=>s+_audMinReais(v),0) + gs.reduce((s,t)=>s+(Number(t.quantidade)||0),0);
+        return { ...g, aut, real, n: vs.length + gs.length };
+      });
+      const dg = document.getElementById('aud-por-guardiao');
+      dg.innerHTML = porG.length ? porG.map(g => `
+        <div class="aud-g-row">
+          <span class="aud-g-nome">${g.nome}</span>
+          <span>
+            <span class="aud-g-val">${g.aut}</span>
+            <div class="aud-g-min">min · ${g.n} liberação(ões) · uso ~${g.real}</div>
+          </span>
+        </div>`).join('') : '<div class="empty-msg">Nenhum guardião.</div>';
+
+      /* ── 2. LINHA DO TEMPO ── */
+      const nomeDe = email => guardioes.find(g=>g.email===email)?.nome || email;
+      const itens = [];
+      vsDia.forEach(v => {
+        const aut  = Number(v.cristais)||0;
+        const real = _audMinReais(v);
+        const ini  = v.timestamp_aprovacao || v.timestamp_solicitacao;
+        const fimP = v.timer_fim;
+        const fimR = v.timestamp_fim;
+        let cls = '', obs = '';
+        if (v.status === 'Ativo') { cls='ativo'; obs = `▶ em andamento · ~${real} min já usados`; }
+        else if (fimR && real < aut - 1) { cls='parcial'; obs = `⏹ encerrado antes · usou ${real} de ${aut} min`; }
+        else if (fimR) { obs = `✔ usou o tempo todo`; }
+        else { obs = `✔ expirou naturalmente (uso integral presumido)`; }
+        itens.push({ t:new Date(ini), html:`
+          <div class="aud-tl-item ${cls}">
+            <div class="aud-tl-time">${_audHora(ini)}<small>${_audHora(fimR||fimP)}</small></div>
+            <div class="aud-tl-info">
+              <div class="aud-tl-nome">${nomeDe(v.email)}</div>
+              <div class="aud-tl-det">${obs}</div>
+            </div>
+            <div class="aud-tl-badge"><b>${aut}</b><small>MIN</small></div>
+          </div>`});
+      });
+      gsDia.forEach(t => {
+        const q = Number(t.quantidade)||0;
+        itens.push({ t:new Date(t.data), html:`
+          <div class="aud-tl-item manual">
+            <div class="aud-tl-time">${_audHora(t.data)}<small>manual</small></div>
+            <div class="aud-tl-info">
+              <div class="aud-tl-nome">${nomeDe(t.email)}</div>
+              <div class="aud-tl-det">💎 Débito manual do Mestre — ${t.detalhes||'sem descrição'}</div>
+            </div>
+            <div class="aud-tl-badge"><b>${q}</b><small>💎</small></div>
+          </div>`});
+      });
+      itens.sort((a,b)=>a.t-b.t);
+      document.getElementById('aud-timeline').innerHTML =
+        itens.length ? itens.map(i=>i.html).join('') : '<div class="empty-msg">Nenhuma liberação de tela neste dia.</div>';
+
+      /* ── 3. CONFERÊNCIA FAMILY LINK ── */
+      const conf = _audConf[dia] || {};
+      const fl = document.getElementById('aud-familylink');
+      fl.innerHTML = porG.length ? porG.map(g => {
+        const salvo = conf[g.emailKey] || {};
+        const val = (salvo.fl_min !== undefined && salvo.fl_min !== null) ? salvo.fl_min : '';
+        return `
+        <div class="aud-fl-row">
+          <span class="aud-fl-nome">${g.nome}<br><span class="aud-fl-sist">Sistema: ${g.aut} min</span></span>
+          <input type="number" id="aud-fl-${g.emailKey}" min="0" placeholder="min" value="${val}"
+                 oninput="audCalcDiff('${g.emailKey}',${g.aut})">
+          <span class="aud-diff none" id="aud-diff-${g.emailKey}">—</span>
+        </div>`;
+      }).join('') : '<div class="empty-msg">Nenhum guardião.</div>';
+      porG.forEach(g => audCalcDiff(g.emailKey, g.aut));
+      document.getElementById('aud-obs').value = conf._obs || '';
+      document.getElementById('aud-conf-status').textContent =
+        conf._salvo_em ? `Última conferência salva em ${fmtData(conf._salvo_em)}` : 'Ainda não conferido.';
+
+      /* ── 4. ALERTAS ── */
+      const alertas = [];
+      const limite = Number(_config.limite_tela_diario) || 120;
+      if (totalAut > limite)
+        alertas.push({c:'warn', t:`Tempo de tela do dia (${totalAut} min) acima do limite de referência de ${limite} min.`});
+
+      vsDia.forEach(v => {
+        const h = new Date(v.timestamp_aprovacao || v.timestamp_solicitacao).getHours();
+        if (h >= 21 || h < 7)
+          alertas.push({c:'warn', t:`${nomeDe(v.email)} recebeu ${v.cristais} min às ${_audHora(v.timestamp_aprovacao||v.timestamp_solicitacao)} — fora do horário habitual.`});
+      });
+
+      _audVouchers.filter(v => v.status==='Ativo' && v.timer_fim && new Date(v.timer_fim) < new Date(Date.now()-10*60000))
+        .forEach(v => alertas.push({c:'err', t:`Voucher travado: ${nomeDe(v.email)} ainda consta "Ativo" mas o tempo acabou às ${_audHora(v.timer_fim)} de ${_audDiaISO(v.timer_fim).split('-').reverse().join('/')}. Encerre na aba Vouchers.`}));
+
+      gsDia.forEach(t => alertas.push({c:'info', t:`Débito manual de ${t.quantidade} 💎 em ${nomeDe(t.email)} às ${_audHora(t.data)} — não passou pelo fluxo de voucher.`}));
+
+      const integridade = _audIntegridade(guardioes);
+      integridade.filter(i => Math.abs(i.difC) > 0).forEach(i =>
+        alertas.push({c:'err', t:`Saldo de cristais de ${i.nome} não bate: histórico indica ${i.espC} 💎, mas o registro mostra ${i.realC} 💎 (diferença de ${i.difC>0?'+':''}${i.difC}).`}));
+
+      porG.forEach(g => {
+        const s = (conf[g.emailKey]||{});
+        if (s.fl_min !== undefined && s.fl_min !== null && s.fl_min !== '') {
+          const d = Number(s.fl_min) - g.aut;
+          if (d > 5) alertas.push({c:'err', t:`Family Link registrou ${d} min A MAIS que o autorizado para ${g.nome} neste dia.`});
+          else if (d < -5) alertas.push({c:'info', t:`${g.nome} usou ${Math.abs(d)} min a menos do que foi autorizado.`});
+        }
+      });
+
+      const vsRecusados = _audVouchers.filter(v => v.status==='Recusado' && _audDiaISO(v.timestamp_solicitacao)===dia);
+      if (vsRecusados.length)
+        alertas.push({c:'info', t:`${vsRecusados.length} pedido(s) de tela recusado(s) neste dia.`});
+
+      if (!alertas.length) alertas.push({c:'okk', t:'Nada fora do normal neste dia. Tudo conferido. ✔'});
+      document.getElementById('aud-alertas').innerHTML =
+        alertas.map(a => `<div class="aud-alert ${a.c}"><span>${a.c==='err'?'⛔':a.c==='warn'?'⚠️':a.c==='okk'?'✅':'ℹ️'}</span><span>${a.t}</span></div>`).join('');
+
+      /* ── 5. GRÁFICO 14 DIAS ── */
+      const dias = [];
+      const [aa,mm,dd] = dia.split('-').map(Number);
+      for (let i = 13; i >= 0; i--) {
+        const dt = new Date(aa, mm-1, dd); dt.setDate(dt.getDate()-i);
+        const k = _audDiaISO(dt);
+        dias.push({ k, min:_audTotalDia(k), lbl:String(dt.getDate()).padStart(2,'0') });
+      }
+      const max = Math.max(1, ...dias.map(d=>d.min));
+      document.getElementById('aud-chart').innerHTML = dias.map(d => `
+        <div class="aud-bar-wrap ${d.k===dia?'sel':''}" onclick="audAbrirDia('${d.k}')">
+          <span class="aud-bar-val">${d.min||''}</span>
+          <div class="aud-bar" style="height:${Math.round(d.min/max*100)}%"></div>
+          <span class="aud-bar-lbl">${d.lbl}</span>
+        </div>`).join('');
+      const totalP = dias.reduce((s,d)=>s+d.min,0);
+      document.getElementById('aud-periodo-total').textContent = totalP + ' min';
+      document.getElementById('aud-media').textContent = Math.round(totalP/14) + ' min';
+      const pico = dias.reduce((a,b)=>b.min>a.min?b:a, dias[0]);
+      document.getElementById('aud-pico').textContent = pico.min + ' min (' + pico.lbl + ')';
+
+      /* ── 6. RAZÃO DO DIA ── */
+      const led = _audTrans.filter(t => _audDiaISO(t.data)===dia).sort((a,b)=>new Date(a.data)-new Date(b.data));
+      document.getElementById('aud-ledger').innerHTML = led.length ? led.map(t => {
+        const f = _audFluxo(t);
+        const cls = f.sinal>0 ? 'pos' : f.sinal<0 ? 'neg' : 'neu';
+        const sig = f.sinal>0 ? '+' : f.sinal<0 ? '−' : '';
+        const aferida = t.data_aferida && _audDiaISO(t.data_aferida)!==dia
+          ? ` · referente a ${_audDiaISO(t.data_aferida).split('-').reverse().join('/')}` : '';
+        const pend = t.status && t.status!=='Aprovado' ? ` · ${t.status}` : '';
+        return `
+          <div class="aud-led-row">
+            <span class="aud-led-hora">${_audHora(t.data)}</span>
+            <span class="aud-led-info">
+              <div class="aud-led-nome">${nomeDe(t.email)} <span style="font-weight:600;color:#999">· ${t.tipo}</span></div>
+              <div class="aud-led-det">${t.detalhes||'—'}${aferida}${pend}</div>
+            </span>
+            <span class="aud-led-qtd ${cls}">${sig}${f.q} ${f.moeda}</span>
+          </div>`;
+      }).join('') : '<div class="empty-msg">Nenhuma movimentação neste dia.</div>';
+
+      /* ── 7. INTEGRIDADE ── */
+      document.getElementById('aud-integridade').innerHTML = integridade.length ? integridade.map(i => {
+        const okC = i.difC === 0, okE = i.difE === 0;
+        return `
+        <div class="aud-int-row">
+          <span class="aud-int-nome">${i.nome}</span>
+          <span class="aud-int-num" style="color:${okC?'#2ecc71':'#e74c3c'}">${i.realC} 💎<small>histórico: ${i.espC}${okC?'':' ⚠'}</small></span>
+          <span class="aud-int-num" style="color:${okE?'#2ecc71':'#e74c3c'}">${i.realE} ⚡<small>histórico: ${i.espE}${okE?'':' ⚠'}</small></span>
+        </div>`;
+      }).join('') : '<div class="empty-msg">Sem dados.</div>';
+    }
+
+    /* Saldo esperado a partir de TODO o histórico × saldo gravado */
+    function _audIntegridade(guardioes) {
+      const custo = Number(_config.custo_forja) || 30;
+      const ganho = Number(_config.ganho_forja) || 10;
+      return guardioes.map(g => {
+        let c = 0, e = 0;
+        _audTrans.filter(t => t.email === g.email).forEach(t => {
+          const f = _audFluxo(t);
+          if (f.sinal === 0) return;
+          if (f.moeda === '💎') c += f.sinal * f.q;
+          if (f.moeda === '⚡') e += f.sinal * f.q;
+          if (t.tipo === 'Forja') e -= Math.round(f.q / ganho * custo);   // energia consumida na forja
+        });
+        return { nome:g.nome, espC:Math.round(c), realC:g.cristais, difC:g.cristais-Math.round(c),
+                                espE:Math.round(e), realE:g.energia,  difE:g.energia-Math.round(e) };
+      });
+    }
+
+    function audCalcDiff(emailKey, sistema) {
+      const inp = document.getElementById('aud-fl-'+emailKey);
+      const bad = document.getElementById('aud-diff-'+emailKey);
+      if (!inp || !bad) return;
+      if (inp.value === '') { bad.className='aud-diff none'; bad.textContent='—'; return; }
+      const d = Number(inp.value) - Number(sistema);
+      bad.textContent = (d>0?'+':'') + d + ' min';
+      bad.className = 'aud-diff ' + (d===0 ? 'ok' : d>0 ? 'over' : 'under');
+    }
+
+    async function salvarConferencia() {
+      const dia = _audDiaSel();
+      if (!dia) { toast('⚠️ Selecione um dia.','error'); return; }
+      const payload = { _obs: document.getElementById('aud-obs').value || '', _salvo_em: new Date().toISOString() };
+      _audGuardioes().forEach(g => {
+        const inp = document.getElementById('aud-fl-'+g.emailKey);
+        if (inp && inp.value !== '') {
+          const vs = _audVouchersDoDia(dia).filter(v=>v.email===g.email).reduce((s,v)=>s+(Number(v.cristais)||0),0);
+          const gs = _audGastosManuais(dia).filter(t=>t.email===g.email).reduce((s,t)=>s+(Number(t.quantidade)||0),0);
+          payload[g.emailKey] = { fl_min: Number(inp.value), sistema_min: vs+gs, nome: g.nome };
+        }
+      });
+      try {
+        await db.ref('auditoria/'+dia).set(payload);
+        _audConf[dia] = payload;
+        toast('✅ Conferência do dia salva!','success');
+        renderAuditoria();
+      } catch(e) { toast('❌ '+e.message+' (verifique a regra /auditoria no Firebase)','error'); }
+    }
+
+    function exportarAuditoriaCSV(escopo) {
+      const dia = _audDiaSel();
+      const linhas = [['data','hora','guardiao','tipo','detalhes','quantidade','moeda','sinal','status']];
+      const nomeDe = email => Object.values(_usuarios).find(u=>u.email===email)?.nome || email;
+      const base = escopo==='dia' ? _audTrans.filter(t=>_audDiaISO(t.data)===dia) : _audTrans;
+      base.sort((a,b)=>new Date(a.data)-new Date(b.data)).forEach(t => {
+        const f = _audFluxo(t);
+        linhas.push([_audDiaISO(t.data), _audHora(t.data), nomeDe(t.email), t.tipo||'',
+                     (t.detalhes||'').replace(/[;\n\r]/g,' '), f.q,
+                     f.moeda==='💎'?'cristais':f.moeda==='⚡'?'energia':'',
+                     f.sinal>0?'entrada':f.sinal<0?'saida':'neutro', t.status||'']);
+      });
+      const csv = '\uFEFF' + linhas.map(l=>l.join(';')).join('\n');
+      const url = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = escopo==='dia' ? `auditoria_${dia}.csv` : `auditoria_completa_${_audDiaISO(new Date())}.csv`;
+      a.click();
+      setTimeout(()=>URL.revokeObjectURL(url), 2000);
+      toast('📤 CSV gerado!','success');
     }
 
     /* ── ATUALIZAR BADGES DE PENDENTES ── */
@@ -1918,7 +2229,7 @@
         el.classList.toggle('warning',min<5&&resto>0);
         if(card) card.classList.toggle('warning',min<5&&resto>0);
         if(resto<=0){ clearInterval(id); el.textContent='00:00';
-          db.ref('vouchers/'+emailKey+'/'+vkey).update({status:'Expirado'}).then(()=>{ toast('⏱ Voucher expirado!','success'); carregarVouchers(); }); }
+          db.ref('vouchers/'+emailKey+'/'+vkey).update({status:'Expirado', timestamp_fim:new Date().toISOString(), encerrado_por:'tempo'}).then(()=>{ toast('⏱ Voucher expirado!','success'); carregarVouchers(); }); }
       },1000);
       _mestreTimers[vkey]=id;
     }
@@ -1954,7 +2265,7 @@
       if(!confirm('Encerrar este voucher?')) return;
       try {
         if(_mestreTimers[vkey]){ clearInterval(_mestreTimers[vkey]); delete _mestreTimers[vkey]; }
-        await db.ref('vouchers/'+emailKey+'/'+vkey).update({status:'Expirado'});
+        await db.ref('vouchers/'+emailKey+'/'+vkey).update({status:'Expirado', timestamp_fim:new Date().toISOString(), encerrado_por:'mestre'});
         await db.ref('notificacoes/'+emailKey).push({tipo:'voucher_encerrado',titulo:'⏱ Voucher Encerrado',mensagem:'O Mestre encerrou seu tempo de tela.',quantidade:0,timestamp:new Date().toISOString()});
         enviarPush(emailKey, '⏱ Voucher Encerrado', 'O Mestre encerrou seu tempo de tela.', 'voucher_encerrado', {});
         toast('Voucher encerrado.','success'); carregarVouchers();
@@ -2003,7 +2314,6 @@
           const pagMsg = document.getElementById('page-mensagens');
           const ehMeu = msg.de === mestreUid || msg.de === '_mestre';
           if (!ehMeu) {
-            if (_ehNovo(msg.timestamp)) _alertarMestre('💬 Nova mensagem', _nomePorKey(gk));
             if (!pagMsg?.classList.contains('active') || conversaAtualKey !== gk) {
               _msgNaoLidas[gk] = (_msgNaoLidas[gk]||0)+1;
               _atualizarBadgeMsg();
@@ -2019,7 +2329,6 @@
       db.ref('vouchers').on('child_changed',snap=>{ snap.forEach(v=>{ if(v.val().status==='Pendente') carregarVouchers(); }); });
       _iniciarListenerMensagensMestre();
       _carregarTodasMensagens();
-      _iniciarAlertasForegroundMestre();
     }
 
     /* ── BADGE GLOBAL DE MENSAGENS NÃO LIDAS ── */
