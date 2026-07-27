@@ -18,8 +18,8 @@ messaging.onBackgroundMessage((payload) => {
   const corpo = payload.notification?.body || '';
   self.registration.showNotification(titulo, {
     body: corpo,
-    icon: 'https://i.ibb.co/7xwvFvSK/avatar-boy-full-body-mod1-nobg.png',
-    badge: 'https://i.ibb.co/7xwvFvSK/avatar-boy-full-body-mod1-nobg.png',
+    icon: (payload.data && payload.data.icone) || '/minutinhos-mestre/icon-192.png',
+    badge: '/minutinhos-mestre/icon-192.png',
     vibrate: [60, 30, 60, 30, 120],
     data: payload.data || {},
     tag: payload.data?.tipo || 'minutinhos-mestre'
@@ -39,7 +39,7 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 // sw-mestre.js — Service Worker — Painel do Mestre
-const CACHE_NAME = 'minutinhos-mestre-v16';
+const CACHE_NAME = 'minutinhos-mestre-v17';
 
 const ROOT  = '/minutinhos-mestre/';
 const INDEX = '/minutinhos-mestre/index.html';
