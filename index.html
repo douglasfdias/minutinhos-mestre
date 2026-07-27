@@ -987,6 +987,7 @@
         document.getElementById('app').style.display = 'block';
         _iniciarListenerVouchersMestre();
         carregarDados();
+        registrarTokenFCMMestre(true); // silencioso: renova a cada login
         // Checar se o nome ainda não foi personalizado
         const adminVal = (await db.ref('admins/' + user.uid).get().catch(() => null))?.val();
         if (!adminVal || adminVal === true || adminVal.nome === 'Mestre') {
@@ -1020,6 +1021,7 @@
         document.getElementById('app').style.display = 'block';
         _iniciarListenerVouchersMestre();
         carregarDados();
+        registrarTokenFCMMestre(true); // silencioso: renova a cada carregamento
         const adminVal = adminSnap.val();
         if (!adminVal || adminVal === true || adminVal.nome === 'Mestre') {
           setTimeout(() => mostrarSetupNome(user.uid), 600);
@@ -1050,28 +1052,91 @@
       }
     }
 
-    async function ativarNotificacoesPushMestre() {
+    /* ============================================================
+       REGISTRO / RENOVAÇÃO DE TOKEN FCM — PAINEL DO MESTRE
+       Antes usava .push(): cada clique criava um registro NOVO e o
+       token nunca era renovado. Como o FCM rotaciona o token e o
+       Worker apaga os mortos, /fcm_tokens/_mestre acabava vazio —
+       e o Worker respondia {enviados: 0} sem erro nenhum.
+       Agora grava sob um ID de dispositivo ESTÁVEL (o mesmo aparelho
+       sobrescreve o próprio registro) e renova a cada carregamento.
+       Mesma correção que já existia no app das crianças.
+    ============================================================ */
+    let _pushUltimoErroMestre = null;
+
+    async function registrarTokenFCMMestre(silencioso) {
       try {
-        if (!('serviceWorker' in navigator) || !('Notification' in window)) {
-          toast('⚠️ Este navegador não suporta notificações.', 'error'); return;
+        if (!('serviceWorker' in navigator)) throw new Error('Este navegador não suporta Service Worker.');
+        if (!('Notification' in window))     throw new Error('Este navegador não suporta notificações.');
+        if (!('PushManager' in window))      throw new Error('Este navegador não suporta Push (no iPhone: instale o app na Tela de Início).');
+        if (Notification.permission !== 'granted') {
+          if (silencioso) return null;
+          throw new Error('Permissão de notificação não concedida.');
         }
-        const permissao = await Notification.requestPermission();
-        if (permissao !== 'granted') { toast('🔔 Notificações não autorizadas.', 'error'); return; }
+        if (firebase.messaging && firebase.messaging.isSupported) {
+          const ok = await firebase.messaging.isSupported();
+          if (!ok) throw new Error('FCM não é suportado neste navegador/dispositivo.');
+        }
+
         const reg = await navigator.serviceWorker.ready;
         const messaging = firebase.messaging();
         const token = await messaging.getToken({ vapidKey: VAPID_PUBLIC_KEY, serviceWorkerRegistration: reg });
-        if (token) {
-          await db.ref('fcm_tokens/_mestre').push({
-            token: token, criadoEm: new Date().toISOString(), ua: navigator.userAgent.substring(0, 120)
-          });
-          toast('🔔 Notificações ativadas neste celular!', 'success');
-          const btn = document.getElementById('btn-ativar-push-mestre');
-          if (btn) btn.textContent = '🔔 Notificações ativadas';
+        if (!token) throw new Error('getToken() retornou vazio (verifique a chave VAPID no Firebase Console).');
+
+        let deviceId = localStorage.getItem('fcm_device_id_mestre');
+        if (!deviceId) {
+          deviceId = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+          localStorage.setItem('fcm_device_id_mestre', deviceId);
         }
+
+        await db.ref('fcm_tokens/_mestre/' + deviceId).set({
+          token: token, criadoEm: new Date().toISOString(), ua: navigator.userAgent.substring(0, 120)
+        });
+        _pushUltimoErroMestre = null;
+        return token;
       } catch (e) {
-        toast('⚠️ Não foi possível ativar: ' + e.message, 'error');
+        _pushUltimoErroMestre = (e && e.message) ? e.message : String(e);
+        console.error('registrarTokenFCMMestre:', e);
+        if (!silencioso) throw e;
+        return null;
       }
     }
+
+    async function ativarNotificacoesPushMestre() {
+      const btn = document.getElementById('btn-ativar-push-mestre');
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Ativando...'; }
+      try {
+        const permissao = await Notification.requestPermission();
+        if (permissao !== 'granted') {
+          throw new Error('Permissão negada. Autorize notificações para este site nas Configurações do aparelho.');
+        }
+        await registrarTokenFCMMestre(false);
+        if (btn) btn.textContent = '🔔 Notificações ativadas';
+        toast('🔔 Notificações ativadas neste celular!', 'success');
+      } catch (e) {
+        // Nunca dizer "ativadas" quando falhou — foi o que escondeu o bug antes.
+        if (btn) btn.textContent = '🔔 Ativar Notificações no Celular';
+        toast('⚠️ Não foi possível ativar: ' + ((e && e.message) ? e.message : e), 'error');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    /* Notificação chegando com o PAINEL ABERTO: o FCM não mostra nada
+       nesse caso, então avisamos dentro do próprio app. */
+    try {
+      if (firebase.messaging && firebase.messaging.isSupported) {
+        firebase.messaging.isSupported().then(ok => {
+          if (!ok) return;
+          firebase.messaging().onMessage(payload => {
+            const t = payload?.notification?.title || 'Minutinhos';
+            const b = payload?.notification?.body || '';
+            toast('🔔 ' + t + (b ? ' — ' + b : ''), 'success');
+            if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
+          });
+        }).catch(() => {});
+      }
+    } catch (e) { /* messaging indisponível neste navegador */ }
 
     /* ── TOAST ── */
     function toast(msg, tipo) {
@@ -1097,7 +1162,7 @@
     const nomeEmail = (usuarios, email) => Object.values(usuarios).find(u=>u.email===email)?.nome || email;
 
     /* ── ESTADO GLOBAL ── */
-    const APP_VERSAO = 'v16 · Auditoria';
+    const APP_VERSAO = 'v17 · Push Mestre';
     let _usuarios = {}, _trans = [], _config = {};
     document.addEventListener('DOMContentLoaded', () => {
       const el = document.getElementById('app-versao');
@@ -2307,6 +2372,7 @@
     }
 
     let _msgListenerIniciado = false;
+    const _msgBootTs = Date.now();
     function _iniciarListenerMensagensMestre() {
       if (_msgListenerIniciado) return;
       _msgListenerIniciado = true;
@@ -2328,6 +2394,14 @@
             if (!pagMsg?.classList.contains('active') || conversaAtualKey !== gk) {
               _msgNaoLidas[gk] = (_msgNaoLidas[gk]||0)+1;
               _atualizarBadgeMsg();
+              // Aviso ativo: só o badge passava despercebido em outras abas do painel.
+              // O guard de timestamp evita disparar para o histórico na primeira carga.
+              const ts = new Date(msg.timestamp || 0).getTime();
+              if (ts >= _msgBootTs) {
+                const nome = nomeEmail(_usuarios, (gk || '').replace(/_/g, '.'));
+                toast('💬 ' + nome + ': ' + String(msg.texto || '').substring(0, 60), 'success');
+                if (navigator.vibrate) navigator.vibrate([40, 30, 40]);
+              }
             }
           }
           if (pagMsg?.classList.contains('active') && !conversaAtualKey) renderContactListMestre();
