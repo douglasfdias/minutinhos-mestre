@@ -1519,33 +1519,12 @@
               <option value="true"  ${u.is_mestre ?'selected':''}>Mestre</option>
             </select>
           </div>
-          <div class="field-row"><span class="field-lbl">📱 Aparelho</span>
-            <span style="font-size:0.78rem;${u.device_uid ? 'color:#2e7d32' : 'color:#999'}">
-              ${u.device_uid ? '🔒 Vinculado' : '🔓 Livre (próximo aparelho a abrir se vincula)'}
-            </span>
-          </div>
           <div class="btn-row">
             <button class="btn btn-save"  onclick="salvarUsuario('${key}')">💾 Salvar</button>
             <button class="btn btn-reset" onclick="resetarUsuario('${key}','${u.nome}')">🔄 Resetar</button>
             <button class="btn btn-del"   onclick="deletarUsuario('${key}','${u.nome}')">🗑 Apagar</button>
           </div>
-          ${u.device_uid ? `<div class="btn-row">
-            <button class="btn btn-warn btn-wide" onclick="liberarDispositivo('${key}','${u.nome}')">🔓 Liberar Aparelho</button>
-          </div>` : ''}
         </div>`).join('');
-    }
-
-    // Solta o vínculo device_uid de um Guardião. Use quando a família
-    // trocou de celular/tablet, resetou o navegador, ou pra permitir que
-    // o Guardião abra o app num aparelho novo. O próximo aparelho que
-    // escolher esse Guardião se vincula automaticamente de novo.
-    async function liberarDispositivo(key, nome) {
-      if (!confirm(`Liberar o vínculo de aparelho de ${nome}?\n\nO app dele vai parar de funcionar no aparelho antigo (chat, vouchers e missões) até que ele abra novamente e revincule — o que acontece automaticamente no próximo aparelho que ele usar.`)) return;
-      try {
-        await db.ref('usuarios/'+key+'/device_uid').remove();
-        toast(`🔓 Vínculo de aparelho de ${nome} liberado.`, 'success');
-        await carregarDados();
-      } catch(e) { toast('❌ '+e.message, 'error'); }
     }
 
     async function salvarUsuario(key) {
