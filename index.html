@@ -180,12 +180,16 @@
     .gc-bar-fill.ok { background:linear-gradient(90deg,#27ae60,#2ecc71); }
 
     /* ── PENDENTES ── */
-    .pendente-item { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f0f0f0; padding:10px 0; }
+    .pendente-item { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; border-bottom:1px solid #f0f0f0; padding:10px 0; }
     .pendente-item:last-child { border-bottom:none; }
     .p-info { flex:1; }
     .p-nome { font-weight:700; color:var(--blue); font-size:0.9rem; }
     .p-det  { font-size:0.78rem; color:#777; margin-top:2px; }
     .p-btns { display:flex; gap:6px; margin-left:8px; }
+    .p-edit { flex-basis:100%; display:none; align-items:center; gap:8px; flex-wrap:wrap; margin-top:8px; padding:8px 10px; background:#fff8e6; border:1px solid #f5d98b; border-radius:9px; }
+    .p-edit.open { display:flex; }
+    .p-edit input[type="number"] { width:84px; margin:0; padding:8px; text-align:center; }
+    .p-edit .p-edit-hint { font-size:0.72rem; color:#a67c00; flex:1; min-width:120px; }
     .badge { background:var(--red); color:white; border-radius:20px; padding:2px 8px; font-size:0.72rem; font-weight:800; }
 
     /* ── HISTÓRICO ── */
@@ -521,8 +525,13 @@
       </div>
       <div class="card">
         <h3>📖 Aprovações de Leitura <span class="badge" id="badge-pend" style="display:none">0</span></h3>
-        <p class="card-hint">Leituras aguardando sua decisão, Mestre.</p>
+        <p class="card-hint">Leituras aguardando sua decisão, Mestre. Toque em ✎ para ajustar os minutos antes de aprovar.</p>
         <div id="lista-pendentes"><div class="empty-msg">Toque em Atualizar.</div></div>
+      </div>
+      <div class="card">
+        <h3>🦉 Aprovações de Duolingo <span class="badge" id="badge-pend-duo" style="display:none">0</span></h3>
+        <p class="card-hint">Sessões registradas pelos Guardiões. Toque em ✎ para ajustar os minutos antes de aprovar.</p>
+        <div id="lista-pendentes-duo"><div class="empty-msg">Toque em Atualizar.</div></div>
       </div>
       <div class="card">
         <h3>📜 Vouchers Pendentes <span class="badge" id="badge-vouchers-pend" style="display:none">0</span></h3>
@@ -554,6 +563,16 @@
         <label style="font-size:0.78rem;font-weight:700;color:#555;margin-top:6px;display:block">📅 Data da atividade</label>
         <input type="date" id="data-duo">
         <button class="btn btn-ok btn-wide" onclick="addDuo()">⚡ Creditar Energia</button>
+      </div>
+      <div class="card">
+        <h3>📖 Creditar Leitura</h3>
+        <p class="card-hint">Registra direto, já aprovada. Use a data correta para não quebrar a sequência!</p>
+        <select id="sel-leitura"><option value="">Selecione o Guardião...</option></select>
+        <input type="text" id="livro-leitura" placeholder="Nome do livro (opcional)">
+        <input type="number" id="val-leitura" placeholder="Minutos lidos" min="1">
+        <label style="font-size:0.78rem;font-weight:700;color:#555;margin-top:6px;display:block">📅 Data da leitura</label>
+        <input type="date" id="data-leitura">
+        <button class="btn btn-ok btn-wide" onclick="addLeitura()">📖 Creditar Energia</button>
       </div>
       <div class="card">
         <h3>💎 Debitar Cristais</h3>
@@ -1097,7 +1116,7 @@
     const nomeEmail = (usuarios, email) => Object.values(usuarios).find(u=>u.email===email)?.nome || email;
 
     /* ── ESTADO GLOBAL ── */
-    const APP_VERSAO = 'v16 · Auditoria';
+    const APP_VERSAO = 'v17 · Duolingo pela criança';
     let _usuarios = {}, _trans = [], _config = {};
     document.addEventListener('DOMContentLoaded', () => {
       const el = document.getElementById('app-versao');
@@ -1107,8 +1126,10 @@
     /* ── CARREGAR DADOS ── */
     function iniciarCamposData() {
       const hoje = new Date().toISOString().substring(0,10);
-      const el = document.getElementById('data-duo');
-      if (el && !el.value) el.value = hoje;
+      ['data-duo','data-leitura'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && !el.value) el.value = hoje;
+      });
     }
 
     async function carregarDados() {
@@ -1138,7 +1159,7 @@
           return { nome:u.nome, email:u.email, avatarUrl:u.avatar_url, energia:Math.floor(Number(u.saldo_energia)), cristais:Math.floor(Number(u.saldo_cristais)), xp, nivel:Math.floor(xp/500)+1, xpN:xp%500, lS, dS, streak:calcStreak(_trans,u.email), ua:ua?ua.data:null };
         });
 
-        const pendentes = _trans.filter(t=>t.status==='Pendente').map(t=>({key:t._key,email:t.email,nome:nomeEmail(_usuarios,t.email),det:t.detalhes,qtd:Number(t.quantidade)}));
+        const pendentes = _trans.filter(t=>t.status==='Pendente').map(t=>({key:t._key,email:t.email,nome:nomeEmail(_usuarios,t.email),det:t.detalhes,qtd:Number(t.quantidade),tipo:t.tipo,data:t.data}));
         const historico = _trans.filter(t=>t.tipo).sort((a,b)=>new Date(b.data)-new Date(a.data)).slice(0,15);
 
         renderDash(guardioes, metaL, metaD);
@@ -1173,16 +1194,52 @@
       }).join('');
     }
 
-    /* ── PENDENTES ── */
+    /* ── PENDENTES (Leitura e Duolingo) ── */
+    function _minimoPend(tipo) {
+      return tipo === 'Duolingo'
+        ? (Number(_config.min_duolingo_diario) || 7)
+        : (Number(_config.min_leitura_diaria)  || 15);
+    }
+
     function renderPend(ps) {
-      const d=document.getElementById('lista-pendentes'), b=document.getElementById('badge-pend');
-      if (!ps.length) { b.style.display='none'; d.innerHTML='<div class="empty-msg" style="color:#27ae60">✅ Nenhuma missão aguardando!</div>'; return; }
+      _renderListaPend(ps.filter(p => p.tipo !== 'Duolingo'), 'lista-pendentes',     'badge-pend',     '📖', '✅ Nenhuma leitura aguardando!');
+      _renderListaPend(ps.filter(p => p.tipo === 'Duolingo'), 'lista-pendentes-duo', 'badge-pend-duo', '🦉', '✅ Nenhum Duolingo aguardando!');
+    }
+
+    function _renderListaPend(ps, listaId, badgeId, emoji, vazioMsg) {
+      const d = document.getElementById(listaId), b = document.getElementById(badgeId);
+      if (!d || !b) return;
+      if (!ps.length) { b.style.display='none'; d.innerHTML='<div class="empty-msg" style="color:#27ae60">'+vazioMsg+'</div>'; return; }
       b.style.display='inline'; b.textContent=ps.length; d.innerHTML='';
+      ps.sort((x,y) => new Date(x.data) - new Date(y.data));   // mais antigas primeiro
       ps.forEach(p => {
-        const el=document.createElement('div'); el.className='pendente-item'; el.id='pend-'+p.key;
-        el.innerHTML=`<div class="p-info"><div class="p-nome">${p.nome}</div><div class="p-det">📖 ${p.det} · ${p.qtd} min</div></div><div class="p-btns"><button class="btn btn-ok">✓</button><button class="btn btn-del">✗</button></div>`;
-        el.querySelectorAll('button')[0].onclick = () => decidir(p.key, p.qtd, p.email, 'APROVAR');
-        el.querySelectorAll('button')[1].onclick = () => decidir(p.key, 0,     p.email, 'REPROVAR');
+        const minimo = _minimoPend(p.tipo);
+        const el = document.createElement('div'); el.className='pendente-item'; el.id='pend-'+p.key;
+        const quando = p.data ? ' · '+fmtData(p.data) : '';
+        el.innerHTML = `
+          <div class="p-info"><div class="p-nome">${_escapeM(p.nome)}</div><div class="p-det">${emoji} ${_escapeM(p.det||p.tipo||'')} · <b>${p.qtd} min</b>${quando}</div></div>
+          <div class="p-btns">
+            <button class="btn btn-ok" data-a="ok" title="Aprovar" aria-label="Aprovar">✓</button>
+            <button class="btn btn-warn" data-a="edit" title="Editar minutos" aria-label="Editar">✎</button>
+            <button class="btn btn-del" data-a="no" title="Reprovar" aria-label="Reprovar">✗</button>
+          </div>
+          <div class="p-edit">
+            <input type="number" min="${minimo}" step="1" value="${p.qtd}" inputmode="numeric" aria-label="Minutos aprovados">
+            <span class="p-edit-hint">mín. ${minimo} min por registro · pediu ${p.qtd}</span>
+            <button class="btn btn-ok" data-a="save">✓ Aprovar</button>
+            <button class="btn" style="background:#ddd;color:#555" data-a="cancel">Cancelar</button>
+          </div>`;
+        const q = a => el.querySelector(`[data-a="${a}"]`);
+        const painel = el.querySelector('.p-edit'), campo = painel.querySelector('input');
+        q('ok').onclick     = () => decidir(p.key, 'APROVAR');
+        q('no').onclick     = () => decidir(p.key, 'REPROVAR');
+        q('edit').onclick   = () => { painel.classList.toggle('open'); if (painel.classList.contains('open')) { campo.focus(); campo.select(); } };
+        q('cancel').onclick = () => { painel.classList.remove('open'); campo.value = p.qtd; };
+        q('save').onclick   = () => {
+          const v = Math.floor(Number(campo.value));
+          if (!Number.isFinite(v) || v < minimo) { toast(`⚠️ Mínimo de ${minimo} minutos por registro.`,'error'); campo.focus(); return; }
+          decidir(p.key, 'APROVAR', v);
+        };
         d.appendChild(el);
       });
     }
@@ -1200,7 +1257,7 @@
     }
 
     function renderSels(gs) {
-      ['sel-duo','sel-gasto'].forEach(id => {
+      ['sel-duo','sel-leitura','sel-gasto'].forEach(id => {
         const s=document.getElementById(id);
         s.innerHTML='<option value="">Selecione o Guardião...</option>';
         gs.forEach(g => s.innerHTML += `<option value="${g.email}">${g.nome}</option>`);
@@ -1423,28 +1480,77 @@
     }
 
     /* ── DECIDIR ── */
-    async function decidir(key, qtd, emailH, acao) {
+    // acao: 'APROVAR' | 'REPROVAR'.  novaQtd (opcional): minutos editados pelo Mestre ao aprovar.
+    async function decidir(key, acao, novaQtd) {
       const row=document.getElementById('pend-'+key);
-      if (row) row.querySelectorAll('button').forEach(b=>b.disabled=true);
+      if (row) row.querySelectorAll('button, input').forEach(b=>b.disabled=true);
+      const reabilitar = () => { if (row) row.querySelectorAll('button, input').forEach(b=>b.disabled=false); };
       try {
-        const tRef=db.ref('transacoes/'+key), tSnap=await tRef.get(), t=tSnap.val(), em=t.email;
+        const tRef=db.ref('transacoes/'+key), tSnap=await tRef.get(), t=tSnap.val();
+        if (!t) throw new Error('Registro não encontrado.');
+        if (t.status !== 'Pendente') {                       // evita crédito duplo (toque duplo / lista velha)
+          toast('⚠️ Esse registro já foi decidido. Atualizando...','error');
+          carregarDados(); return;
+        }
+        const em    = t.email;
+        const ehDuo = t.tipo === 'Duolingo';
+        const rotulo= ehDuo ? 'Duolingo' : 'Leitura';
+        const icone = ehDuo ? '🦉' : '📖';
+        const nomeItem = ehDuo ? 'seu Duolingo' : `"${t.detalhes}"`;
+        const orig  = Number(t.quantidade);
+
         if (acao==='APROVAR') {
+          const final = (novaQtd == null) ? orig : Math.floor(Number(novaQtd));
+          const editado = final !== orig;
+          const minimo = _minimoPend(t.tipo);
+          if (editado && (!Number.isFinite(final) || final < minimo)) {   // piso do valor editado
+            throw new Error(`Mínimo de ${minimo} minutos por registro.`);
+          }
           const uSnap=await db.ref('usuarios/'+san(em)).get(), u=uSnap.val();
-          await db.ref('usuarios/'+san(em)).update({saldo_energia:Number(u.saldo_energia)+Number(t.quantidade)});
-          await tRef.update({status:'Aprovado'});
-          await db.ref('notificacoes/'+san(em)).push({tipo:'leitura_aprovada',titulo:'📖 Leitura Aprovada!',mensagem:`O Mestre aprovou "${t.detalhes}"! +${t.quantidade} ⚡ creditados!`,quantidade:Number(t.quantidade),timestamp:new Date().toISOString()});
-          enviarPush(san(em), '📖 Leitura Aprovada!', `+${t.quantidade} ⚡ por "${t.detalhes}"!`, 'leitura_aprovada', { quantidade: t.quantidade });
-          toast('✅ Leitura aprovada!','success');
+          await db.ref('usuarios/'+san(em)).update({saldo_energia:Number(u.saldo_energia)+final});
+          const upd = { status:'Aprovado' };
+          if (editado) { upd.quantidade = final; upd.quantidade_solicitada = orig; }
+          await tRef.update(upd);
+
+          let msg, pushMsg;
+          if (!editado) {
+            msg     = ehDuo ? `O Mestre aprovou seu Duolingo! +${final} ⚡ creditados!`
+                            : `O Mestre aprovou ${nomeItem}! +${final} ⚡ creditados!`;
+            pushMsg = ehDuo ? `+${final} ⚡ pelo seu Duolingo!` : `+${final} ⚡ por ${nomeItem}!`;
+          } else if (final < orig) {
+            msg     = ehDuo ? `O Mestre aprovou ${final} dos ${orig} minutos de Duolingo que você registrou! +${final} ⚡ creditados!`
+                            : `O Mestre aprovou ${final} dos ${orig} minutos que você registrou em ${nomeItem}! +${final} ⚡ creditados!`;
+            pushMsg = `Aprovou ${final} dos ${orig} min que você registrou. +${final} ⚡`;
+          } else {
+            msg     = ehDuo ? `O Mestre aprovou ${final} minutos de Duolingo (você tinha registrado ${orig})! +${final} ⚡ creditados!`
+                            : `O Mestre aprovou ${final} minutos em ${nomeItem} (você tinha registrado ${orig})! +${final} ⚡ creditados!`;
+            pushMsg = `Aprovou ${final} min (você registrou ${orig}). +${final} ⚡`;
+          }
+          const tipoNotif = ehDuo ? 'duolingo_aprovado' : 'leitura_aprovada';
+          const titulo    = `${icone} ${rotulo} Aprovad${ehDuo?'o':'a'}!`;
+          await db.ref('notificacoes/'+san(em)).push({tipo:tipoNotif,titulo,mensagem:msg,quantidade:final,timestamp:new Date().toISOString()});
+          enviarPush(san(em), titulo, pushMsg, tipoNotif, { quantidade: final });
+          toast(editado ? `✅ ${rotulo} aprovad${ehDuo?'o':'a'}: ${final} de ${orig} min.` : `✅ ${rotulo} aprovad${ehDuo?'o':'a'}!`,'success');
         } else {
           await tRef.update({status:'Reprovado'});
-          await db.ref('notificacoes/'+san(em)).push({tipo:'leitura_reprovada',titulo:'📖 Leitura Reprovada',mensagem:`O Mestre não aprovou "${t.detalhes}" desta vez. Tente novamente!`,quantidade:0,timestamp:new Date().toISOString()});
-          enviarPush(san(em), '📖 Leitura Reprovada', `"${t.detalhes}" não foi aprovada desta vez.`, 'leitura_reprovada', {});
-          toast('❌ Leitura reprovada.','error');
+          const tipoNotif = ehDuo ? 'duolingo_reprovado' : 'leitura_reprovada';
+          const titulo    = `${icone} ${rotulo} Reprovad${ehDuo?'o':'a'}`;
+          const msg       = ehDuo ? `O Mestre não aprovou seu registro de ${orig} min de Duolingo desta vez. Converse com ele se tiver dúvidas!`
+                                  : `O Mestre não aprovou ${nomeItem} desta vez. Tente novamente!`;
+          await db.ref('notificacoes/'+san(em)).push({tipo:tipoNotif,titulo,mensagem:msg,quantidade:0,timestamp:new Date().toISOString()});
+          enviarPush(san(em), titulo, ehDuo ? 'Seu registro de Duolingo não foi aprovado desta vez.' : `${nomeItem} não foi aprovada desta vez.`, tipoNotif, {});
+          toast(`❌ ${rotulo} reprovad${ehDuo?'o':'a'}.`,'error');
         }
         if (row) row.remove();
-        const pd=document.getElementById('lista-pendentes');
-        if (pd && !pd.querySelector('.pendente-item')) { document.getElementById('badge-pend').style.display='none'; pd.innerHTML='<div class="empty-msg" style="color:#27ae60">✅ Nenhuma missão aguardando!</div>'; }
-      } catch(e) { toast('❌ '+e.message,'error'); if(row) row.querySelectorAll('button').forEach(b=>b.disabled=false); }
+        // atualiza contadores / esvazia o card se acabou a fila
+        [['lista-pendentes','badge-pend','✅ Nenhuma leitura aguardando!'],['lista-pendentes-duo','badge-pend-duo','✅ Nenhum Duolingo aguardando!']].forEach(([lid,bid,vz]) => {
+          const pd=document.getElementById(lid), bd=document.getElementById(bid);
+          if (!pd || !bd) return;
+          const n = pd.querySelectorAll('.pendente-item').length;
+          if (n) { bd.textContent=n; } else { bd.style.display='none'; pd.innerHTML='<div class="empty-msg" style="color:#27ae60">'+vz+'</div>'; }
+        });
+        _atualizarBadgesPendentes();
+      } catch(e) { toast('❌ '+e.message,'error'); reabilitar(); }
     }
 
     /* ── DUOLINGO ── */
@@ -1455,7 +1561,7 @@
       const dataAferida = dataEl.value || new Date().toISOString().substring(0,10);
       if (!email) { toast('⚠️ Selecione um Guardião!','error'); return; }
       if (!min||min<1) { toast('⚠️ Informe os minutos.','error'); return; }
-      const minDuo = Number(_config.min_duolingo_diario) || 15;
+      const minDuo = Number(_config.min_duolingo_diario) || 7;
       if (min < minDuo) { toast(`⚠️ Mínimo de ${minDuo} minutos para registrar Duolingo.`,'error'); return; }
       try {
         const snap=await db.ref('usuarios/'+san(email)).get(), u=snap.val();
@@ -1474,6 +1580,40 @@
         enviarPush(san(email), '🦉 Duolingo Creditado!', `+${min} min de Duolingo (${dataAferida})! +${min} ⚡`, 'duolingo', { quantidade: min });
         toast(`✅ +${min} min para ${u.nome} (${dataAferida})!`,'success');
         document.getElementById('val-duo').value='';
+        dataEl.value = new Date().toISOString().substring(0,10);
+      } catch(e) { toast('❌ '+e.message,'error'); }
+    }
+
+    /* ── LEITURA lançada direto pelo Mestre (já aprovada) ── */
+    async function addLeitura() {
+      const email = document.getElementById('sel-leitura').value;
+      const livro = document.getElementById('livro-leitura').value.trim();
+      const min   = parseInt(document.getElementById('val-leitura').value);
+      const dataEl = document.getElementById('data-leitura');
+      const dataAferida = dataEl.value || new Date().toISOString().substring(0,10);
+      if (!email) { toast('⚠️ Selecione um Guardião!','error'); return; }
+      if (!min||min<1) { toast('⚠️ Informe os minutos.','error'); return; }
+      const minLeit = Number(_config.min_leitura_diaria) || 15;
+      if (min < minLeit) { toast(`⚠️ Mínimo de ${minLeit} minutos para registrar leitura.`,'error'); return; }
+      const dBR = dataAferida.split('-').reverse().join('/');
+      try {
+        const snap=await db.ref('usuarios/'+san(email)).get(), u=snap.val();
+        await db.ref('usuarios/'+san(email)).update({saldo_energia:Number(u.saldo_energia)+min});
+        await db.ref('transacoes').push({
+          data: new Date().toISOString(),
+          data_aferida: dataAferida + 'T12:00:00',
+          email, tipo:'Leitura', quantidade:min,
+          detalhes: (livro ? livro : 'Leitura') + ` (Mestre) — ${dataAferida}`, status:'Aprovado'
+        });
+        await db.ref('notificacoes/'+san(email)).push({
+          tipo:'leitura_aprovada', titulo:'📖 Leitura Creditada!',
+          mensagem:`O Mestre registrou +${min} min de leitura (${dBR})! +${min} ⚡ de Energia!`,
+          quantidade:min, timestamp:new Date().toISOString()
+        });
+        enviarPush(san(email), '📖 Leitura Creditada!', `+${min} min de leitura (${dBR})! +${min} ⚡`, 'leitura_aprovada', { quantidade: min });
+        toast(`✅ +${min} min de leitura para ${u.nome} (${dBR})!`,'success');
+        document.getElementById('val-leitura').value='';
+        document.getElementById('livro-leitura').value='';
         dataEl.value = new Date().toISOString().substring(0,10);
       } catch(e) { toast('❌ '+e.message,'error'); }
     }
@@ -1697,7 +1837,7 @@
       document.getElementById('cfg-bonus-7d').value       = _config.bonus_leitura_7d       || 40;
       document.getElementById('cfg-bonus-14d').value      = _config.bonus_leitura_14d      || 60;
       document.getElementById('cfg-bonus-30d').value      = _config.bonus_leitura_30d      || 90;
-      document.getElementById('cfg-min-duo').value        = _config.min_duolingo_diario    || 15;
+      document.getElementById('cfg-min-duo').value        = _config.min_duolingo_diario    || 7;
       document.getElementById('cfg-meta-duo-dias').value  = _config.meta_duo_semanal_dias  || 7;
       document.getElementById('cfg-recompensa-duo').value = _config.recompensa_duo_semanal || 20;
       document.getElementById('cfg-limite-tela').value    = _config.limite_tela_diario     || 120;
@@ -1818,7 +1958,7 @@
                                 ? { moeda:'💎', sinal:1, q }
                                 : { moeda:'⚡', sinal:1, q };
         case 'Leitura':  return { moeda:'⚡', sinal: t.status==='Aprovado' ? 1 : 0, q };
-        case 'Duolingo': return { moeda:'⚡', sinal: 1, q };
+        case 'Duolingo': return { moeda:'⚡', sinal: t.status==='Aprovado' ? 1 : 0, q };   // Pendente/Reprovado não creditou energia
         default:         return { moeda:'',  sinal: 0, q };
       }
     }
@@ -2144,10 +2284,11 @@
     /* ── ATUALIZAR BADGES DE PENDENTES ── */
     function _atualizarBadgesPendentes() {
       const leituras = document.getElementById('badge-pend');
+      const duolingo = document.getElementById('badge-pend-duo');
       const vouchers = document.getElementById('badge-vouchers-pend');
       const missoes  = document.getElementById('badge-missoes');
       let total = 0;
-      [leituras,vouchers,missoes].forEach(b=>{ if(b&&b.style.display!=='none') total+=parseInt(b.textContent||0)||0; });
+      [leituras,duolingo,vouchers,missoes].forEach(b=>{ if(b&&b.style.display!=='none') total+=parseInt(b.textContent||0)||0; });
       const nb = document.getElementById('nav-badge-all');
       if(nb){ if(total>0){nb.textContent=total;nb.style.display='block';}else{nb.style.display='none';} }
     }
