@@ -290,6 +290,8 @@
     .bn-add { background:none; border:1px dashed #bbb; color:#666; border-radius:8px; padding:7px; width:100%; font-size:0.8rem; font-weight:700; cursor:pointer; margin-top:4px; }
     .bn-desde { font-size:0.7rem; color:#2980b9; margin-top:6px; }
     .bn-aviso { font-size:0.7rem; color:#e67e22; margin-top:4px; }
+    .bn-mais { border:1px solid #bbb; background:#fff; border-radius:8px; width:30px; height:30px; font-weight:900; font-size:1rem; cursor:pointer; padding:0; }
+    .bn-escudo { padding-top:0; border-bottom:1px dashed #e4e4e4; margin-bottom:4px; }
 
 
     /* ══ AUDITORIA ══ */
@@ -863,6 +865,11 @@
           <p class="card-hint">Defina os bônus por comprometimento. <b>Regras novas só valem a partir do dia em que você as ativa</b>: ninguém recebe pelo passado. Os valores devem crescer junto com o esforço.</p>
           <div id="bonus-editor"><div class="empty-msg">Toque em Atualizar.</div></div>
           <button class="btn btn-save btn-wide" onclick="salvarBonus()">💾 Salvar Bônus</button>
+          <div class="bn-bloco" style="margin-top:16px">
+            <div class="bn-head"><span class="bn-titulo">🛡️ Escudos dos Guardiões</span></div>
+            <div class="bn-sub">Saldo de cada Guardião. O <b>+</b> dá um escudo de presente (vale também para testar). Escudos de presente ignoram o limite do baú.</div>
+            <div id="escudos-mestre"><div class="empty-msg">Toque em Atualizar.</div></div>
+          </div>
         </div>
         <div class="tab-panel" id="tab-simulador">
           <p class="card-hint">Mostra o resultado de uma mudança em cima dos dados reais, lado a lado (antes e depois). <b>Nada é gravado</b> até você confirmar.</p>
@@ -1201,11 +1208,12 @@
     function calcStreak(trans, email) {
       const minDiario = Number(_config.min_leitura_diaria) || 15;
       const dias = new Set(trans.filter(t => t.email===email && (t.status==='Aprovado' || t.status==='Pendente') && t.tipo==='Leitura' && Number(t.quantidade) >= minDiario).map(dataEstudoM));
+      const prot = new Set(Object.values(((_inventario[san(email)] || {}).usos) || {}).filter(u => u && u.item === 'protetor_leitura').map(u => u.dia));
       let s = 0; const hoje = new Date();
       for (let i=0; i<365; i++) {
         const d = new Date(hoje); d.setDate(hoje.getDate()-i);
         const str = diaLocal(d);
-        if (dias.has(str)) s++; else if (i>0) break;
+        if (dias.has(str)) s++; else if (i>0 && prot.has(str)) continue; else if (i>0) break;   // dia protegido por escudo
       }
       return s;
     }
@@ -1214,8 +1222,8 @@
     const nomeEmail = (usuarios, email) => Object.values(usuarios).find(u=>u.email===email)?.nome || email;
 
     /* ── ESTADO GLOBAL ── */
-    const APP_VERSAO = 'v19 · Bônus';
-    let _usuarios = {}, _trans = [], _config = {};
+    const APP_VERSAO = 'v20 · Escudos';
+    let _usuarios = {}, _trans = [], _config = {}, _inventario = {};
     document.addEventListener('DOMContentLoaded', () => {
       const el = document.getElementById('app-versao');
       if (el) el.textContent = APP_VERSAO;
@@ -1234,11 +1242,13 @@
       iniciarCamposData();
       document.querySelectorAll('.btn-refresh-sm').forEach(b=>{b.disabled=true;b.textContent='⏳';});
       try {
-        const [uS, tS, cS] = await Promise.all([
+        const [uS, tS, cS, iS] = await Promise.all([
           db.ref('usuarios').get(),
           db.ref('transacoes').get(),
-          db.ref('config').get()
+          db.ref('config').get(),
+          db.ref('inventario').get().catch(() => null)   // regra ainda não publicada: segue sem escudos
         ]);
+        _inventario = iS && iS.exists() ? iS.val() : {};
         _usuarios = uS.exists() ? uS.val() : {};
         _trans    = tS.exists() ? Object.entries(tS.val()).map(([k,v]) => ({...v, _key:k})).filter(t=>t.email) : [];
         _config   = cS.exists() ? cS.val() : {};
@@ -2118,7 +2128,7 @@
         if (!raw || typeof raw !== 'object') return { ativo: ativoPadrao, moeda: 'energia', desde: '', marcos: marcosPadrao };
         return {
           ativo: !!raw.ativo, moeda: moeda(raw.moeda), desde: raw.desde || '',
-          marcos: _bnLista(raw.marcos).map(m => ({ dias: Number(m.dias) || 0, valor: Number(m.valor) || 0, desde: m.desde || '' }))
+          marcos: _bnLista(raw.marcos).map(m => ({ dias: Number(m.dias) || 0, valor: Number(m.valor) || 0, desde: m.desde || '', boosters: Math.max(0, Math.floor(Number(m.boosters)) || 0) }))
                     .filter(m => m.dias > 0).sort((a, c) => a.dias - c.dias)
         };
       };
@@ -2140,7 +2150,8 @@
         leitura:  { streak: streak(l.streak, true, legado), volume: volume(l.volume) },
         duolingo: { streak: streak(d.streak, false, []),    volume: volume(d.volume) },
         ranking:  { duelo: rk(r.duelo), torneio: rk(r.torneio) },
-        cabecas:  { dias: dias >= 1 ? dias : 7, premio: (premio !== undefined && premio !== null) ? Number(premio) || 0 : 20 }
+        cabecas:  { dias: dias >= 1 ? dias : 7, premio: (premio !== undefined && premio !== null) ? Number(premio) || 0 : 20 },
+        inventario: { limite: Math.min(5, Math.max(1, Math.floor(Number(b.inventario && b.inventario.limite)) || 2)) }
       };
     }
 
@@ -2154,6 +2165,48 @@
     function renderBonus() {
       _bonusEd = bnNormalizar(_config);
       bnDesenhar();
+      renderEscudosMestre();
+    }
+
+    // Saldo de escudos por Guardião (mesma conta do app: ganhos menos usos, e um uso num dia que depois virou dia de estudo não conta)
+    function escudosSaldo(email, tipo) {
+      const inv = _inventario[san(email)] || {};
+      const item = tipo === 'Leitura' ? 'protetor_leitura' : 'protetor_duolingo';
+      const min = tipo === 'Leitura' ? (Number(_config.min_leitura_diaria) || 15) : (Number(_config.min_duolingo_diario) || 7);
+      const soma = {};
+      _trans.forEach(t => {
+        if (t.email !== email || t.tipo !== tipo || (t.status !== 'Aprovado' && t.status !== 'Pendente')) return;
+        const d = dataEstudoM(t), q = Number(t.quantidade) || 0;
+        soma[d] = tipo === 'Leitura' ? Math.max(soma[d] || 0, q) : (soma[d] || 0) + q;
+      });
+      const g = Object.values(inv.ganhos || {}).filter(x => x && x.item === item && !x.descartado).length;
+      const u = Object.values(inv.usos || {}).filter(x => x && x.item === item && !((soma[x.dia] || 0) >= min)).length;
+      return Math.max(0, g - u);
+    }
+    function renderEscudosMestre() {
+      const box = document.getElementById('escudos-mestre');
+      if (!box) return;
+      const lista = Object.values(_usuarios).filter(u => u.email && !u.is_mestre);
+      if (!lista.length) { box.innerHTML = '<div class="empty-msg">Nenhum Guardião.</div>'; return; }
+      box.innerHTML = lista.map(u => `<div class="bn-linha">
+          <span class="bn-un" style="flex:1;color:#333;font-weight:700">${_bnEsc(u.nome || u.email)}</span>
+          <span class="bn-un">🔥 ${escudosSaldo(u.email, 'Leitura')}</span>
+          <button class="bn-mais" onclick="darEscudo('${_bnEsc(u.email)}','Leitura')">+</button>
+          <span class="bn-un">🦉 ${escudosSaldo(u.email, 'Duolingo')}</span>
+          <button class="bn-mais" onclick="darEscudo('${_bnEsc(u.email)}','Duolingo')">+</button>
+        </div>`).join('');
+    }
+    async function darEscudo(email, tipo) {
+      try {
+        const item = tipo === 'Leitura' ? 'protetor_leitura' : 'protetor_duolingo';
+        const id = 'mestre_' + Date.now().toString(36);
+        await db.ref('inventario/' + san(email) + '/ganhos/' + id).set({ item, origem: 'mestre', criado_em: new Date().toISOString() });
+        const inv = (_inventario[san(email)] = _inventario[san(email)] || {});
+        inv.ganhos = inv.ganhos || {};
+        inv.ganhos[id] = { item, origem: 'mestre' };
+        renderEscudosMestre();
+        toast('🛡️ Escudo entregue!', 'success');
+      } catch (e) { toast('❌ ' + e.message + ' (a regra de inventário já foi publicada?)', 'error'); }
     }
 
     function bnHtmlMoeda(mod, tipo, moeda) {
@@ -2183,11 +2236,13 @@
           <input class="bn-n" type="number" min="0" value="${_bnEsc(m.valor)}" placeholder="40" oninput="bnSetItem('${mod}','streak','marcos',${i},'valor',this.value)">
           <span class="bn-un">${sim}</span>
           <button class="trans-del" onclick="bnDel('${mod}','streak','marcos',${i})">🗑</button>
-        </div>`).join('') || '<div class="empty-msg" style="padding:8px 0">Nenhum marco.</div>';
+        </div>
+        <div class="bn-linha bn-escudo"><span class="bn-un" style="flex:1">🛡️ Escudos ganhos neste marco</span>
+          <input class="bn-n" type="number" min="0" max="5" value="${_bnEsc(m.boosters || 0)}" oninput="bnSetItem('${mod}','streak','marcos',${i},'boosters',this.value)"></div>`).join('') || '<div class="empty-msg" style="padding:8px 0">Nenhum marco.</div>';
       return `<div class="bn-bloco ${b.ativo?'':'bn-off'}">
         <div class="bn-head"><span class="bn-titulo">${tit}</span>
           <label class="bn-switch"><input type="checkbox" ${b.ativo?'checked':''} onchange="bnSet('${mod}','streak','ativo',this.checked)"> ativo</label></div>
-        <div class="bn-sub">Pago a cada marco batido, quando os dias já estão aprovados. Vale só quem estuda ${min} min ou mais por dia (mínimo em Config).</div>
+        <div class="bn-sub">Pago a cada marco batido, quando os dias já estão aprovados. Vale só quem estuda ${min} min ou mais por dia (mínimo em Config). Cada marco também pode dar escudos, que protegem a sequência de um dia perdido (0 = nenhum).</div>
         ${bnHtmlMoeda(mod, 'streak', b.moeda)}${linhas}
         <button class="bn-add" onclick="bnAdd('${mod}','streak')">➕ Marco</button>
         ${bnHtmlDesde(b, antes[mod].streak, false)}</div>`;
@@ -2238,7 +2293,13 @@
             <input class="bn-n" type="number" min="0" value="${_bnEsc(c.premio)}" oninput="bnSetCab('premio',this.value)"><span class="bn-un">💎</span></div>
         </div>` +
         linhaRank('duelo', '⚔ Prêmio do Duelo dos Guardiões (leitura)') +
-        linhaRank('torneio', '🦉 Prêmio do Torneio das Línguas (Duolingo)');
+        linhaRank('torneio', '🦉 Prêmio do Torneio das Línguas (Duolingo)') +
+        `<div class="bn-bloco">
+          <div class="bn-head"><span class="bn-titulo">🛡️ Baú de escudos</span></div>
+          <div class="bn-sub">Quantos escudos cada Guardião pode guardar, separado para leitura e Duolingo. Com o baú cheio, o escudo novo é descartado. O escudo se ativa sozinho no primeiro dia perdido, só protege sequências de 3 dias ou mais, e só entra se cobrir todos os dias perdidos.</div>
+          <div class="bn-linha"><span class="bn-un" style="flex:1">Limite por modalidade (1 a 5)</span>
+            <input class="bn-n" type="number" min="1" max="5" value="${_bnEsc(_bonusEd.inventario.limite)}" oninput="bnSetInv(this.value)"></div>
+        </div>`;
     }
 
     // Edição: mexer em números não redesenha (não perde o foco); ativar, trocar moeda, adicionar e apagar redesenham
@@ -2252,9 +2313,10 @@
       if (campo === 'ativo') bnDesenhar();
     }
     function bnSetCab(campo, valor) { _bonusEd.cabecas[campo] = valor; }
+    function bnSetInv(valor) { _bonusEd.inventario.limite = valor; }
     function bnAdd(mod, tipo) {
       const b = _bonusEd[mod][tipo];
-      if (tipo === 'streak') b.marcos.push({ dias: '', valor: '', desde: '' });
+      if (tipo === 'streak') b.marcos.push({ dias: '', valor: '', desde: '', boosters: 0 });
       else b.faixas.push({ id: 'f' + Date.now().toString(36), nome: '', minutos: '', valor: '' });
       bnDesenhar();
     }
@@ -2276,10 +2338,11 @@
 
           // ── streak ──
           const s = _bonusEd[mod].streak, ps = antes[mod].streak;
-          let marcos = s.marcos.map(m => ({ dias: num(m.dias), valor: num(m.valor), desde: m.desde || '' }));
+          let marcos = s.marcos.map(m => ({ dias: num(m.dias), valor: num(m.valor), desde: m.desde || '', boosters: (String(m.boosters == null ? '' : m.boosters).trim() === '' ? 0 : Number(m.boosters)) }));
           if (s.ativo) {
             if (!marcos.length) erros.push(`Streak de ${nomeMod}: adicione ao menos um marco ou desative.`);
             if (marcos.some(m => !Number.isInteger(m.dias) || m.dias < 1 || !(m.valor >= 0))) erros.push(`Streak de ${nomeMod}: preencha dias (inteiro) e valor em todos os marcos.`);
+            if (marcos.some(m => !Number.isInteger(m.boosters) || m.boosters < 0 || m.boosters > 5)) erros.push(`Streak de ${nomeMod}: escudos por marco de 0 a 5 (número inteiro).`);
             marcos.sort((a, c) => a.dias - c.dias);
             if (marcos.some((m, i) => i > 0 && m.dias === marcos[i - 1].dias)) erros.push(`Streak de ${nomeMod}: há dois marcos com os mesmos dias.`);
             else if (marcos.some((m, i) => i > 0 && !(m.valor > marcos[i - 1].valor))) erros.push(`Streak de ${nomeMod}: o valor precisa crescer a cada marco.`);
@@ -2292,6 +2355,7 @@
           if (desdeS) sOut.desde = desdeS;
           sOut.marcos = marcos.map(m => {
             const x = { dias: m.dias, valor: m.valor };
+            if (Number.isInteger(m.boosters) && m.boosters > 0) x.boosters = Math.min(5, m.boosters);
             // marco criado com a regra já ativa: só vale para sequências que o completarem daqui para frente
             const d = (s.ativo && ps.ativo && !diasAntes.has(m.dias)) ? hoje : m.desde;
             if (d) x.desde = d;
@@ -2328,6 +2392,11 @@
           if (desdeR) o.desde = desdeR;
           out.ranking[chave] = o;
         }
+
+        // ── baú de escudos ──
+        const lim = num(_bonusEd.inventario.limite);
+        if (!Number.isInteger(lim) || lim < 1 || lim > 5) erros.push('Baú de escudos: use um limite de 1 a 5.');
+        out.inventario = { limite: Number.isInteger(lim) ? Math.min(5, Math.max(1, lim)) : 2 };
 
         // ── cabeças ──
         const cabDias = num(_bonusEd.cabecas.dias), cabPremio = num(_bonusEd.cabecas.premio);
