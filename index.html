@@ -271,6 +271,26 @@
     .config-lbl { font-size:0.85rem; font-weight:700; color:#333; flex:1; }
     .config-row input { width:90px; flex-shrink:0; margin:0; padding:8px 10px; text-align:right; font-size:0.95rem; }
 
+    /* ══ ABA BÔNUS ══ */
+    .bn-bloco { border:1px solid #ececec; border-radius:10px; padding:10px 12px; margin-bottom:12px; background:#fafafa; }
+    .bn-bloco.bn-off { opacity:0.6; }
+    .bn-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:4px; }
+    .bn-titulo { font-size:0.86rem; font-weight:800; color:#333; }
+    .bn-switch { display:flex; align-items:center; gap:6px; font-size:0.78rem; font-weight:700; color:#555; cursor:pointer; }
+    .bn-switch input { width:18px; height:18px; margin:0; }
+    .bn-sub { font-size:0.72rem; color:#888; margin-bottom:6px; }
+    .bn-linha { display:flex; align-items:center; gap:6px; padding:4px 0; }
+    .bn-linha input { margin:0; padding:7px 6px; font-size:0.9rem; text-align:center; min-width:0; }
+    .bn-linha input.bn-n { width:62px; flex:0 0 62px; }
+    .bn-linha input.bn-nome { flex:1; text-align:left; }
+    .bn-un { font-size:0.74rem; color:#777; white-space:nowrap; }
+    .bn-seta { color:#bbb; font-size:0.85rem; }
+    .bn-moeda { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:6px 0; font-size:0.8rem; font-weight:700; color:#555; }
+    .bn-moeda select { margin:0; width:auto; padding:6px 8px; font-size:0.85rem; }
+    .bn-add { background:none; border:1px dashed #bbb; color:#666; border-radius:8px; padding:7px; width:100%; font-size:0.8rem; font-weight:700; cursor:pointer; margin-top:4px; }
+    .bn-desde { font-size:0.7rem; color:#2980b9; margin-top:6px; }
+    .bn-aviso { font-size:0.7rem; color:#e67e22; margin-top:4px; }
+
 
     /* ══ AUDITORIA ══ */
     .aud-datebar { display:flex; align-items:center; gap:6px; margin-bottom:12px; }
@@ -783,6 +803,7 @@
           <button class="tab-btn active" onclick="aba('usuarios')">👤 Usuários</button>
           <button class="tab-btn" onclick="aba('transacoes')">📋 Transações</button>
           <button class="tab-btn" onclick="aba('config')">⚙️ Config</button>
+          <button class="tab-btn" onclick="aba('bonus')">🎁 Bônus</button>
           <button class="tab-btn" onclick="aba('artefatos')">⚔️ Artefatos</button>
           <button class="tab-btn" onclick="aba('simulador')">🧪 Simulador</button>
         </div>
@@ -814,6 +835,7 @@
               <option value="Leitura">Leitura</option>
               <option value="Duolingo">Duolingo</option>
               <option value="Forja">Forja</option>
+              <option value="Bonus">Bônus</option>
               <option value="Gasto">Gasto</option>
               <option value="Voucher">Voucher</option>
               <option value="Artefato">Artefato</option>
@@ -830,17 +852,17 @@
           <div class="config-row"><span class="config-lbl">💎 Ganho da Forja (cristais)</span><input id="cfg-ganho-forja" type="number" min="0"></div>
           <p style="font-size:0.72rem;font-weight:700;color:#e67e22;margin:14px 0 8px">🔥 STREAK DE LEITURA</p>
           <div class="config-row"><span class="config-lbl">📅 Mínimo diário (min)</span><input id="cfg-min-leitura" type="number" min="1"></div>
-          <div class="config-row"><span class="config-lbl">🎁 Bônus 3 dias (⚡)</span><input id="cfg-bonus-3d" type="number" min="0"></div>
-          <div class="config-row"><span class="config-lbl">🎁 Bônus 7 dias (⚡)</span><input id="cfg-bonus-7d" type="number" min="0"></div>
-          <div class="config-row"><span class="config-lbl">🎁 Bônus 14 dias (⚡)</span><input id="cfg-bonus-14d" type="number" min="0"></div>
-          <div class="config-row"><span class="config-lbl">🎁 Bônus 30 dias (⚡)</span><input id="cfg-bonus-30d" type="number" min="0"></div>
           <p style="font-size:0.72rem;font-weight:700;color:#e67e22;margin:14px 0 8px">🦉 STREAK DE DUOLINGO</p>
           <div class="config-row"><span class="config-lbl">📅 Mínimo diário (min)</span><input id="cfg-min-duo" type="number" min="1"></div>
-          <div class="config-row"><span class="config-lbl">🎯 Meta semanal (dias)</span><input id="cfg-meta-duo-dias" type="number" min="1" max="7"></div>
-          <div class="config-row"><span class="config-lbl">💎 Recompensa semanal</span><input id="cfg-recompensa-duo" type="number" min="0"></div>
+          <p class="card-hint" style="margin:6px 0 0">Marcos, faixas, cabeças do Oráculo e prêmios dos rankings ficam na aba 🎁 Bônus.</p>
           <p style="font-size:0.72rem;font-weight:700;color:#e67e22;margin:14px 0 8px">🔍 AUDITORIA</p>
           <div class="config-row"><span class="config-lbl">📵 Limite de tela/dia (min)</span><input id="cfg-limite-tela" type="number" min="0"></div>
           <button class="btn btn-save btn-wide" onclick="salvarConfig()">💾 Salvar Configurações</button>
+        </div>
+        <div class="tab-panel" id="tab-bonus">
+          <p class="card-hint">Defina os bônus por comprometimento. <b>Regras novas só valem a partir do dia em que você as ativa</b>: ninguém recebe pelo passado. Os valores devem crescer junto com o esforço.</p>
+          <div id="bonus-editor"><div class="empty-msg">Toque em Atualizar.</div></div>
+          <button class="btn btn-save btn-wide" onclick="salvarBonus()">💾 Salvar Bônus</button>
         </div>
         <div class="tab-panel" id="tab-simulador">
           <p class="card-hint">Mostra o resultado de uma mudança em cima dos dados reais, lado a lado (antes e depois). <b>Nada é gravado</b> até você confirmar.</p>
@@ -1192,7 +1214,7 @@
     const nomeEmail = (usuarios, email) => Object.values(usuarios).find(u=>u.email===email)?.nome || email;
 
     /* ── ESTADO GLOBAL ── */
-    const APP_VERSAO = 'v18 · Base técnica';
+    const APP_VERSAO = 'v19 · Bônus';
     let _usuarios = {}, _trans = [], _config = {};
     document.addEventListener('DOMContentLoaded', () => {
       const el = document.getElementById('app-versao');
@@ -1246,6 +1268,7 @@
         renderTransacoes();
         const nomes={}; Object.entries(_usuarios).forEach(([,u])=>{ if(u.email) nomes[u.email]=u.nome; });
         renderConfig();
+        renderBonus();
         await carregarVouchers();
         await carregarArtefatosConfig();
         await _carregarMissoesPend(nomes);
@@ -1852,7 +1875,7 @@
 
     /* ── ABAS ── */
     function aba(nome) {
-      document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active',['usuarios','transacoes','config','artefatos','simulador'][i]===nome));
+      document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active',['usuarios','transacoes','config','bonus','artefatos','simulador'][i]===nome));
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       document.getElementById('tab-'+nome).classList.add('active');
     }
@@ -1993,6 +2016,7 @@
                 <option value="Pendente"  ${t.status==='Pendente' ?'selected':''}>Pendente</option>
                 <option value="Aprovado"  ${t.status==='Aprovado' ?'selected':''}>Aprovado</option>
                 <option value="Reprovado" ${t.status==='Reprovado'?'selected':''}>Reprovado</option>
+                <option value="Estornado" ${t.status==='Estornado'?'selected':''}>Estornado</option>
               </select>
             </div>
             <div class="trans-edit-btns">
@@ -2048,13 +2072,7 @@
       document.getElementById('cfg-custo-forja').value    = _config.custo_forja            || 30;
       document.getElementById('cfg-ganho-forja').value    = _config.ganho_forja            || 10;
       document.getElementById('cfg-min-leitura').value    = _config.min_leitura_diaria     || 15;
-      document.getElementById('cfg-bonus-3d').value       = _config.bonus_leitura_3d       || 20;
-      document.getElementById('cfg-bonus-7d').value       = _config.bonus_leitura_7d       || 40;
-      document.getElementById('cfg-bonus-14d').value      = _config.bonus_leitura_14d      || 60;
-      document.getElementById('cfg-bonus-30d').value      = _config.bonus_leitura_30d      || 90;
       document.getElementById('cfg-min-duo').value        = _config.min_duolingo_diario    || 7;
-      document.getElementById('cfg-meta-duo-dias').value  = _config.meta_duo_semanal_dias  || 7;
-      document.getElementById('cfg-recompensa-duo').value = _config.recompensa_duo_semanal || 20;
       document.getElementById('cfg-limite-tela').value    = _config.limite_tela_diario     || 120;
     }
 
@@ -2066,18 +2084,266 @@
           custo_forja:            Number(document.getElementById('cfg-custo-forja').value),
           ganho_forja:            Number(document.getElementById('cfg-ganho-forja').value),
           min_leitura_diaria:     Number(document.getElementById('cfg-min-leitura').value),
-          bonus_leitura_3d:       Number(document.getElementById('cfg-bonus-3d').value),
-          bonus_leitura_7d:       Number(document.getElementById('cfg-bonus-7d').value),
-          bonus_leitura_14d:      Number(document.getElementById('cfg-bonus-14d').value),
-          bonus_leitura_30d:      Number(document.getElementById('cfg-bonus-30d').value),
           min_duolingo_diario:    Number(document.getElementById('cfg-min-duo').value),
-          meta_duo_semanal_dias:  Number(document.getElementById('cfg-meta-duo-dias').value),
-          recompensa_duo_semanal: Number(document.getElementById('cfg-recompensa-duo').value),
           limite_tela_diario:     Number(document.getElementById('cfg-limite-tela').value),
         });
         toast('✅ Regras da Ordem salvas!','success');
         await carregarDados();
       } catch(e) { toast('❌ '+e.message,'error'); }
+    }
+
+
+    /* ── GESTÃO: BÔNUS ──
+       Tudo é salvo em config/bonus e lido pelo app dos Guardiões (normalizarBonus no index.html).
+       Estrutura: { leitura:{streak,volume}, duolingo:{streak,volume}, ranking:{duelo,torneio} }
+         streak:  { ativo, moeda, desde?, marcos:[{dias, valor, desde?}] }
+         volume:  { ativo, moeda, desde?, faixas:[{id, nome, minutos, valor}] }   (semana fixa, segunda a domingo)
+         ranking: { duelo:{ativo, valor, desde?}, torneio:{ativo, valor, desde?} } (prêmio em cristais)
+       'desde' é gravado sozinho ao ativar uma regra: evita pagar o passado. */
+    let _bonusEd = null;
+    const BN_SIM = { energia: '⚡', cristais: '💎' };
+    const _bnLista = x => Array.isArray(x) ? x.filter(Boolean) : (x && typeof x === 'object' ? Object.values(x) : []);
+    const _bnEsc = v => String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+
+    function bnNormalizar(cfg) {
+      cfg = cfg || {};
+      const b = cfg.bonus || {};
+      const padraoLegado = { 3: 20, 7: 40, 14: 60, 30: 90 };
+      const legado = [3, 7, 14, 30].map(d => {
+        const v = cfg['bonus_leitura_' + d + 'd'];
+        return { dias: d, valor: Number(v !== undefined && v !== null ? v : padraoLegado[d]) || 0, desde: '' };
+      });
+      const moeda = m => (m === 'cristais' ? 'cristais' : 'energia');
+      const streak = (raw, ativoPadrao, marcosPadrao) => {
+        if (!raw || typeof raw !== 'object') return { ativo: ativoPadrao, moeda: 'energia', desde: '', marcos: marcosPadrao };
+        return {
+          ativo: !!raw.ativo, moeda: moeda(raw.moeda), desde: raw.desde || '',
+          marcos: _bnLista(raw.marcos).map(m => ({ dias: Number(m.dias) || 0, valor: Number(m.valor) || 0, desde: m.desde || '' }))
+                    .filter(m => m.dias > 0).sort((a, c) => a.dias - c.dias)
+        };
+      };
+      const volume = raw => {
+        raw = raw || {};
+        return {
+          ativo: !!raw.ativo, moeda: moeda(raw.moeda), desde: raw.desde || '',
+          faixas: _bnLista(raw.faixas).map((f, i) => ({
+            id: String(f.id || ('f' + (i + 1))).replace(/[.$#\[\]\/\s]/g, '_'),
+            nome: String(f.nome || ''), minutos: Number(f.minutos) || 0, valor: Number(f.valor) || 0
+          })).filter(f => f.minutos > 0).sort((a, c) => a.minutos - c.minutos)
+        };
+      };
+      const rk = raw => ({ ativo: !!(raw && raw.ativo), valor: Number(raw && raw.valor) || 0, desde: (raw && raw.desde) || '' });
+      const l = b.leitura || {}, d = b.duolingo || {}, r = b.ranking || {};
+      const dias = Number(cfg.meta_duo_semanal_dias);
+      const premio = cfg.recompensa_duo_semanal;
+      return {
+        leitura:  { streak: streak(l.streak, true, legado), volume: volume(l.volume) },
+        duolingo: { streak: streak(d.streak, false, []),    volume: volume(d.volume) },
+        ranking:  { duelo: rk(r.duelo), torneio: rk(r.torneio) },
+        cabecas:  { dias: dias >= 1 ? dias : 7, premio: (premio !== undefined && premio !== null) ? Number(premio) || 0 : 20 }
+      };
+    }
+
+    function bnProxSegunda() {
+      const d = new Date();
+      d.setDate(d.getDate() + (d.getDay() === 0 ? 1 : 8 - d.getDay()));
+      return diaLocal(d);
+    }
+    const bnFmt = iso => iso.split('-').reverse().join('/');
+
+    function renderBonus() {
+      _bonusEd = bnNormalizar(_config);
+      bnDesenhar();
+    }
+
+    function bnHtmlMoeda(mod, tipo, moeda) {
+      return `<div class="bn-moeda"><span>Paga em</span>
+        <select onchange="bnSet('${mod}','${tipo}','moeda',this.value)">
+          <option value="energia" ${moeda==='energia'?'selected':''}>⚡ Energia</option>
+          <option value="cristais" ${moeda==='cristais'?'selected':''}>💎 Cristais</option>
+        </select></div>`;
+    }
+
+    function bnHtmlDesde(atual, antes, ehSemana) {
+      if (atual.ativo && !antes.ativo) {
+        return `<div class="bn-desde">Ao salvar, começa a valer ${ehSemana ? 'na segunda-feira ' + bnFmt(bnProxSegunda()) : 'hoje'}.</div>`;
+      }
+      if (atual.ativo && antes.desde) return `<div class="bn-desde">Vale a partir de ${bnFmt(antes.desde)}.</div>`;
+      return '';
+    }
+
+    function bnHtmlStreak(mod, antes) {
+      const b = _bonusEd[mod].streak, sim = BN_SIM[b.moeda];
+      const tit = mod === 'leitura' ? '🔥 Streak de leitura' : '🦉 Streak de Duolingo';
+      const min = mod === 'leitura' ? (_config.min_leitura_diaria || 15) : (_config.min_duolingo_diario || 7);
+      const linhas = b.marcos.map((m, i) => `
+        <div class="bn-linha">
+          <input class="bn-n" type="number" min="1" value="${_bnEsc(m.dias)}" placeholder="7" oninput="bnSetItem('${mod}','streak','marcos',${i},'dias',this.value)">
+          <span class="bn-un">dias seguidos</span><span class="bn-seta">→</span>
+          <input class="bn-n" type="number" min="0" value="${_bnEsc(m.valor)}" placeholder="40" oninput="bnSetItem('${mod}','streak','marcos',${i},'valor',this.value)">
+          <span class="bn-un">${sim}</span>
+          <button class="trans-del" onclick="bnDel('${mod}','streak','marcos',${i})">🗑</button>
+        </div>`).join('') || '<div class="empty-msg" style="padding:8px 0">Nenhum marco.</div>';
+      return `<div class="bn-bloco ${b.ativo?'':'bn-off'}">
+        <div class="bn-head"><span class="bn-titulo">${tit}</span>
+          <label class="bn-switch"><input type="checkbox" ${b.ativo?'checked':''} onchange="bnSet('${mod}','streak','ativo',this.checked)"> ativo</label></div>
+        <div class="bn-sub">Pago a cada marco batido, quando os dias já estão aprovados. Vale só quem estuda ${min} min ou mais por dia (mínimo em Config).</div>
+        ${bnHtmlMoeda(mod, 'streak', b.moeda)}${linhas}
+        <button class="bn-add" onclick="bnAdd('${mod}','streak')">➕ Marco</button>
+        ${bnHtmlDesde(b, antes[mod].streak, false)}</div>`;
+    }
+
+    function bnHtmlVolume(mod, antes) {
+      const b = _bonusEd[mod].volume, sim = BN_SIM[b.moeda];
+      const tit = mod === 'leitura' ? '📖 Volume de leitura (semana)' : '🦉 Volume de Duolingo (semana)';
+      const linhas = b.faixas.map((f, i) => `
+        <div class="bn-linha">
+          <input class="bn-nome" type="text" maxlength="14" value="${_bnEsc(f.nome)}" placeholder="Bronze" oninput="bnSetItem('${mod}','volume','faixas',${i},'nome',this.value)">
+          <input class="bn-n" type="number" min="1" value="${_bnEsc(f.minutos)}" placeholder="100" oninput="bnSetItem('${mod}','volume','faixas',${i},'minutos',this.value)">
+          <span class="bn-un">min</span><span class="bn-seta">→</span>
+          <input class="bn-n" type="number" min="0" value="${_bnEsc(f.valor)}" placeholder="10" oninput="bnSetItem('${mod}','volume','faixas',${i},'valor',this.value)">
+          <span class="bn-un">${sim}</span>
+          <button class="trans-del" onclick="bnDel('${mod}','volume','faixas',${i})">🗑</button>
+        </div>`).join('') || '<div class="empty-msg" style="padding:8px 0">Nenhuma faixa.</div>';
+      return `<div class="bn-bloco ${b.ativo?'':'bn-off'}">
+        <div class="bn-head"><span class="bn-titulo">${tit}</span>
+          <label class="bn-switch"><input type="checkbox" ${b.ativo?'checked':''} onchange="bnSet('${mod}','volume','ativo',this.checked)"> ativo</label></div>
+        <div class="bn-sub">Minutos aprovados de segunda a domingo. Vale só a faixa mais alta alcançada: ao subir de faixa, o app paga apenas a diferença.</div>
+        ${bnHtmlMoeda(mod, 'volume', b.moeda)}${linhas}
+        <button class="bn-add" onclick="bnAdd('${mod}','volume')">➕ Faixa</button>
+        ${bnHtmlDesde(b, antes[mod].volume, true)}</div>`;
+    }
+
+    function bnDesenhar() {
+      const antes = bnNormalizar(_config);
+      const c = _bonusEd.cabecas, rk = _bonusEd.ranking;
+      const linhaRank = (chave, rotulo) => `
+        <div class="bn-bloco ${rk[chave].ativo?'':'bn-off'}">
+          <div class="bn-head"><span class="bn-titulo">${rotulo}</span>
+            <label class="bn-switch"><input type="checkbox" ${rk[chave].ativo?'checked':''} onchange="bnSetRank('${chave}','ativo',this.checked)"> ativo</label></div>
+          <div class="bn-sub">Quem lidera a semana (segunda a domingo) recebe o prêmio no começo da semana seguinte. Empate: cada campeão recebe o valor inteiro.</div>
+          <div class="bn-linha"><span class="bn-un" style="flex:1">Prêmio do campeão</span>
+            <input class="bn-n" type="number" min="0" value="${_bnEsc(rk[chave].valor)}" oninput="bnSetRank('${chave}','valor',this.value)"><span class="bn-un">💎</span></div>
+          ${bnHtmlDesde(rk[chave], antes.ranking[chave], true)}
+        </div>`;
+      document.getElementById('bonus-editor').innerHTML =
+        bnHtmlStreak('leitura', antes) + bnHtmlVolume('leitura', antes) +
+        bnHtmlStreak('duolingo', antes) + bnHtmlVolume('duolingo', antes) +
+        `<div class="bn-bloco">
+          <div class="bn-head"><span class="bn-titulo">🦉 Cabeças do Oráculo (meta semanal)</span></div>
+          <div class="bn-sub">Cada dia com Duolingo acende uma cabeça. Ao acender todas, a criança ganha cristais. As cabeças zeram na segunda-feira.</div>
+          <div class="bn-linha"><span class="bn-un" style="flex:1">Cabeças por semana (1 a 7)</span>
+            <input class="bn-n" type="number" min="1" max="7" value="${_bnEsc(c.dias)}" oninput="bnSetCab('dias',this.value)"></div>
+          <div class="bn-linha"><span class="bn-un" style="flex:1">Recompensa (0 desliga)</span>
+            <input class="bn-n" type="number" min="0" value="${_bnEsc(c.premio)}" oninput="bnSetCab('premio',this.value)"><span class="bn-un">💎</span></div>
+        </div>` +
+        linhaRank('duelo', '⚔ Prêmio do Duelo dos Guardiões (leitura)') +
+        linhaRank('torneio', '🦉 Prêmio do Torneio das Línguas (Duolingo)');
+    }
+
+    // Edição: mexer em números não redesenha (não perde o foco); ativar, trocar moeda, adicionar e apagar redesenham
+    function bnSet(mod, tipo, campo, valor) {
+      _bonusEd[mod][tipo][campo] = valor;
+      bnDesenhar();
+    }
+    function bnSetItem(mod, tipo, lista, i, campo, valor) { _bonusEd[mod][tipo][lista][i][campo] = valor; }
+    function bnSetRank(chave, campo, valor) {
+      _bonusEd.ranking[chave][campo] = valor;
+      if (campo === 'ativo') bnDesenhar();
+    }
+    function bnSetCab(campo, valor) { _bonusEd.cabecas[campo] = valor; }
+    function bnAdd(mod, tipo) {
+      const b = _bonusEd[mod][tipo];
+      if (tipo === 'streak') b.marcos.push({ dias: '', valor: '', desde: '' });
+      else b.faixas.push({ id: 'f' + Date.now().toString(36), nome: '', minutos: '', valor: '' });
+      bnDesenhar();
+    }
+    function bnDel(mod, tipo, lista, i) {
+      _bonusEd[mod][tipo][lista].splice(i, 1);
+      bnDesenhar();
+    }
+
+    async function salvarBonus() {
+      try {
+        const hoje = diaLocal(), segProx = bnProxSegunda();
+        const antes = bnNormalizar(_config);
+        const erros = [];
+        const num = v => (String(v).trim() === '' ? NaN : Number(v));
+        const out = { leitura: {}, duolingo: {}, ranking: {} };
+
+        for (const mod of ['leitura', 'duolingo']) {
+          const nomeMod = mod === 'leitura' ? 'Leitura' : 'Duolingo';
+
+          // ── streak ──
+          const s = _bonusEd[mod].streak, ps = antes[mod].streak;
+          let marcos = s.marcos.map(m => ({ dias: num(m.dias), valor: num(m.valor), desde: m.desde || '' }));
+          if (s.ativo) {
+            if (!marcos.length) erros.push(`Streak de ${nomeMod}: adicione ao menos um marco ou desative.`);
+            if (marcos.some(m => !Number.isInteger(m.dias) || m.dias < 1 || !(m.valor >= 0))) erros.push(`Streak de ${nomeMod}: preencha dias (inteiro) e valor em todos os marcos.`);
+            marcos.sort((a, c) => a.dias - c.dias);
+            if (marcos.some((m, i) => i > 0 && m.dias === marcos[i - 1].dias)) erros.push(`Streak de ${nomeMod}: há dois marcos com os mesmos dias.`);
+            else if (marcos.some((m, i) => i > 0 && !(m.valor > marcos[i - 1].valor))) erros.push(`Streak de ${nomeMod}: o valor precisa crescer a cada marco.`);
+          } else {
+            marcos = marcos.filter(m => Number.isInteger(m.dias) && m.dias >= 1 && m.valor >= 0).sort((a, c) => a.dias - c.dias);
+          }
+          const diasAntes = new Set(ps.marcos.map(m => m.dias));
+          const sOut = { ativo: !!s.ativo, moeda: s.moeda };
+          const desdeS = s.ativo ? (ps.ativo ? ps.desde : hoje) : '';
+          if (desdeS) sOut.desde = desdeS;
+          sOut.marcos = marcos.map(m => {
+            const x = { dias: m.dias, valor: m.valor };
+            // marco criado com a regra já ativa: só vale para sequências que o completarem daqui para frente
+            const d = (s.ativo && ps.ativo && !diasAntes.has(m.dias)) ? hoje : m.desde;
+            if (d) x.desde = d;
+            return x;
+          });
+          out[mod].streak = sOut;
+
+          // ── volume ──
+          const v = _bonusEd[mod].volume, pv = antes[mod].volume;
+          let faixas = v.faixas.map(f => ({ id: f.id, nome: String(f.nome || '').trim(), minutos: num(f.minutos), valor: num(f.valor) }));
+          if (v.ativo) {
+            if (!faixas.length) erros.push(`Volume de ${nomeMod}: adicione ao menos uma faixa ou desative.`);
+            if (faixas.some(f => !Number.isInteger(f.minutos) || f.minutos < 1 || !(f.valor >= 0))) erros.push(`Volume de ${nomeMod}: preencha minutos (inteiro) e valor em todas as faixas.`);
+            faixas.sort((a, c) => a.minutos - c.minutos);
+            if (faixas.some((f, i) => i > 0 && f.minutos === faixas[i - 1].minutos)) erros.push(`Volume de ${nomeMod}: há duas faixas com os mesmos minutos.`);
+            else if (faixas.some((f, i) => i > 0 && !(f.valor > faixas[i - 1].valor))) erros.push(`Volume de ${nomeMod}: o prêmio precisa crescer a cada faixa.`);
+          } else {
+            faixas = faixas.filter(f => Number.isInteger(f.minutos) && f.minutos >= 1 && f.valor >= 0).sort((a, c) => a.minutos - c.minutos);
+          }
+          const vOut = { ativo: !!v.ativo, moeda: v.moeda };
+          const desdeV = v.ativo ? (pv.ativo ? pv.desde : segProx) : '';
+          if (desdeV) vOut.desde = desdeV;
+          vOut.faixas = faixas.map((f, i) => ({ id: f.id, nome: f.nome || ('Faixa ' + (i + 1)), minutos: f.minutos, valor: f.valor }));
+          out[mod].volume = vOut;
+        }
+
+        // ── rankings ──
+        for (const chave of ['duelo', 'torneio']) {
+          const r = _bonusEd.ranking[chave], pr = antes.ranking[chave];
+          const valor = num(r.valor);
+          if (r.ativo && !(valor > 0)) erros.push(`Prêmio do ${chave === 'duelo' ? 'Duelo' : 'Torneio'}: informe um valor maior que zero ou desative.`);
+          const o = { ativo: !!r.ativo, valor: valor >= 0 ? valor : 0 };
+          const desdeR = r.ativo ? (pr.ativo ? pr.desde : segProx) : '';
+          if (desdeR) o.desde = desdeR;
+          out.ranking[chave] = o;
+        }
+
+        // ── cabeças ──
+        const cabDias = num(_bonusEd.cabecas.dias), cabPremio = num(_bonusEd.cabecas.premio);
+        if (!Number.isInteger(cabDias) || cabDias < 1 || cabDias > 7) erros.push('Cabeças do Oráculo: use de 1 a 7 dias.');
+        if (!(cabPremio >= 0)) erros.push('Cabeças do Oráculo: informe a recompensa (0 desliga).');
+
+        if (erros.length) { toast('⚠️ ' + erros[0], 'error'); return; }
+
+        await db.ref('config').update({
+          bonus: out,
+          meta_duo_semanal_dias: cabDias,
+          recompensa_duo_semanal: cabPremio
+        });
+        toast('✅ Bônus salvos!', 'success');
+        await carregarDados();
+      } catch (e) { toast('❌ ' + e.message, 'error'); }
     }
 
 
@@ -2170,6 +2436,7 @@
         case 'Artefato':
         case 'Missao':   return { moeda:'💎', sinal: 1, q };
         case 'Bonus':    if (t.status === 'Estornado') return { moeda:'', sinal:0, q };
+                         if (t.moeda) return { moeda: t.moeda === 'cristais' ? '💎' : '⚡', sinal:1, q };   // bônus novos dizem a moeda
                          return (det.includes('duolingo') || det.includes('🦉'))
                                 ? { moeda:'💎', sinal:1, q }
                                 : { moeda:'⚡', sinal:1, q };
