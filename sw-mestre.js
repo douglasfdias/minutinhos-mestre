@@ -14,7 +14,7 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  const titulo = payload.notification?.title || 'Minutinhos — Painel do Mestre';
+  const titulo = payload.notification?.title || 'Minutinhos - Painel do Mestre';
   const corpo = payload.notification?.body || '';
   self.registration.showNotification(titulo, {
     body: corpo,
@@ -38,8 +38,8 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// sw-mestre.js — Service Worker — Painel do Mestre
-const CACHE_NAME = 'minutinhos-mestre-v18';
+// sw-mestre.js - Service Worker - Painel do Mestre
+const CACHE_NAME = 'minutinhos-mestre-v19';
 
 const ROOT  = '/minutinhos-mestre/';
 const INDEX = '/minutinhos-mestre/index.html';
