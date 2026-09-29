@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Painel do Mestre — Ordem dos Guardiões</title>
+  <title>Painel do Mestre · Ordem dos Guardiões</title>
   <link rel="manifest" href="manifest-mestre.json">
   <meta name="theme-color" content="#1a1a2e">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -18,6 +18,18 @@
     :root { --gold:#e67e22; --blue:#1a1a2e; --green:#2ecc71; --red:#e74c3c; --bg:#f0f2f5; --crystal:#00bcd4; }
     * { box-sizing:border-box; margin:0; padding:0; }
     body { font-family:'Segoe UI',sans-serif; background:var(--bg); }
+
+    /* ── COMPORTAMENTO DE APP: sem seleção, sem menu do navegador, sem zoom por toque duplo ── */
+    html, body, * { -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+    input, textarea, [contenteditable="true"] { -webkit-user-select:text; user-select:text; -webkit-touch-callout:default; }
+    html { touch-action:manipulation; -webkit-text-size-adjust:100%; }
+    img { -webkit-user-drag:none; }
+    [data-copiar] { cursor:pointer; }
+    .toque-anel { position:fixed; width:16px; height:16px; margin:-8px 0 0 -8px; border-radius:50%; border:2px solid rgba(230,126,34,0.9); pointer-events:none; z-index:100000; animation:anel-toque 0.5s ease-out forwards; }
+    @keyframes anel-toque { from { transform:scale(0.4); opacity:1; } to { transform:scale(3.4); opacity:0; } }
+    .card h3, .page-title, .p-nome, .gc-nome { cursor:pointer; }
+    .toque-pulso { animation:toque-pulso 0.4s ease-out; }
+    @keyframes toque-pulso { 0% { transform:scale(1); } 35% { transform:scale(1.03); } 100% { transform:scale(1); } }
 
     /* ── SENHA ── */
     #senha-screen { position:fixed; inset:0; background:#1a1a2e; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999; gap:14px; padding:30px; }
@@ -63,7 +75,7 @@
     .nome-custom-input { flex: 1; padding: 10px 12px; border: 1.5px solid #ddd; border-radius: 10px; font-size: 0.9rem; }
     .nome-confirmar { width: 100%; margin-top: 16px; background: var(--orange); color: white; border: none; border-radius: 10px; padding: 13px; font-size: 0.95rem; font-weight: 700; cursor: pointer; }
 
-    /* ── MENSAGENS (WhatsApp-style — igual ao app das crianças) ── */
+    /* ── MENSAGENS (WhatsApp-style - igual ao app das crianças) ── */
     .msg-contact-list { flex: 1; overflow-y: auto; background: white; scrollbar-width: none; }
     .msg-contact-item {
       display: flex; align-items: center; gap: 13px;
@@ -462,7 +474,7 @@
            onkeydown="if(event.key==='Enter')verificarSenha()">
     <p id="senha-erro">❌ Email ou senha incorretos.</p>
     <button id="senha-btn" onclick="verificarSenha()">🔓 Entrar na Ordem</button>
-    <p style="color:#666;font-size:0.72rem;text-align:center;max-width:300px;">Primeiro acesso? Digite o email e a senha que você quer usar — a conta da Mestre é criada automaticamente na primeira vez. Se já existe uma Mestre cadastrada, peça a ela um código de convite e cole no campo acima.</p>
+    <p style="color:#666;font-size:0.72rem;text-align:center;max-width:300px;">Primeiro acesso? Digite o email e a senha que você quer usar. A conta da Mestre é criada sozinha na primeira vez. Se já existe uma Mestre cadastrada, peça a ela um código de convite e cole no campo acima.</p>
   </div>
 
   <div id="toast"></div>
@@ -477,7 +489,7 @@
         <button class="nome-opcao" id="opcao-pai" onclick="selecionarNome('Pai','👨')">👨<br>Pai</button>
         <button class="nome-opcao" id="opcao-mae" onclick="selecionarNome('Mãe','👩')">👩<br>Mãe</button>
       </div>
-      <div class="nome-divider">— ou escolha outro —</div>
+      <div class="nome-divider">· ou escolha outro ·</div>
       <div class="nome-custom-row">
         <input type="text" id="nome-custom-input" class="nome-custom-input" placeholder="Ex: Tio João, Vovó..." maxlength="20">
       </div>
@@ -576,7 +588,7 @@
       </div>
       <div class="card">
         <h3>💎 Debitar Cristais</h3>
-        <p class="card-hint">Remove cristais — notifica o Guardião.</p>
+        <p class="card-hint">Retira cristais do tesouro e avisa o Guardião.</p>
         <select id="sel-gasto"><option value="">Selecione o Guardião...</option></select>
         <input type="number" id="val-gasto" placeholder="Quantidade de Cristais" min="1">
         <button class="btn btn-del btn-wide" onclick="addGasto()">💎 Remover Cristais</button>
@@ -665,11 +677,11 @@
       <!-- Resumo do dia -->
       <div class="card">
         <h3>💎 Tempo de tela liberado</h3>
-        <p class="card-hint" id="aud-data-label">—</p>
+        <p class="card-hint" id="aud-data-label">·</p>
         <div class="aud-hero">
           <div class="aud-hero-num" id="aud-total-min">0</div>
           <div class="aud-hero-lbl">MINUTOS AUTORIZADOS NO DIA</div>
-          <div class="aud-hero-sub" id="aud-total-sub">—</div>
+          <div class="aud-hero-sub" id="aud-total-sub">·</div>
         </div>
         <div id="aud-por-guardiao"><div class="empty-msg">Sem dados.</div></div>
       </div>
@@ -712,7 +724,7 @@
       <!-- Razão do dia -->
       <div class="card">
         <h3>📒 Movimentações do dia</h3>
-        <p class="card-hint">Tudo que entrou e saiu — cristais e energia.</p>
+        <p class="card-hint">Tudo que entrou e saiu: cristais e energia.</p>
         <div id="aud-ledger"><div class="empty-msg">Sem movimentações.</div></div>
       </div>
 
@@ -727,8 +739,8 @@
       <div class="card">
         <h3>📤 Exportar</h3>
         <p class="card-hint">Baixe os dados para conferir na planilha.</p>
-        <button class="btn btn-ok btn-wide" onclick="exportarAuditoriaCSV('dia')">📄 CSV — Dia selecionado</button>
-        <button class="btn btn-warn btn-wide" onclick="exportarAuditoriaCSV('tudo')">📚 CSV — Histórico completo</button>
+        <button class="btn btn-ok btn-wide" onclick="exportarAuditoriaCSV('dia')">📄 CSV do dia selecionado</button>
+        <button class="btn btn-warn btn-wide" onclick="exportarAuditoriaCSV('tudo')">📚 CSV do histórico completo</button>
       </div>
     </div>
 
@@ -741,15 +753,15 @@
       <div class="card">
         <h3>🔄 Versão do App</h3>
         <p class="card-hint">Build carregado agora neste aparelho. Se a versão não bater com a que você publicou, use o botão abaixo.</p>
-        <div class="aud-g-row"><span class="aud-g-nome">Versão</span><span class="aud-g-val" id="app-versao">—</span></div>
+        <div class="aud-g-row"><span class="aud-g-nome">Versão</span><span class="aud-g-val" id="app-versao">·</span></div>
         <button class="btn btn-del btn-wide" onclick="forcarAtualizacao()">🧹 Limpar Cache e Recarregar</button>
       </div>
       <div class="card">
         <h3>👥 Outros Mestres</h3>
-        <p class="card-hint">Gere um código de uso único para outra pessoa (ex: o pai) entrar com a conta própria dela e ter os mesmos poderes de Mestre — sem precisar editar nada no Firebase.</p>
+        <p class="card-hint">Gere um código de uso único para outra pessoa (ex: o pai) entrar com a conta própria dela e ter os mesmos poderes de Mestre, sem precisar editar nada no Firebase. Toque no código para copiar.</p>
         <button class="btn btn-ok btn-wide" onclick="gerarConviteMestre()">➕ Gerar Código de Convite</button>
         <div id="convite-resultado" style="display:none;margin-top:10px;background:#f0f8ff;border:1px solid #bee3f8;border-radius:8px;padding:12px;text-align:center;">
-          <div style="font-size:1.6rem;font-weight:900;letter-spacing:3px;color:#1565C0;" id="convite-codigo"></div>
+          <div style="font-size:1.6rem;font-weight:900;letter-spacing:3px;color:#1565C0;" id="convite-codigo" data-copiar title="Toque para copiar"></div>
           <p style="font-size:0.78rem;color:#555;margin-top:6px;">Compartilhe este código. A outra pessoa deve abrir este painel, criar a própria conta (email + senha) e colar o código antes de entrar. Válido uma única vez.</p>
         </div>
       </div>
@@ -881,7 +893,7 @@
     const san = e => e.replace(/\./g,'_');
 
     /* ============================================================
-       LOGIN — Firebase Authentication (email/senha) substitui a
+       LOGIN - Firebase Authentication (email/senha) substitui a
        antiga senha fixa escrita no código. A primeira pessoa a
        logar com sucesso se torna a Mestre (grava em /admins/{uid});
        depois disso, só quem já está em /admins continua tendo acesso.
@@ -910,7 +922,7 @@
     }
 
     async function gerarConviteMestre() {
-      if (!mestreUid) { toast('⚠️ Faça login novamente.', 'error'); return; }
+      if (!mestreUid) { toast('⚠️ Sua sessão na Ordem expirou. Entre novamente, Mestre.', 'error'); return; }
       const codigo = _gerarCodigoAleatorio();
       try {
         await db.ref('convites/' + codigo).set({
@@ -920,7 +932,7 @@
         });
         document.getElementById('convite-codigo').textContent = codigo;
         document.getElementById('convite-resultado').style.display = 'block';
-        toast('✅ Código gerado!', 'success');
+        toast('📜 Selo de convite forjado! Toque nele para copiar.', 'success');
       } catch (e) {
         toast('❌ ' + e.message, 'error');
       }
@@ -1052,7 +1064,7 @@
     });
 
     /* ============================================================
-       PUSH NOTIFICATIONS — envio real para o celular dos Guardiões
+       PUSH NOTIFICATIONS - envio real para o celular dos Guardiões
        (funciona com o app das crianças fechado). O envio passa por
        um Worker externo que guarda a credencial secreta.
     ============================================================ */
@@ -1077,10 +1089,10 @@
     async function ativarNotificacoesPushMestre() {
       try {
         if (!('serviceWorker' in navigator) || !('Notification' in window)) {
-          toast('⚠️ Este navegador não suporta notificações.', 'error'); return;
+          toast('⚠️ Este navegador não recebe os corvos mensageiros (notificações).', 'error'); return;
         }
         const permissao = await Notification.requestPermission();
-        if (permissao !== 'granted') { toast('🔔 Notificações não autorizadas.', 'error'); return; }
+        if (permissao !== 'granted') { toast('🔔 Os avisos não foram liberados neste celular.', 'error'); return; }
         const reg = await navigator.serviceWorker.ready;
         const messaging = firebase.messaging();
         const token = await messaging.getToken({ vapidKey: VAPID_PUBLIC_KEY, serviceWorkerRegistration: reg });
@@ -1088,12 +1100,12 @@
           await db.ref('fcm_tokens/_mestre').push({
             token: token, criadoEm: new Date().toISOString(), ua: navigator.userAgent.substring(0, 120)
           });
-          toast('🔔 Notificações ativadas neste celular!', 'success');
+          toast('🔔 Corvos mensageiros ativados neste celular!', 'success');
           const btn = document.getElementById('btn-ativar-push-mestre');
           if (btn) btn.textContent = '🔔 Notificações ativadas';
         }
       } catch (e) {
-        toast('⚠️ Não foi possível ativar: ' + e.message, 'error');
+        toast('⚠️ Os corvos não quiseram voar: ' + e.message, 'error');
       }
     }
 
@@ -1103,6 +1115,38 @@
       t.textContent = msg; t.className = 'show ' + (tipo||'');
       setTimeout(() => t.className = '', 3200);
     }
+
+    /* ── INTERAÇÃO UNIVERSAL (o painel também é um app) ──
+       Qualquer toque ganha resposta: anel de luz e vibração leve. Títulos de cartões
+       e nomes reagem com um pulso. O código de convite copia com um toque. */
+    (function iniciarInteracaoMestre() {
+      const vibra = (p) => { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} };
+      const ehCampo = (el) => el && el.closest && el.closest('input, textarea, [contenteditable="true"]');
+      document.addEventListener('click', (ev) => {
+        const t = ev.target;
+        if (!t || !t.closest) return;
+        const copia = t.closest('[data-copiar]');
+        if (copia) {
+          const txt = (copia.textContent || '').trim();
+          if (txt && navigator.clipboard) {
+            navigator.clipboard.writeText(txt).then(() => toast('📜 Código copiado! Entregue-o ao novo Mestre.', 'success')).catch(() => {});
+          }
+        }
+        const anel = document.createElement('div');
+        anel.className = 'toque-anel';
+        anel.style.left = ev.clientX + 'px';
+        anel.style.top  = ev.clientY + 'px';
+        document.body.appendChild(anel);
+        setTimeout(() => anel.remove(), 520);
+        vibra(t.closest('button, .nav-item, [onclick]') ? 12 : 6);
+        const pulsa = t.closest('.card h3, .page-title, .p-nome, .gc-nome, .guardiao-card');
+        if (pulsa) { pulsa.classList.remove('toque-pulso'); void pulsa.offsetWidth; pulsa.classList.add('toque-pulso'); }
+      });
+      document.addEventListener('contextmenu', (e) => { if (!ehCampo(e.target)) e.preventDefault(); });
+      document.addEventListener('selectstart',  (e) => { if (!ehCampo(e.target)) e.preventDefault(); });
+      document.addEventListener('dragstart',    (e) => e.preventDefault());
+      ['gesturestart', 'gesturechange', 'gestureend'].forEach(g => document.addEventListener(g, (e) => e.preventDefault()));
+    })();
 
     /* ── HELPERS ── */
     const san2 = s => s;
@@ -1116,8 +1160,8 @@
       }
       return s;
     }
-    const diasDesde = data => { if(!data)return'—'; const d=Math.floor((Date.now()-new Date(data))/86400000); return d===0?'hoje':d===1?'ontem':d+' dias atrás'; };
-    const fmtData  = iso  => { if(!iso)return'—'; const d=new Date(iso); return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); };
+    const diasDesde = data => { if(!data)return'sem registro'; const d=Math.floor((Date.now()-new Date(data))/86400000); return d===0?'hoje':d===1?'ontem':d+' dias atrás'; };
+    const fmtData  = iso  => { if(!iso)return'sem data'; const d=new Date(iso); return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); };
     const nomeEmail = (usuarios, email) => Object.values(usuarios).find(u=>u.email===email)?.nome || email;
 
     /* ── ESTADO GLOBAL ── */
@@ -1242,7 +1286,7 @@
         q('cancel').onclick = () => { painel.classList.remove('open'); campo.value = p.qtd; };
         q('save').onclick   = () => {
           const v = Math.floor(Number(campo.value));
-          if (!Number.isFinite(v) || v < minimo) { toast(`⚠️ Mínimo de ${minimo} minutos por registro.`,'error'); campo.focus(); return; }
+          if (!Number.isFinite(v) || v < minimo) { toast(`⚠️ A Ordem pede pelo menos ${minimo} minutos por registro.`,'error'); campo.focus(); return; }
           decidir(p.key, 'APROVAR', v);
         };
         d.appendChild(el);
@@ -1298,7 +1342,7 @@
       let nome, emoji;
       if (custom) { nome = custom; emoji = '⚔️'; }
       else if (_nomeSetupSel) { nome = _nomeSetupSel.nome; emoji = _nomeSetupSel.emoji; }
-      else { toast('⚠️ Selecione ou digite um nome.', 'error'); return; }
+      else { toast('⚠️ Escolha ou digite um nome para o seu brasão.', 'error'); return; }
       try {
         await db.ref('admins/' + mestreUid).update({ nome, emoji });
         document.getElementById('nome-setup-modal').classList.remove('open');
@@ -1306,7 +1350,7 @@
       } catch(e) { toast('❌ ' + e.message, 'error'); }
     }
 
-    /* ── MENSAGENS — WhatsApp-style ── */
+    /* ── MENSAGENS - WhatsApp-style ── */
     let msgCacheMestre = {}; // { guardianKey: [{key,de,mestreUid,texto,timestamp}] }
     let conversaAtualKey = null;
     let conversaRefs = {}; // { guardianKey: firebase ref } para remover listener ao sair
@@ -1445,7 +1489,7 @@
       const input = document.getElementById('msg-input-mestre');
       const texto = input.value.trim();
       if (!texto) return;
-      if (!conversaAtualKey) { toast('⚠️ Selecione um Guardião primeiro.', 'error'); return; }
+      if (!conversaAtualKey) { toast('⚠️ Escolha primeiro um Guardião para conversar.', 'error'); return; }
       input.value = '';
       const adminInfo = (await db.ref('admins/' + mestreUid).get().catch(()=>null))?.val();
       const mNome = (adminInfo && adminInfo.nome) ? adminInfo.nome : 'Mestre';
@@ -1494,7 +1538,7 @@
         const tRef=db.ref('transacoes/'+key), tSnap=await tRef.get(), t=tSnap.val();
         if (!t) throw new Error('Registro não encontrado.');
         if (t.status !== 'Pendente') {                       // evita crédito duplo (toque duplo / lista velha)
-          toast('⚠️ Esse registro já foi decidido. Atualizando...','error');
+          toast('⚠️ Este pedido já recebeu o selo. Atualizando a lista...','error');
           carregarDados(); return;
         }
         const em    = t.email;
@@ -1509,7 +1553,7 @@
           const editado = final !== orig;
           const minimo = _minimoPend(t.tipo);
           if (editado && (!Number.isFinite(final) || final < minimo)) {   // piso do valor editado
-            throw new Error(`Mínimo de ${minimo} minutos por registro.`);
+            throw new Error(`A Ordem pede pelo menos ${minimo} minutos por registro.`);
           }
           const uSnap=await db.ref('usuarios/'+san(em)).get(), u=uSnap.val();
           await db.ref('usuarios/'+san(em)).update({saldo_energia:Number(u.saldo_energia)+final});
@@ -1533,18 +1577,18 @@
           }
           const tipoNotif = ehDuo ? 'duolingo_aprovado' : 'leitura_aprovada';
           const titulo    = `${icone} ${rotulo} Aprovad${ehDuo?'o':'a'}!`;
-          await db.ref('notificacoes/'+san(em)).push({tipo:tipoNotif,titulo,mensagem:msg,quantidade:final,timestamp:new Date().toISOString()});
+          await db.ref('notificacoes/'+san(em)).push({tipo:tipoNotif,titulo,mensagem:msg,quantidade:final,pedido:orig,item:(ehDuo?'':(t.detalhes||'')),timestamp:new Date().toISOString()});
           enviarPush(san(em), titulo, pushMsg, tipoNotif, { quantidade: final });
-          toast(editado ? `✅ ${rotulo} aprovad${ehDuo?'o':'a'}: ${final} de ${orig} min.` : `✅ ${rotulo} aprovad${ehDuo?'o':'a'}!`,'success');
+          toast(editado ? `📜 ${rotulo} aprovad${ehDuo?'o':'a'}: ${final} de ${orig} min.` : `📜 ${rotulo} aprovad${ehDuo?'o':'a'}! Selo entregue.`,'success');
         } else {
           await tRef.update({status:'Reprovado'});
           const tipoNotif = ehDuo ? 'duolingo_reprovado' : 'leitura_reprovada';
           const titulo    = `${icone} ${rotulo} Reprovad${ehDuo?'o':'a'}`;
           const msg       = ehDuo ? `O Mestre não aprovou seu registro de ${orig} min de Duolingo desta vez. Converse com ele se tiver dúvidas!`
                                   : `O Mestre não aprovou ${nomeItem} desta vez. Tente novamente!`;
-          await db.ref('notificacoes/'+san(em)).push({tipo:tipoNotif,titulo,mensagem:msg,quantidade:0,timestamp:new Date().toISOString()});
+          await db.ref('notificacoes/'+san(em)).push({tipo:tipoNotif,titulo,mensagem:msg,quantidade:0,pedido:orig,item:(ehDuo?'':(t.detalhes||'')),timestamp:new Date().toISOString()});
           enviarPush(san(em), titulo, ehDuo ? 'Seu registro de Duolingo não foi aprovado desta vez.' : `${nomeItem} não foi aprovada desta vez.`, tipoNotif, {});
-          toast(`❌ ${rotulo} reprovad${ehDuo?'o':'a'}.`,'error');
+          toast(`📜 ${rotulo} reprovad${ehDuo?'o':'a'}. O Guardião foi avisado.`,'error');
         }
         if (row) row.remove();
         // atualiza contadores / esvazia o card se acabou a fila
@@ -1564,10 +1608,11 @@
       const min   = parseInt(document.getElementById('val-duo').value);
       const dataEl = document.getElementById('data-duo');
       const dataAferida = dataEl.value || new Date().toISOString().substring(0,10);
-      if (!email) { toast('⚠️ Selecione um Guardião!','error'); return; }
-      if (!min||min<1) { toast('⚠️ Informe os minutos.','error'); return; }
+      if (!email) { toast('⚠️ Escolha um Guardião!','error'); return; }
+      if (!min||min<1) { toast('⚠️ Quantos minutos foram? Informe o tempo.','error'); return; }
       const minDuo = Number(_config.min_duolingo_diario) || 7;
-      if (min < minDuo) { toast(`⚠️ Mínimo de ${minDuo} minutos para registrar Duolingo.`,'error'); return; }
+      const dBRduo = dataAferida.split('-').reverse().join('/');
+      if (min < minDuo) { toast(`⚠️ A Ordem pede pelo menos ${minDuo} minutos por sessão de Duolingo.`,'error'); return; }
       try {
         const snap=await db.ref('usuarios/'+san(email)).get(), u=snap.val();
         await db.ref('usuarios/'+san(email)).update({saldo_energia:Number(u.saldo_energia)+min});
@@ -1575,15 +1620,15 @@
           data: new Date().toISOString(),
           data_aferida: dataAferida + 'T12:00:00',
           email, tipo:'Duolingo', quantidade:min,
-          detalhes:`Duolingo (Mestre) — ${dataAferida}`, status:'Aprovado'
+          detalhes:`Duolingo (Mestre) · ${dataAferida}`, status:'Aprovado'
         });
         await db.ref('notificacoes/'+san(email)).push({
           tipo:'duolingo', titulo:'🦉 Duolingo Creditado!',
-          mensagem:`O Mestre creditou +${min} min de Duolingo (${dataAferida})! +${min} ⚡ de Energia!`,
-          quantidade:min, timestamp:new Date().toISOString()
+          mensagem:`O Mestre anotou +${min} minutos de Duolingo do dia ${dBRduo}! +${min} ⚡ para você!`,
+          quantidade:min, origem:'mestre', dataRef:dBRduo, timestamp:new Date().toISOString()
         });
-        enviarPush(san(email), '🦉 Duolingo Creditado!', `+${min} min de Duolingo (${dataAferida})! +${min} ⚡`, 'duolingo', { quantidade: min });
-        toast(`✅ +${min} min para ${u.nome} (${dataAferida})!`,'success');
+        enviarPush(san(email), '🦉 Duolingo Creditado!', `+${min} min de Duolingo do dia ${dBRduo}! +${min} ⚡`, 'duolingo', { quantidade: min });
+        toast(`🦉 +${min} min de Duolingo para ${u.nome} (${dBRduo}). Energia entregue!`,'success');
         document.getElementById('val-duo').value='';
         dataEl.value = new Date().toISOString().substring(0,10);
       } catch(e) { toast('❌ '+e.message,'error'); }
@@ -1596,10 +1641,10 @@
       const min   = parseInt(document.getElementById('val-leitura').value);
       const dataEl = document.getElementById('data-leitura');
       const dataAferida = dataEl.value || new Date().toISOString().substring(0,10);
-      if (!email) { toast('⚠️ Selecione um Guardião!','error'); return; }
-      if (!min||min<1) { toast('⚠️ Informe os minutos.','error'); return; }
+      if (!email) { toast('⚠️ Escolha um Guardião!','error'); return; }
+      if (!min||min<1) { toast('⚠️ Quantos minutos foram? Informe o tempo.','error'); return; }
       const minLeit = Number(_config.min_leitura_diaria) || 15;
-      if (min < minLeit) { toast(`⚠️ Mínimo de ${minLeit} minutos para registrar leitura.`,'error'); return; }
+      if (min < minLeit) { toast(`⚠️ A Ordem pede pelo menos ${minLeit} minutos por leitura.`,'error'); return; }
       const dBR = dataAferida.split('-').reverse().join('/');
       try {
         const snap=await db.ref('usuarios/'+san(email)).get(), u=snap.val();
@@ -1608,15 +1653,15 @@
           data: new Date().toISOString(),
           data_aferida: dataAferida + 'T12:00:00',
           email, tipo:'Leitura', quantidade:min,
-          detalhes: (livro ? livro : 'Leitura') + ` (Mestre) — ${dataAferida}`, status:'Aprovado'
+          detalhes: (livro ? livro : 'Leitura') + ` (Mestre) · ${dataAferida}`, status:'Aprovado'
         });
         await db.ref('notificacoes/'+san(email)).push({
           tipo:'leitura_aprovada', titulo:'📖 Leitura Creditada!',
-          mensagem:`O Mestre registrou +${min} min de leitura (${dBR})! +${min} ⚡ de Energia!`,
-          quantidade:min, timestamp:new Date().toISOString()
+          mensagem:`O Mestre anotou +${min} minutos de leitura do dia ${dBR}! +${min} ⚡ para você!`,
+          quantidade:min, origem:'mestre', dataRef:dBR, item:livro, timestamp:new Date().toISOString()
         });
-        enviarPush(san(email), '📖 Leitura Creditada!', `+${min} min de leitura (${dBR})! +${min} ⚡`, 'leitura_aprovada', { quantidade: min });
-        toast(`✅ +${min} min de leitura para ${u.nome} (${dBR})!`,'success');
+        enviarPush(san(email), '📖 Leitura Creditada!', `+${min} min de leitura do dia ${dBR}! +${min} ⚡`, 'leitura_aprovada', { quantidade: min });
+        toast(`📖 +${min} min de leitura para ${u.nome} (${dBR}). Energia entregue!`,'success');
         document.getElementById('val-leitura').value='';
         document.getElementById('livro-leitura').value='';
         dataEl.value = new Date().toISOString().substring(0,10);
@@ -1626,16 +1671,16 @@
     /* ── DEBITAR CRISTAIS ── */
     async function addGasto() {
       const email=document.getElementById('sel-gasto').value, qtd=parseInt(document.getElementById('val-gasto').value);
-      if (!email) { toast('⚠️ Selecione um Guardião!','error'); return; }
-      if (!qtd||qtd<1) { toast('⚠️ Informe a quantidade.','error'); return; }
+      if (!email) { toast('⚠️ Escolha um Guardião!','error'); return; }
+      if (!qtd||qtd<1) { toast('⚠️ Informe quantos cristais serão retirados.','error'); return; }
       try {
         const snap=await db.ref('usuarios/'+san(email)).get(), u=snap.val(), saldo=Number(u.saldo_cristais);
-        if (saldo<qtd) { toast(`⚠️ Apenas ${saldo} cristais disponíveis.`,'error'); return; }
+        if (saldo<qtd) { toast(`⚠️ O tesouro só tem ${saldo} cristais.`,'error'); return; }
         await db.ref('usuarios/'+san(email)).update({saldo_cristais:saldo-qtd});
         await db.ref('transacoes').push({data:new Date().toISOString(),email,tipo:'Gasto',quantidade:qtd,detalhes:'Tempo de Tela (Mestre)',status:'Aprovado'});
         await db.ref('notificacoes/'+san(email)).push({tipo:'gasto',titulo:'💎 Cristais Usados!',mensagem:`${qtd} cristais trocados por tempo de tela. Aproveite! 🎮`,quantidade:qtd,timestamp:new Date().toISOString()});
         enviarPush(san(email), '💎 Cristais Usados!', `${qtd} cristais trocados por tempo de tela. 🎮`, 'gasto', { quantidade: qtd });
-        toast(`💎 ${qtd} cristais de ${u.nome} removidos.`,'success');
+        toast(`💎 ${qtd} cristais retirados do tesouro de ${u.nome}.`,'success');
         document.getElementById('val-gasto').value='';
       } catch(e) { toast('❌ '+e.message,'error'); }
     }
@@ -1680,7 +1725,7 @@
           avatar_url:     document.getElementById('ua-'+key).value.trim(),
           is_mestre:      document.getElementById('um-'+key).value === 'true'
         });
-        toast('✅ Usuário salvo!','success');
+        toast('✅ Ficha do Guardião salva!','success');
         await carregarDados();
       } catch(e) { toast('❌ '+e.message,'error'); }
     }
@@ -1690,7 +1735,7 @@
       try {
         await db.ref('usuarios/'+key).remove();
         document.getElementById('uc-'+key)?.remove();
-        toast(`🗑 ${nome} removido.`,'success');
+        toast(`🗑 ${nome} saiu da Ordem.`,'success');
       } catch(e) { toast('❌ '+e.message,'error'); }
     }
 
@@ -1719,7 +1764,7 @@
           // Limpa notificações pendentes também
           await db.ref('notificacoes/'+key).remove();
         }
-        toast(`🔄 ${nome} resetado com sucesso!`, 'success');
+        toast(`🔄 ${nome} recomeçou a jornada do zero!`, 'success');
         await carregarDados();
       } catch(e) { toast('❌ '+e.message, 'error'); }
     }
@@ -1731,10 +1776,10 @@
       const cristais= Number(document.getElementById('nu-cristais').value)||0;
       const avatar  = document.getElementById('nu-avatar').value.trim();
       const mestre  = document.getElementById('nu-mestre').value === 'true';
-      if (!email||!nome) { toast('⚠️ Email e nome são obrigatórios.','error'); return; }
+      if (!email||!nome) { toast('⚠️ Informe o email e o nome do novo Guardião.','error'); return; }
       try {
         await db.ref('usuarios/'+san(email)).set({email,nome,saldo_energia:energia,saldo_cristais:cristais,avatar_url:avatar||'https://i.ibb.co/7xwvFvSK/avatar-boy-full-body-mod1-nobg.png',is_mestre:mestre});
-        toast(`✅ ${nome} criado!`,'success');
+        toast(`✅ ${nome} agora faz parte da Ordem!`,'success');
         ['nu-email','nu-nome','nu-avatar'].forEach(id=>document.getElementById(id).value='');
         document.getElementById('nu-energia').value='0';
         document.getElementById('nu-cristais').value='0';
@@ -1758,7 +1803,7 @@
         return `<div class="trans-expandable" id="tr-wrap-${t._key}">
           <div class="trans-row" onclick="toggleEditTrans('${t._key}')">
             <div class="trans-info">
-              <div class="trans-nome">${ic[t.tipo]||'•'} ${nomeEmail(_usuarios,t.email)} — ${t.detalhes||t.tipo} ${t.tipo==='Gasto'?'−':'+'}${t.quantidade}</div>
+              <div class="trans-nome">${ic[t.tipo]||'•'} ${nomeEmail(_usuarios,t.email)} · ${t.detalhes||t.tipo} ${t.tipo==='Gasto'?'−':'+'}${t.quantidade}</div>
               <div class="trans-det">${fmtData(t.data)}${t.data_aferida?' · Aferido: '+dataAf:''}</div>
             </div>
             <span class="trans-status s-status-${t.status}">${t.status}</span>
@@ -1816,7 +1861,7 @@
         // Update local state
         const idx = _trans.findIndex(t => t._key === key);
         if (idx >= 0) Object.assign(_trans[idx], updates);
-        toast('✅ Transação salva!', 'success');
+        toast('✅ Registro do pergaminho salvo!', 'success');
         renderTransacoes();
       } catch(e) { toast('❌ '+e.message, 'error'); }
     }
@@ -1827,7 +1872,7 @@
         await db.ref('transacoes/'+key).remove();
         document.getElementById('tr-'+key)?.remove();
         _trans = _trans.filter(t=>t._key!==key);
-        toast('🗑 Transação removida.','success');
+        toast('🗑 Registro removido do pergaminho.','success');
       } catch(e) { toast('❌ '+e.message,'error'); }
     }
 
@@ -1865,7 +1910,7 @@
           recompensa_duo_semanal: Number(document.getElementById('cfg-recompensa-duo').value),
           limite_tela_diario:     Number(document.getElementById('cfg-limite-tela').value),
         });
-        toast('✅ Configurações salvas!','success');
+        toast('✅ Regras da Ordem salvas!','success');
         await carregarDados();
       } catch(e) { toast('❌ '+e.message,'error'); }
     }
@@ -1906,7 +1951,7 @@
       return isNaN(d) ? '--:--' : d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
     }
     function _audDataBonita(dia) {
-      if (!dia) return '—';
+      if (!dia) return '·';
       const [a,m,d] = dia.split('-').map(Number);
       const dt = new Date(a, m-1, d);
       return dt.toLocaleDateString('pt-BR',{weekday:'long', day:'2-digit', month:'long', year:'numeric'});
@@ -2097,7 +2142,7 @@
             <div class="aud-tl-time">${_audHora(t.data)}<small>manual</small></div>
             <div class="aud-tl-info">
               <div class="aud-tl-nome">${nomeDe(t.email)}</div>
-              <div class="aud-tl-det">💎 Débito manual do Mestre — ${t.detalhes||'sem descrição'}</div>
+              <div class="aud-tl-det">💎 Débito manual do Mestre: ${t.detalhes||'sem descrição'}</div>
             </div>
             <div class="aud-tl-badge"><b>${q}</b><small>💎</small></div>
           </div>`});
@@ -2117,7 +2162,7 @@
           <span class="aud-fl-nome">${g.nome}<br><span class="aud-fl-sist">Sistema: ${g.aut} min</span></span>
           <input type="number" id="aud-fl-${g.emailKey}" min="0" placeholder="min" value="${val}"
                  oninput="audCalcDiff('${g.emailKey}',${g.aut})">
-          <span class="aud-diff none" id="aud-diff-${g.emailKey}">—</span>
+          <span class="aud-diff none" id="aud-diff-${g.emailKey}">·</span>
         </div>`;
       }).join('') : '<div class="empty-msg">Nenhum guardião.</div>';
       porG.forEach(g => audCalcDiff(g.emailKey, g.aut));
@@ -2134,13 +2179,13 @@
       vsDia.forEach(v => {
         const h = new Date(v.timestamp_aprovacao || v.timestamp_solicitacao).getHours();
         if (h >= 21 || h < 7)
-          alertas.push({c:'warn', t:`${nomeDe(v.email)} recebeu ${v.cristais} min às ${_audHora(v.timestamp_aprovacao||v.timestamp_solicitacao)} — fora do horário habitual.`});
+          alertas.push({c:'warn', t:`${nomeDe(v.email)} recebeu ${v.cristais} min às ${_audHora(v.timestamp_aprovacao||v.timestamp_solicitacao)}, fora do horário habitual.`});
       });
 
       _audVouchers.filter(v => v.status==='Ativo' && v.timer_fim && new Date(v.timer_fim) < new Date(Date.now()-10*60000))
         .forEach(v => alertas.push({c:'err', t:`Voucher travado: ${nomeDe(v.email)} ainda consta "Ativo" mas o tempo acabou às ${_audHora(v.timer_fim)} de ${_audDiaISO(v.timer_fim).split('-').reverse().join('/')}. Encerre na aba Vouchers.`}));
 
-      gsDia.forEach(t => alertas.push({c:'info', t:`Débito manual de ${t.quantidade} 💎 em ${nomeDe(t.email)} às ${_audHora(t.data)} — não passou pelo fluxo de voucher.`}));
+      gsDia.forEach(t => alertas.push({c:'info', t:`Débito manual de ${t.quantidade} 💎 em ${nomeDe(t.email)} às ${_audHora(t.data)}, sem passar pelo fluxo de voucher.`}));
 
       const integridade = _audIntegridade(guardioes);
       integridade.filter(i => Math.abs(i.difC) > 0).forEach(i =>
@@ -2198,7 +2243,7 @@
             <span class="aud-led-hora">${_audHora(t.data)}</span>
             <span class="aud-led-info">
               <div class="aud-led-nome">${nomeDe(t.email)} <span style="font-weight:600;color:#999">· ${t.tipo}</span></div>
-              <div class="aud-led-det">${t.detalhes||'—'}${aferida}${pend}</div>
+              <div class="aud-led-det">${t.detalhes||'sem detalhes'}${aferida}${pend}</div>
             </span>
             <span class="aud-led-qtd ${cls}">${sig}${f.q} ${f.moeda}</span>
           </div>`;
@@ -2238,7 +2283,7 @@
       const inp = document.getElementById('aud-fl-'+emailKey);
       const bad = document.getElementById('aud-diff-'+emailKey);
       if (!inp || !bad) return;
-      if (inp.value === '') { bad.className='aud-diff none'; bad.textContent='—'; return; }
+      if (inp.value === '') { bad.className='aud-diff none'; bad.textContent='·'; return; }
       const d = Number(inp.value) - Number(sistema);
       bad.textContent = (d>0?'+':'') + d + ' min';
       bad.className = 'aud-diff ' + (d===0 ? 'ok' : d>0 ? 'over' : 'under');
@@ -2246,7 +2291,7 @@
 
     async function salvarConferencia() {
       const dia = _audDiaSel();
-      if (!dia) { toast('⚠️ Selecione um dia.','error'); return; }
+      if (!dia) { toast('⚠️ Escolha um dia no calendário.','error'); return; }
       const payload = { _obs: document.getElementById('aud-obs').value || '', _salvo_em: new Date().toISOString() };
       _audGuardioes().forEach(g => {
         const inp = document.getElementById('aud-fl-'+g.emailKey);
@@ -2259,7 +2304,7 @@
       try {
         await db.ref('auditoria/'+dia).set(payload);
         _audConf[dia] = payload;
-        toast('✅ Conferência do dia salva!','success');
+        toast('✅ Conferência do dia guardada nos arquivos da Ordem!','success');
         renderAuditoria();
       } catch(e) { toast('❌ '+e.message+' (verifique a regra /auditoria no Firebase)','error'); }
     }
@@ -2283,7 +2328,7 @@
       a.download = escopo==='dia' ? `auditoria_${dia}.csv` : `auditoria_completa_${_audDiaISO(new Date())}.csv`;
       a.click();
       setTimeout(()=>URL.revokeObjectURL(url), 2000);
-      toast('📤 CSV gerado!','success');
+      toast('📤 Pergaminho em CSV pronto!','success');
     }
 
     /* ── ATUALIZAR BADGES DE PENDENTES ── */
@@ -2298,7 +2343,7 @@
       if(nb){ if(total>0){nb.textContent=total;nb.style.display='block';}else{nb.style.display='none';} }
     }
 
-    /* ── VOUCHERS — Painel do Mestre ── */
+    /* ── VOUCHERS - Painel do Mestre ── */
     let _mestreTimers = {};
 
     function voucherTab(tab) {
@@ -2342,22 +2387,22 @@
         const pendEl=document.getElementById('lista-vouchers-pend');
         if(pendEl) pendEl.innerHTML = pendentes.length
           ? pendentes.map(v=>{ const nome=nomes[v.email]||v.email; const dt=new Date(v.timestamp_solicitacao).toLocaleDateString('pt-BR');
-              return `<div class="voucher-pend-item"><div class="vp-info"><div class="vp-nome">${nome} &middot; ${v.cristais} &#x1F48E;</div><div class="vp-det">${dt} &middot; ${v.cristais} min</div></div><div class="vp-btns"><button class="btn btn-ok" onclick="aprovarVoucher('${v.emailKey}','${v.key}',${v.cristais},'${v.email}')">&#10003;</button><button class="btn btn-del" onclick="recusarVoucher('${v.emailKey}','${v.key}','${v.email}')">&#10007;</button></div></div>`; }).join('')
-          : '<div class="empty-msg" style="color:#27ae60">&#x2705; Nenhum pendente!</div>';
+              return `<div class="voucher-pend-item"><div class="vp-info"><div class="vp-nome">${nome} &middot; ${v.cristais} 💎</div><div class="vp-det">${dt} &middot; ${v.cristais} min</div></div><div class="vp-btns"><button class="btn btn-ok" onclick="aprovarVoucher('${v.emailKey}','${v.key}',${v.cristais},'${v.email}')">&#10003;</button><button class="btn btn-del" onclick="recusarVoucher('${v.emailKey}','${v.key}','${v.email}')">&#10007;</button></div></div>`; }).join('')
+          : '<div class="empty-msg" style="color:#27ae60">✅ Nenhum pendente!</div>';
 
         // Pendentes (mini panel na página Pendentes)
         const miniEl=document.getElementById('lista-vouchers-pend-mini');
         if(miniEl) miniEl.innerHTML = pendentes.length
           ? pendentes.map(v=>{ const nome=nomes[v.email]||v.email; const dt=new Date(v.timestamp_solicitacao).toLocaleDateString('pt-BR');
-              return `<div class="voucher-pend-item"><div class="vp-info"><div class="vp-nome">${nome} &middot; ${v.cristais} &#x1F48E;</div><div class="vp-det">${dt} &middot; ${v.cristais} min</div></div><div class="vp-btns"><button class="btn btn-ok" onclick="aprovarVoucher('${v.emailKey}','${v.key}',${v.cristais},'${v.email}');navTo('vouchers')">&#10003;</button><button class="btn btn-del" onclick="recusarVoucher('${v.emailKey}','${v.key}','${v.email}')">&#10007;</button></div></div>`; }).join('')
-          : '<div class="empty-msg" style="color:#27ae60">&#x2705; Nenhum pendente!</div>';
+              return `<div class="voucher-pend-item"><div class="vp-info"><div class="vp-nome">${nome} &middot; ${v.cristais} 💎</div><div class="vp-det">${dt} &middot; ${v.cristais} min</div></div><div class="vp-btns"><button class="btn btn-ok" onclick="aprovarVoucher('${v.emailKey}','${v.key}',${v.cristais},'${v.email}');navTo('vouchers')">&#10003;</button><button class="btn btn-del" onclick="recusarVoucher('${v.emailKey}','${v.key}','${v.email}')">&#10007;</button></div></div>`; }).join('')
+          : '<div class="empty-msg" style="color:#27ae60">✅ Nenhum pendente!</div>';
 
         // Ativos
         Object.values(_mestreTimers).forEach(id=>clearInterval(id)); _mestreTimers={};
         const ativoEl=document.getElementById('lista-vouchers-ativo');
         if(ativoEl) ativoEl.innerHTML = ativos.length
           ? ativos.map(v=>{ const nome=nomes[v.email]||v.email;
-              return `<div class="voucher-ativo-card" id="vacard-${v.key}"><div class="va-info"><div class="va-nome">${nome} &middot; ${v.cristais} min</div><div class="va-det">Aprovado ${new Date(v.timestamp_aprovacao||v.timestamp_solicitacao).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div></div><div id="vm-timer-${v.key}" class="va-timer">--:--</div><div class="va-btns"><button class="btn btn-del" style="font-size:0.75rem;padding:5px 8px" onclick="encerrarVoucher('${v.emailKey}','${v.key}','${v.email}')">&#x23F9; Encerrar</button></div></div>`;}).join('')
+              return `<div class="voucher-ativo-card" id="vacard-${v.key}"><div class="va-info"><div class="va-nome">${nome} &middot; ${v.cristais} min</div><div class="va-det">Aprovado ${new Date(v.timestamp_aprovacao||v.timestamp_solicitacao).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div></div><div id="vm-timer-${v.key}" class="va-timer">--:--</div><div class="va-btns"><button class="btn btn-del" style="font-size:0.75rem;padding:5px 8px" onclick="encerrarVoucher('${v.emailKey}','${v.key}','${v.email}')">⏹ Encerrar</button></div></div>`;}).join('')
           : '<div class="empty-msg">Nenhum ativo.</div>';
 
         ativos.forEach(v=>_iniciarTimerMestreVoucher(v.key,v.timer_fim,v.emailKey));
@@ -2386,7 +2431,7 @@
         el.classList.toggle('warning',min<5&&resto>0);
         if(card) card.classList.toggle('warning',min<5&&resto>0);
         if(resto<=0){ clearInterval(id); el.textContent='00:00';
-          db.ref('vouchers/'+emailKey+'/'+vkey).update({status:'Expirado', timestamp_fim:new Date().toISOString(), encerrado_por:'tempo'}).then(()=>{ toast('⏱ Voucher expirado!','success'); carregarVouchers(); }); }
+          db.ref('vouchers/'+emailKey+'/'+vkey).update({status:'Expirado', timestamp_fim:new Date().toISOString(), encerrado_por:'tempo'}).then(()=>{ toast('⏱ O tempo do voucher acabou!','success'); carregarVouchers(); }); }
       },1000);
       _mestreTimers[vkey]=id;
     }
@@ -2395,27 +2440,27 @@
       try {
         const snapU=await db.ref('usuarios/'+emailKey).get(), u=snapU.val();
         const saldo=Number(u.saldo_cristais)||0;
-        if(saldo<cristais){ toast('&#x26A0;&#xFE0F; '+u.nome+' tem apenas '+saldo+' &#x1F48E;!','error'); return; }
+        if(saldo<cristais){ toast('⚠️ O tesouro de '+u.nome+' tem só '+saldo+' 💎!','error'); return; }
         const snapAtivos=await db.ref('vouchers/'+emailKey).orderByChild('status').equalTo('Ativo').get();
-        if(snapAtivos.exists()){ toast('&#x26A0;&#xFE0F; '+u.nome+' já tem um voucher ativo!','error'); return; }
+        if(snapAtivos.exists()){ toast('⚠️ '+u.nome+' ainda tem um voucher valendo!','error'); return; }
         const agora=new Date(), timerFim=new Date(agora.getTime()+cristais*60000).toISOString();
         await db.ref('usuarios/'+emailKey).update({saldo_cristais:saldo-cristais});
         await db.ref('vouchers/'+emailKey+'/'+vkey).update({status:'Ativo',timestamp_aprovacao:agora.toISOString(),timer_fim:timerFim});
         await db.ref('transacoes').push({data:agora.toISOString(),email,tipo:'Voucher',quantidade:cristais,detalhes:'Tempo de Tela (Voucher)',status:'Aprovado'});
-        await db.ref('notificacoes/'+emailKey).push({tipo:'voucher_aprovado',titulo:'&#x1F4DC; Voucher Aprovado!',mensagem:'O Mestre aprovou '+cristais+' minutos de tela! ⏱',quantidade:cristais,timestamp:agora.toISOString()});
+        await db.ref('notificacoes/'+emailKey).push({tipo:'voucher_aprovado',titulo:'📜 Voucher Aprovado!',mensagem:'O Mestre aprovou '+cristais+' minutos de tela! ⏱',quantidade:cristais,timestamp:agora.toISOString()});
         enviarPush(emailKey, '📜 Voucher Aprovado!', `O Mestre aprovou ${cristais} minutos de tela! ⏱`, 'voucher_aprovado', { cristais });
-        toast('&#x2705; Voucher aprovado! '+cristais+' min para '+u.nome,'success');
+        toast('📜 Voucher selado! '+cristais+' min de tela para '+u.nome,'success');
         carregarVouchers();
-      } catch(e){ toast('&#x274C; '+e.message,'error'); }
+      } catch(e){ toast('❌ '+e.message,'error'); }
     }
 
     async function recusarVoucher(emailKey,vkey,email) {
       try {
         await db.ref('vouchers/'+emailKey+'/'+vkey).update({status:'Recusado'});
-        await db.ref('notificacoes/'+emailKey).push({tipo:'voucher_recusado',titulo:'&#x1F4DC; Voucher Recusado',mensagem:'O Mestre não aprovou este voucher.',quantidade:0,timestamp:new Date().toISOString()});
+        await db.ref('notificacoes/'+emailKey).push({tipo:'voucher_recusado',titulo:'📜 Voucher Recusado',mensagem:'O Mestre não aprovou este voucher.',quantidade:0,timestamp:new Date().toISOString()});
         enviarPush(emailKey, '📜 Voucher Recusado', 'O Mestre não aprovou este voucher.', 'voucher_recusado', {});
-        toast('Voucher recusado.','success'); carregarVouchers();
-      } catch(e){ toast('&#x274C; '+e.message,'error'); }
+        toast('📜 Voucher recusado. O Guardião foi avisado.','success'); carregarVouchers();
+      } catch(e){ toast('❌ '+e.message,'error'); }
     }
 
     async function encerrarVoucher(emailKey,vkey,email) {
@@ -2425,31 +2470,31 @@
         await db.ref('vouchers/'+emailKey+'/'+vkey).update({status:'Expirado', timestamp_fim:new Date().toISOString(), encerrado_por:'mestre'});
         await db.ref('notificacoes/'+emailKey).push({tipo:'voucher_encerrado',titulo:'⏱ Voucher Encerrado',mensagem:'O Mestre encerrou seu tempo de tela.',quantidade:0,timestamp:new Date().toISOString()});
         enviarPush(emailKey, '⏱ Voucher Encerrado', 'O Mestre encerrou seu tempo de tela.', 'voucher_encerrado', {});
-        toast('Voucher encerrado.','success'); carregarVouchers();
-      } catch(e){ toast('&#x274C; '+e.message,'error'); }
+        toast('⏹ Voucher encerrado. O Guardião foi avisado.','success'); carregarVouchers();
+      } catch(e){ toast('❌ '+e.message,'error'); }
     }
 
     async function criarVoucherMestre() {
       const selVal=document.getElementById('sel-voucher-manual').value;
-      if(!selVal){ toast('&#x26A0;&#xFE0F; Selecione um Guardião.','error'); return; }
+      if(!selVal){ toast('⚠️ Escolha um Guardião.','error'); return; }
       const [email,emailKey]=selVal.split('|');
       const cristais=parseInt(document.getElementById('val-voucher-manual').value);
-      if(!cristais||cristais<1){ toast('&#x26A0;&#xFE0F; Informe os cristais.','error'); return; }
+      if(!cristais||cristais<1){ toast('⚠️ Informe quantos cristais.','error'); return; }
       try {
         const snapU=await db.ref('usuarios/'+emailKey).get(), u=snapU.val(), saldo=Number(u.saldo_cristais)||0;
-        if(saldo<cristais){ toast('&#x26A0;&#xFE0F; Apenas '+saldo+' &#x1F48E; disponíveis.','error'); return; }
+        if(saldo<cristais){ toast('⚠️ O tesouro só tem '+saldo+' 💎.','error'); return; }
         const snapAtivos=await db.ref('vouchers/'+emailKey).orderByChild('status').equalTo('Ativo').get();
-        if(snapAtivos.exists()){ toast('&#x26A0;&#xFE0F; '+u.nome+' já tem um voucher ativo!','error'); return; }
+        if(snapAtivos.exists()){ toast('⚠️ '+u.nome+' ainda tem um voucher valendo!','error'); return; }
         const agora=new Date(), timerFim=new Date(agora.getTime()+cristais*60000).toISOString();
         await db.ref('usuarios/'+emailKey).update({saldo_cristais:saldo-cristais});
         await db.ref('vouchers/'+emailKey).push({email,status:'Ativo',cristais,timestamp_solicitacao:agora.toISOString(),timestamp_aprovacao:agora.toISOString(),timer_fim:timerFim});
         await db.ref('transacoes').push({data:agora.toISOString(),email,tipo:'Voucher',quantidade:cristais,detalhes:'Tempo de Tela (Voucher Mestre)',status:'Aprovado'});
-        await db.ref('notificacoes/'+emailKey).push({tipo:'voucher_aprovado',titulo:'&#x1F4DC; Voucher Criado!',mensagem:'O Mestre liberou '+cristais+' minutos de tela! ⏱',quantidade:cristais,timestamp:agora.toISOString()});
+        await db.ref('notificacoes/'+emailKey).push({tipo:'voucher_aprovado',titulo:'📜 Voucher Criado!',mensagem:'O Mestre liberou '+cristais+' minutos de tela! ⏱',quantidade:cristais,timestamp:agora.toISOString()});
         enviarPush(emailKey, '📜 Voucher Criado!', `O Mestre liberou ${cristais} minutos de tela! ⏱`, 'voucher_aprovado', { cristais });
-        toast('&#x2705; '+cristais+' min para '+u.nome,'success');
+        toast('📜 '+cristais+' min de tela liberados para '+u.nome,'success');
         document.getElementById('val-voucher-manual').value='';
         carregarVouchers();
-      } catch(e){ toast('&#x274C; '+e.message,'error'); }
+      } catch(e){ toast('❌ '+e.message,'error'); }
     }
 
     let _msgListenerIniciado = false;
@@ -2516,7 +2561,7 @@
       const items=Object.entries(_artefatos);
       if(!items.length){ el.innerHTML='<div class="empty-msg">Nenhum artefato. Crie o primeiro abaixo!</div>'; return; }
       el.innerHTML=items.map(([key,a])=>
-        `<div class="artefato-card"><span class="art-icon">${a.emoji||'⚔️'}</span><div class="art-info"><div class="art-nome">${a.nome} &middot; ${a.cristais} &#x1F48E;</div><div class="art-det">${a.descricao||''}</div></div><div class="art-btns"><button class="btn btn-del" style="padding:5px 9px;font-size:0.78rem" onclick="deletarArtefatoConfig('${key}')">&#x1F5D1;</button></div></div>`
+        `<div class="artefato-card"><span class="art-icon">${a.emoji||'⚔️'}</span><div class="art-info"><div class="art-nome">${a.nome} &middot; ${a.cristais} 💎</div><div class="art-det">${a.descricao||''}</div></div><div class="art-btns"><button class="btn btn-del" style="padding:5px 9px;font-size:0.78rem" onclick="deletarArtefatoConfig('${key}')">🗑</button></div></div>`
       ).join('');
     }
 
@@ -2524,11 +2569,11 @@
       const sel=document.getElementById('sel-art-tipo'); if(!sel) return;
       const prev=sel.value;
       sel.innerHTML='<option value="">Selecione o Artefato...</option>';
-      Object.entries(_artefatos).forEach(([key,a])=>{ sel.innerHTML+=`<option value="${key}">${a.emoji||'⚔️'} ${a.nome} (+${a.cristais} &#x1F48E;)</option>`; });
+      Object.entries(_artefatos).forEach(([key,a])=>{ sel.innerHTML+=`<option value="${key}">${a.emoji||'⚔️'} ${a.nome} (+${a.cristais} 💎)</option>`; });
       sel.value=prev;
       sel.onchange=()=>{
         const key=sel.value, prev=document.getElementById('art-preview');
-        if(key&&_artefatos[key]){ const a=_artefatos[key]; prev.style.display='block'; prev.innerHTML=`${a.emoji||'⚔️'} <strong>${a.nome}</strong> &middot; +${a.cristais} &#x1F48E;<br><span style="color:#666">${a.descricao||''}</span>`; }
+        if(key&&_artefatos[key]){ const a=_artefatos[key]; prev.style.display='block'; prev.innerHTML=`${a.emoji||'⚔️'} <strong>${a.nome}</strong> &middot; +${a.cristais} 💎<br><span style="color:#666">${a.descricao||''}</span>`; }
         else { prev.style.display='none'; }
       };
     }
@@ -2538,29 +2583,29 @@
       const nome=document.getElementById('na-nome').value.trim();
       const cristais=parseInt(document.getElementById('na-cristais').value);
       const desc=document.getElementById('na-desc').value.trim();
-      if(!nome){ toast('&#x26A0;&#xFE0F; Informe o nome.','error'); return; }
-      if(!cristais||cristais<1){ toast('&#x26A0;&#xFE0F; Informe os cristais.','error'); return; }
+      if(!nome){ toast('⚠️ Dê um nome ao artefato.','error'); return; }
+      if(!cristais||cristais<1){ toast('⚠️ Informe quantos cristais.','error'); return; }
       try {
         const key='art_'+Date.now();
         await db.ref('config/missoes/'+key).set({emoji,nome,cristais,descricao:desc});
-        toast('&#x2705; Artefato "'+nome+'" criado!','success');
+        toast('⚔️ Artefato "'+nome+'" forjado!','success');
         ['na-emoji','na-nome','na-desc'].forEach(id=>document.getElementById(id).value='');
         document.getElementById('na-cristais').value='';
         await carregarArtefatosConfig();
-      } catch(e){ toast('&#x274C; '+e.message,'error'); }
+      } catch(e){ toast('❌ '+e.message,'error'); }
     }
 
     async function deletarArtefatoConfig(key) {
       if(!confirm('Deletar este artefato?')) return;
-      try { await db.ref('config/missoes/'+key).remove(); toast('&#x1F5D1; Removido.','success'); await carregarArtefatosConfig(); }
-      catch(e){ toast('&#x274C; '+e.message,'error'); }
+      try { await db.ref('config/missoes/'+key).remove(); toast('🗑 Artefato removido do Baú.','success'); await carregarArtefatosConfig(); }
+      catch(e){ toast('❌ '+e.message,'error'); }
     }
 
     async function darArtefato() {
       const guardiaoVal=document.getElementById('sel-art-guardiao').value;
       const artefatoKey=document.getElementById('sel-art-tipo').value;
-      if(!guardiaoVal){ toast('&#x26A0;&#xFE0F; Selecione um Guardião.','error'); return; }
-      if(!artefatoKey||!_artefatos[artefatoKey]){ toast('&#x26A0;&#xFE0F; Selecione um artefato.','error'); return; }
+      if(!guardiaoVal){ toast('⚠️ Escolha um Guardião.','error'); return; }
+      if(!artefatoKey||!_artefatos[artefatoKey]){ toast('⚠️ Escolha um artefato.','error'); return; }
       const [email,emailKey]=guardiaoVal.split('|');
       const art=_artefatos[artefatoKey];
       try {
@@ -2571,13 +2616,13 @@
         const novoCristais=(Number(u.saldo_cristais)||0)+cristais;
         await db.ref('usuarios/'+emailKey).update({saldo_cristais:novoCristais});
         await db.ref('transacoes').push({data:new Date().toISOString(),email,tipo:'Artefato',quantidade:cristais,detalhes:(art.emoji||'⚔️')+' '+art.nome+' (Artefato)',status:'Aprovado'});
-        await db.ref('notificacoes/'+emailKey).push({tipo:'artefato',titulo:'⚔️ Artefato Recebido!',mensagem:'O Mestre te deu '+(art.emoji||'⚔️')+' '+art.nome+'! +'+cristais+' 💎 creditados!',quantidade:cristais,timestamp:new Date().toISOString()});
+        await db.ref('notificacoes/'+emailKey).push({tipo:'artefato',titulo:'⚔️ Artefato Recebido!',mensagem:'O Mestre te deu '+(art.emoji||'⚔️')+' '+art.nome+'! +'+cristais+' 💎 creditados!',quantidade:cristais,item:(art.emoji||'⚔️')+' '+art.nome,timestamp:new Date().toISOString()});
         enviarPush(emailKey, '⚔️ Artefato Recebido!', `O Mestre te deu ${art.emoji||'⚔️'} ${art.nome}! +${cristais} 💎`, 'artefato', { cristais });
-        toast('✅ '+art.nome+' entregue a '+u.nome+'! +'+cristais+' 💎','success');
+        toast('⚔️ '+art.nome+' entregue a '+u.nome+'! +'+cristais+' 💎','success');
         document.getElementById('sel-art-tipo').value='';
         document.getElementById('art-preview').style.display='none';
         await carregarDados();
-      } catch(e){ toast('&#x274C; '+e.message,'error'); }
+      } catch(e){ toast('❌ '+e.message,'error'); }
     }
 
     /* ── MISSÕES PENDENTES (Artefatos solicitados pelas crianças) ── */
@@ -2592,15 +2637,15 @@
         if(badge){ badge.textContent=items.length; badge.style.display=items.length?'inline':'none'; }
         el.innerHTML=items.length
           ? items.map(m=>{ const nome=nomes[m.email]||m.email; const art=_artefatos[m.artefatoKey]||{nome:'Artefato',cristais:0,emoji:'⚔️'};
-              return `<div class="missao-pend-item"><div class="vp-info"><div class="vp-nome">${nome}: ${art.emoji} ${art.nome}</div><div class="vp-det">+${art.cristais} &#x1F48E; &middot; ${new Date(m.timestamp).toLocaleDateString('pt-BR')}</div></div><div class="vp-btns"><button class="btn btn-ok" onclick="aprovarMissao('${m.emailKey}','${m.key}','${m.email}','${m.artefatoKey}')">&#10003;</button><button class="btn btn-del" onclick="recusarMissao('${m.emailKey}','${m.key}','${m.email}')">&#10007;</button></div></div>`;}).join('')
-          : '<div class="empty-msg">Nenhuma missão pendente. &#x2705;</div>';
+              return `<div class="missao-pend-item"><div class="vp-info"><div class="vp-nome">${nome}: ${art.emoji} ${art.nome}</div><div class="vp-det">+${art.cristais} 💎 &middot; ${new Date(m.timestamp).toLocaleDateString('pt-BR')}</div></div><div class="vp-btns"><button class="btn btn-ok" onclick="aprovarMissao('${m.emailKey}','${m.key}','${m.email}','${m.artefatoKey}')">&#10003;</button><button class="btn btn-del" onclick="recusarMissao('${m.emailKey}','${m.key}','${m.email}')">&#10007;</button></div></div>`;}).join('')
+          : '<div class="empty-msg">Nenhuma missão pendente. ✅</div>';
         _atualizarBadgesPendentes();
       } catch(e){ console.error('_carregarMissoesPend:',e); }
     }
 
     async function aprovarMissao(emailKey,mkey,email,artefatoKey) {
       try {
-        // Busca artefato direto do Firebase — não depende do cache _artefatos
+        // Busca artefato direto do Firebase - não depende do cache _artefatos
         const snapA = await db.ref('config/missoes/'+artefatoKey).get();
         if (!snapA.exists()) { toast('⚠️ Artefato não encontrado no banco.','error'); return; }
         const a = snapA.val();
@@ -2622,10 +2667,10 @@
         await db.ref('notificacoes/'+emailKey).push({
           tipo:'artefato', titulo:'⚔️ Missão Aprovada!',
           mensagem: 'O Mestre aprovou '+(a.emoji||'⚔️')+' '+(a.nome||'Artefato')+'! +'+cristais+' 💎 na sua conta!',
-          quantidade: cristais, timestamp: new Date().toISOString()
+          quantidade: cristais, item:(a.emoji||'⚔️')+' '+(a.nome||'Artefato'), timestamp: new Date().toISOString()
         });
         enviarPush(emailKey, '⚔️ Missão Aprovada!', `${a.emoji||'⚔️'} ${a.nome||'Artefato'}! +${cristais} 💎`, 'artefato', { cristais });
-        toast('✅ Missão aprovada! +'+cristais+' 💎 para '+u.nome,'success');
+        toast('⚔️ Missão aprovada! +'+cristais+' 💎 para '+u.nome,'success');
         await carregarVouchers(); // atualiza só o painel, não recarrega tudo
       } catch(e){ toast('❌ '+e.message,'error'); }
     }
@@ -2635,8 +2680,8 @@
         await db.ref('missoes/'+emailKey+'/'+mkey).update({status:'Recusado'});
         await db.ref('notificacoes/'+emailKey).push({tipo:'artefato_recusado',titulo:'⚔️ Missão Recusada',mensagem:'O Mestre não aprovou esta tarefa desta vez.',quantidade:0,timestamp:new Date().toISOString()});
         enviarPush(emailKey, '⚔️ Missão Recusada', 'O Mestre não aprovou esta tarefa desta vez.', 'artefato_recusado', {});
-        toast('Missão recusada.','success'); await carregarDados();
-      } catch(e){ toast('&#x274C; '+e.message,'error'); }
+        toast('⚔️ Missão recusada. O Guardião foi avisado.','success'); await carregarDados();
+      } catch(e){ toast('❌ '+e.message,'error'); }
     }
 
     let _swReg = null;
