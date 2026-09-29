@@ -220,7 +220,18 @@
     select:focus, input:focus { border-color:var(--gold); }
 
     /* ── ABAS DA GESTÃO ── */
-    .tabs { display:flex; gap:6px; margin-bottom:12px; }
+    .tabs { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+    .tabs .tab-btn { flex:1 1 30%; }
+    .sim-btn { display:block; width:100%; text-align:left; padding:11px 12px; margin-bottom:8px; border:1.5px solid #ddd; border-radius:10px; background:white; cursor:pointer; }
+    .sim-btn b { display:block; font-size:0.88rem; color:#333; }
+    .sim-btn span { font-size:0.72rem; color:#888; }
+    .sim-tab { width:100%; border-collapse:collapse; font-size:0.78rem; margin:10px 0; }
+    .sim-tab th { text-align:left; font-size:0.68rem; color:#888; padding:4px 6px; border-bottom:1.5px solid #eee; }
+    .sim-tab td { padding:7px 6px; border-bottom:1px solid #f0f0f0; vertical-align:top; }
+    .sim-antes { color:#c0392b; font-weight:700; }
+    .sim-depois { color:#27ae60; font-weight:700; }
+    .sim-obs { font-size:0.7rem; color:#999; }
+    .sim-vazio { text-align:center; padding:14px 6px; color:#27ae60; font-weight:700; font-size:0.85rem; }
     .tab-btn { flex:1; padding:9px 4px; border:1.5px solid #ddd; border-radius:8px; font-size:0.8rem; font-weight:700; background:white; color:#555; cursor:pointer; transition:background 0.15s; }
     .tab-btn.active { background:var(--blue); color:white; border-color:var(--blue); }
     .tab-panel { display:none; }
@@ -773,6 +784,7 @@
           <button class="tab-btn" onclick="aba('transacoes')">📋 Transações</button>
           <button class="tab-btn" onclick="aba('config')">⚙️ Config</button>
           <button class="tab-btn" onclick="aba('artefatos')">⚔️ Artefatos</button>
+          <button class="tab-btn" onclick="aba('simulador')">🧪 Simulador</button>
         </div>
         <div class="tab-panel active" id="tab-usuarios">
           <div id="lista-usuarios"><div class="empty-msg">Toque em Atualizar.</div></div>
@@ -795,6 +807,7 @@
               <option value="Pendente">Pendentes</option>
               <option value="Aprovado">Aprovados</option>
               <option value="Reprovado">Reprovados</option>
+              <option value="Estornado">Estornados</option>
             </select>
             <select id="filtro-tipo" onchange="renderTransacoes()">
               <option value="todos">Todos os tipos</option>
@@ -828,6 +841,11 @@
           <p style="font-size:0.72rem;font-weight:700;color:#e67e22;margin:14px 0 8px">🔍 AUDITORIA</p>
           <div class="config-row"><span class="config-lbl">📵 Limite de tela/dia (min)</span><input id="cfg-limite-tela" type="number" min="0"></div>
           <button class="btn btn-save btn-wide" onclick="salvarConfig()">💾 Salvar Configurações</button>
+        </div>
+        <div class="tab-panel" id="tab-simulador">
+          <p class="card-hint">Mostra o resultado de uma mudança em cima dos dados reais, lado a lado (antes e depois). <b>Nada é gravado</b> até você confirmar.</p>
+          <div id="sim-lista"></div>
+          <div id="sim-resultado"></div>
         </div>
         <div class="tab-panel" id="tab-artefatos">
           <p class="card-hint" style="margin-bottom:10px">Defina tarefas domésticas e os cristais que concedem.</p>
@@ -1150,12 +1168,21 @@
 
     /* ── HELPERS ── */
     const san2 = s => s;
+    /* ── DATA DE ESTUDO ── mesma regra do app da criança: data_aferida vale mais que a de registro */
+    const diaLocal = v => { const d = v ? new Date(v) : new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+    const dataEstudoM = t => diaLocal(t.data_aferida || t.data_registro || t.data);
+    const addDias = (str, n) => { const d = new Date(str+'T12:00:00'); d.setDate(d.getDate()+n); return diaLocal(d); };
+    /* segunda-feira da semana de uma data (YYYY-MM-DD), como no app da criança */
+    const segundaDe = str => { const d = new Date(str+'T12:00:00'); const dow = d.getDay(); d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1)); return diaLocal(d); };
+
+    /* Sequência de leitura: mesma conta do app da criança (Aprovado + Pendente, mínimo diário, data de estudo) */
     function calcStreak(trans, email) {
-      const dias = new Set(trans.filter(t => t.email===email && t.status==='Aprovado' && t.tipo==='Leitura').map(t => (t.data||'').substring(0,10)));
+      const minDiario = Number(_config.min_leitura_diaria) || 15;
+      const dias = new Set(trans.filter(t => t.email===email && (t.status==='Aprovado' || t.status==='Pendente') && t.tipo==='Leitura' && Number(t.quantidade) >= minDiario).map(dataEstudoM));
       let s = 0; const hoje = new Date();
-      for (let i=0; i<60; i++) {
+      for (let i=0; i<365; i++) {
         const d = new Date(hoje); d.setDate(hoje.getDate()-i);
-        const str = d.toISOString().substring(0,10);
+        const str = diaLocal(d);
         if (dias.has(str)) s++; else if (i>0) break;
       }
       return s;
@@ -1165,7 +1192,7 @@
     const nomeEmail = (usuarios, email) => Object.values(usuarios).find(u=>u.email===email)?.nome || email;
 
     /* ── ESTADO GLOBAL ── */
-    const APP_VERSAO = 'v17 · Duolingo pela criança';
+    const APP_VERSAO = 'v18 · Base técnica';
     let _usuarios = {}, _trans = [], _config = {};
     document.addEventListener('DOMContentLoaded', () => {
       const el = document.getElementById('app-versao');
@@ -1197,13 +1224,13 @@
         const metaL = Number(_config.meta_leitura_semanal)||140;
         const metaD = Number(_config.meta_duolingo_semanal)||140;
         const hoje  = new Date();
-        const iS    = new Date(hoje); iS.setDate(hoje.getDate()-hoje.getDay()); iS.setHours(0,0,0,0);
+        const iSStr = segundaDe(diaLocal(hoje));   // semana começa na segunda, como no app da criança
 
         const guardioes = Object.values(_usuarios).filter(u=>u.email).map(u => {
           const mt  = _trans.filter(t => t.email===u.email);
           const xp  = mt.filter(t => t.status==='Aprovado' && t.tipo==='Leitura').reduce((s,t)=>s+Number(t.quantidade),0);
           let lS=0, dS=0;
-          mt.forEach(t => { if(t.status==='Aprovado' && new Date(t.data)>=iS) { if(t.tipo==='Leitura') lS+=Number(t.quantidade); if(t.tipo==='Duolingo') dS+=Number(t.quantidade); } });
+          mt.forEach(t => { if(t.status==='Aprovado' && dataEstudoM(t)>=iSStr) { if(t.tipo==='Leitura') lS+=Number(t.quantidade); if(t.tipo==='Duolingo') dS+=Number(t.quantidade); } });
           const ua = mt.filter(t=>t.status==='Aprovado').sort((a,b)=>new Date(b.data)-new Date(a.data))[0];
           return { nome:u.nome, email:u.email, avatarUrl:u.avatar_url, energia:Math.floor(Number(u.saldo_energia)), cristais:Math.floor(Number(u.saldo_cristais)), xp, nivel:Math.floor(xp/500)+1, xpN:xp%500, lS, dS, streak:calcStreak(_trans,u.email), ua:ua?ua.data:null };
         });
@@ -1685,9 +1712,147 @@
       } catch(e) { toast('❌ '+e.message,'error'); }
     }
 
+
+    /* ═══════════════════ SIMULADOR (padrão reaproveitável) ═══════════════════
+       Como criar uma simulação nova (ex.: XP do Duolingo na Fase 5):
+         SIMULADORES.meu_id = { titulo, dica, calcular(ctx) { ... return { resumo, colunas, linhas, escritas }; } }
+       ctx = { usuarios, trans, config, bonus }  (dados reais, lidos na hora, nada é gravado)
+       Retorno: linhas = [{ quem, antes, depois, obs }]  ·  escritas = { 'caminho/no/firebase': valor }
+       O motor mostra "antes x depois" e só grava (de uma vez, atomicamente) quando o Mestre confirma. */
+    const SIMULADORES = {};
+    let _simResultado = null, _simId = null, _simArmado = false, _simTimer = null;
+
+    function simRenderLista() {
+      const el = document.getElementById('sim-lista');
+      if (!el) return;
+      el.innerHTML = Object.entries(SIMULADORES).map(([id, sm]) =>
+        `<button class="sim-btn" onclick="simRodar('${id}')"><b>${sm.titulo}</b><span>${sm.dica}</span></button>`).join('');
+    }
+
+    async function simRodar(id) {
+      const out = document.getElementById('sim-resultado');
+      out.innerHTML = '<div class="empty-msg">⏳ Calculando sobre os dados reais...</div>';
+      _simId = id; _simResultado = null; _simArmado = false;
+      try {
+        const [uS, tS, cS, bS] = await Promise.all([
+          db.ref('usuarios').get(), db.ref('transacoes').get(), db.ref('config').get(), db.ref('bonus_pagos').get().catch(() => null)
+        ]);
+        const ctx = {
+          usuarios: uS.exists() ? uS.val() : {},
+          trans:    tS.exists() ? Object.entries(tS.val()).map(([k,v]) => ({...v, _key:k})).filter(t => t.email) : [],
+          config:   cS.exists() ? cS.val() : {},
+          bonus:    bS && bS.exists() ? bS.val() : {}
+        };
+        _simResultado = SIMULADORES[id].calcular(ctx);
+        simRenderResultado();
+      } catch (e) { out.innerHTML = ''; toast('❌ ' + e.message, 'error'); }
+    }
+
+    function simRenderResultado() {
+      const out = document.getElementById('sim-resultado');
+      const r = _simResultado, sm = SIMULADORES[_simId];
+      if (!r) { out.innerHTML = ''; return; }
+      const n = Object.keys(r.escritas || {}).length;
+      let h = `<hr class="divider"><p class="section-label">${sm.titulo}</p><p class="card-hint">${r.resumo}</p>`;
+      if (!r.linhas.length) {
+        h += '<div class="sim-vazio">✅ Nada a corrigir. Está tudo certo.</div>';
+      } else {
+        const [c1, c2] = r.colunas || ['Antes', 'Depois'];
+        h += `<table class="sim-tab"><tr><th>Guardião</th><th>${c1}</th><th>${c2}</th></tr>` +
+          r.linhas.map(l => `<tr><td><b>${l.quem}</b>${l.obs ? `<div class="sim-obs">${l.obs}</div>` : ''}</td><td class="sim-antes">${l.antes}</td><td class="sim-depois">${l.depois}</td></tr>`).join('') +
+          '</table>';
+        h += `<button class="btn btn-warn btn-wide" id="sim-confirmar" onclick="simConfirmar()">✅ Confirmar e gravar (${n} alterações)</button>`;
+        h += '<button class="btn btn-wide" style="background:#95a5a6;color:white" onclick="simCancelar()">Cancelar (não grava nada)</button>';
+      }
+      out.innerHTML = h;
+    }
+
+    function simCancelar() { _simResultado = null; _simArmado = false; document.getElementById('sim-resultado').innerHTML = ''; }
+
+    async function simConfirmar() {
+      const btn = document.getElementById('sim-confirmar');
+      if (!_simResultado || !btn) return;
+      if (!_simArmado) {   // 1º toque arma, 2º toque grava
+        _simArmado = true;
+        btn.textContent = '⚠️ Toque de novo para GRAVAR de verdade';
+        clearTimeout(_simTimer);
+        _simTimer = setTimeout(() => { _simArmado = false; if (document.getElementById('sim-confirmar')) simRenderResultado(); }, 6000);
+        return;
+      }
+      clearTimeout(_simTimer);
+      btn.disabled = true; btn.textContent = '⏳ Gravando...';
+      try {
+        await db.ref().update(_simResultado.escritas);
+        toast('✅ Alterações gravadas.');
+        const id = _simId;
+        await carregarDados();
+        await simRodar(id);   // roda de novo: deve aparecer "nada a corrigir"
+      } catch (e) { toast('❌ ' + e.message, 'error'); btn.disabled = false; btn.textContent = '✅ Confirmar e gravar'; _simArmado = false; }
+    }
+
+    /* ── Simulação 1: bônus pagos em dobro ── */
+    SIMULADORES.bonus_duplicados = {
+      titulo: '🎁 Bônus pagos em dobro',
+      dica: 'Procura marcos de streak de leitura e metas semanais de Duolingo pagos mais de uma vez pelo mesmo período (bug do app reaberto).',
+      calcular(ctx) {
+        const minLeitura = Number(ctx.config.min_leitura_diaria) || 15;
+        const agora = new Date().toISOString();
+        const linhas = [], escritas = {};
+        Object.entries(ctx.usuarios).filter(([, u]) => u.email && !u.is_mestre).forEach(([key, u]) => {
+          const tx = ctx.trans.filter(t => t.email === u.email);
+          const dias = new Set(tx.filter(t => t.tipo === 'Leitura' && (t.status === 'Aprovado' || t.status === 'Pendente') && Number(t.quantidade) >= minLeitura).map(dataEstudoM));
+          const inicioDaSeq = dia => {   // dia em que começou a sequência que contém "dia" (ou o dia anterior)
+            let d = dia; if (!dias.has(d)) d = addDias(d, -1); if (!dias.has(d)) return null;
+            while (dias.has(addDias(d, -1))) d = addDias(d, -1);
+            return d;
+          };
+          const grupos = {};
+          tx.filter(t => t.tipo === 'Bonus' && t.status === 'Aprovado').forEach(t => {
+            const det = String(t.detalhes || ''), dia = diaLocal(t.data);
+            let chave, campo;
+            const m = det.match(/Streak de leitura: (\d+) dias/);
+            if (m) { chave = 'L|' + m[1] + '|' + (inicioDaSeq(dia) || dia); campo = 'saldo_energia'; }
+            else if (det.includes('Meta semanal Duolingo')) { chave = 'D|' + segundaDe(dia); campo = 'saldo_cristais'; }
+            else return;
+            (grupos[chave] = grupos[chave] || { campo, itens: [] }).itens.push(t);
+          });
+          let extraE = 0, extraC = 0, qtd = 0;
+          Object.values(grupos).forEach(g => {
+            if (g.itens.length < 2) return;
+            g.itens.sort((a, b) => new Date(a.data) - new Date(b.data));   // o 1º é o legítimo
+            g.itens.slice(1).forEach(t => {
+              qtd++;
+              if (g.campo === 'saldo_energia') extraE += Number(t.quantidade) || 0; else extraC += Number(t.quantidade) || 0;
+              escritas['transacoes/' + t._key + '/status'] = 'Estornado';
+              escritas['transacoes/' + t._key + '/estornado_em'] = agora;
+              escritas['transacoes/' + t._key + '/motivo_estorno'] = 'Bônus pago em dobro (Fase 2)';
+            });
+          });
+          if (!qtd) return;
+          const aE = Number(u.saldo_energia) || 0, aC = Number(u.saldo_cristais) || 0;
+          const dE = Math.max(0, aE - extraE), dC = Math.max(0, aC - extraC);
+          if (extraE) escritas['usuarios/' + key + '/saldo_energia'] = dE;
+          if (extraC) escritas['usuarios/' + key + '/saldo_cristais'] = dC;
+          const falta = (aE - extraE < 0 || aC - extraC < 0) ? ' · saldo menor que o excesso: só o que existe será retirado' : '';
+          linhas.push({
+            quem: u.nome, obs: `${qtd} bônus em dobro${falta}`,
+            antes:  `⚡ ${Math.floor(aE)} · 💎 ${Math.floor(aC)}`,
+            depois: `⚡ ${Math.floor(dE)} · 💎 ${Math.floor(dC)}`
+          });
+        });
+        return {
+          resumo: linhas.length
+            ? 'Os bônus repetidos ficam marcados como "Estornado" (o histórico é mantido) e o saldo é ajustado. O primeiro pagamento de cada período continua valendo.'
+            : 'Nenhum bônus repetido encontrado no histórico.',
+          colunas: ['Saldo antes', 'Saldo depois'], linhas, escritas
+        };
+      }
+    };
+    document.addEventListener('DOMContentLoaded', simRenderLista);
+
     /* ── ABAS ── */
     function aba(nome) {
-      document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active',['usuarios','transacoes','config','artefatos'][i]===nome));
+      document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active',['usuarios','transacoes','config','artefatos','simulador'][i]===nome));
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       document.getElementById('tab-'+nome).classList.add('active');
     }
@@ -2004,7 +2169,8 @@
         case 'Forja':
         case 'Artefato':
         case 'Missao':   return { moeda:'💎', sinal: 1, q };
-        case 'Bonus':    return (det.includes('duolingo') || det.includes('🦉'))
+        case 'Bonus':    if (t.status === 'Estornado') return { moeda:'', sinal:0, q };
+                         return (det.includes('duolingo') || det.includes('🦉'))
                                 ? { moeda:'💎', sinal:1, q }
                                 : { moeda:'⚡', sinal:1, q };
         case 'Leitura':  return { moeda:'⚡', sinal: t.status==='Aprovado' ? 1 : 0, q };
@@ -2718,6 +2884,7 @@
       const seg  = new Date(hoje);
       seg.setDate(hoje.getDate() - dow + (dow === 0 ? -6 : 1));
       seg.setHours(0,0,0,0);
+      const segStr = diaLocal(seg);
       const dom = new Date(seg); dom.setDate(seg.getDate() + 6);
       const fmt = d => d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
 
@@ -2733,8 +2900,7 @@
         const mins = _trans.filter(t => {
           if (t.email !== u.email || t.status !== 'Aprovado' || t.tipo !== tipo) return false;
           if (_mRankPeriodo === 'semanal') {
-            const d = new Date(t.data_aferida || t.data_registro || t.data);
-            return d >= seg;
+            return dataEstudoM(t) >= segStr;
           }
           return true;
         }).reduce((s, t) => s + Number(t.quantidade), 0);
