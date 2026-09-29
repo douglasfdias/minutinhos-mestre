@@ -862,7 +862,7 @@
 
     <script>
     /* ── FIREBASE ── */
-    firebase.initializeApp({
+    const _fbConfig = {
       apiKey:"AIzaSyABCdoTrqwRmj3wmiYGRJfTbcyoqyf5uME",
       authDomain:"minutinhos.firebaseapp.com",
       databaseURL:"https://minutinhos-default-rtdb.firebaseio.com",
@@ -870,9 +870,14 @@
       storageBucket:"minutinhos.firebasestorage.app",
       messagingSenderId:"205117538078",
       appId:"1:205117538078:web:33a0c88a10c6b3d7f5930f"
-    });
-    const db = firebase.database();
-    const auth = firebase.auth();
+    };
+    // App padrão: usado só pelo Messaging (push).
+    firebase.initializeApp(_fbConfig);
+    // App nomeado 'mestre': login e banco do painel em sessão SEPARADA da do
+    // app dos Guardiões (mesma origem douglasfdias.github.io dividia a sessão).
+    const _mestreApp = firebase.initializeApp(_fbConfig, 'mestre');
+    const db = _mestreApp.database();
+    const auth = _mestreApp.auth();
     const san = e => e.replace(/\./g,'_');
 
     /* ============================================================
