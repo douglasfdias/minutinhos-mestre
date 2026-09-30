@@ -39,7 +39,7 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 // sw-mestre.js - Service Worker - Painel do Mestre
-const CACHE_NAME = 'minutinhos-mestre-v23';
+const CACHE_NAME = 'minutinhos-mestre-v24';
 
 const ROOT  = '/minutinhos-mestre/';
 const INDEX = '/minutinhos-mestre/index.html';
@@ -49,6 +49,8 @@ const ASSETS = [
   INDEX,
   'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js',
+  'https://i.ibb.co/YF6L3bP8/imagem-livro-180x140.png',
+  'https://i.ibb.co/jvkzKpNL/duolingo-oraculo-head-50x50.png',
 ];
 
 /* Baixa SEMPRE da rede na instalação (ignora o cache HTTP do navegador).
