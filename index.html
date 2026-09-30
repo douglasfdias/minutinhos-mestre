@@ -1222,7 +1222,7 @@
     const nomeEmail = (usuarios, email) => Object.values(usuarios).find(u=>u.email===email)?.nome || email;
 
     /* ── ESTADO GLOBAL ── */
-    const APP_VERSAO = 'v20 · Escudos';
+    const APP_VERSAO = 'v21 · XP';
     let _usuarios = {}, _trans = [], _config = {}, _inventario = {};
     document.addEventListener('DOMContentLoaded', () => {
       const el = document.getElementById('app-versao');
@@ -1260,11 +1260,14 @@
 
         const guardioes = Object.values(_usuarios).filter(u=>u.email).map(u => {
           const mt  = _trans.filter(t => t.email===u.email);
-          const xp  = mt.filter(t => t.status==='Aprovado' && t.tipo==='Leitura').reduce((s,t)=>s+Number(t.quantidade),0);
+          const xpL = mt.filter(t => t.status==='Aprovado' && t.tipo==='Leitura').reduce((s,t)=>s+(Number(t.quantidade)||0),0);
+          const xpD = mt.filter(t => t.status==='Aprovado' && t.tipo==='Duolingo').reduce((s,t)=>s+(Number(t.quantidade)||0),0);
+          const xpAtivo = _config.xp_duolingo_ativo === true;   // Fase 5: o Duolingo só vale no nível depois da virada no Simulador
+          const xp  = xpL + (xpAtivo ? xpD : 0);
           let lS=0, dS=0;
           mt.forEach(t => { if(t.status==='Aprovado' && dataEstudoM(t)>=iSStr) { if(t.tipo==='Leitura') lS+=Number(t.quantidade); if(t.tipo==='Duolingo') dS+=Number(t.quantidade); } });
           const ua = mt.filter(t=>t.status==='Aprovado').sort((a,b)=>new Date(b.data)-new Date(a.data))[0];
-          return { nome:u.nome, email:u.email, avatarUrl:u.avatar_url, energia:Math.floor(Number(u.saldo_energia)), cristais:Math.floor(Number(u.saldo_cristais)), xp, nivel:Math.floor(xp/500)+1, xpN:xp%500, lS, dS, streak:calcStreak(_trans,u.email), ua:ua?ua.data:null };
+          return { nome:u.nome, email:u.email, avatarUrl:u.avatar_url, energia:Math.floor(Number(u.saldo_energia)), cristais:Math.floor(Number(u.saldo_cristais)), xp, xpL, xpD, xpAtivo, nivel:Math.floor(xp/500)+1, xpN:xp%500, lS, dS, streak:calcStreak(_trans,u.email), ua:ua?ua.data:null };
         });
 
         const pendentes = _trans.filter(t=>t.status==='Pendente').map(t=>({key:t._key,email:t.email,nome:nomeEmail(_usuarios,t.email),det:t.detalhes,qtd:Number(t.quantidade),tipo:t.tipo,data:t.data}));
@@ -1294,7 +1297,7 @@
         const pL=Math.min(100,Math.round(g.lS/metaL*100)), pX=Math.round(g.xpN/500*100);
         const str = g.streak>0 ? `<span class="gc-streak">🔥 ${g.streak} dia${g.streak>1?'s':''}</span>` : '';
         return `<div class="guardiao-card">
-          <div class="gc-topo"><img class="gc-avatar" src="${g.avatarUrl}" onerror="this.style.display='none'"><div class="gc-info"><div class="gc-nome">${g.nome}</div><div class="gc-nivel">⭐ Nível ${g.nivel} · ${g.xp} XP</div></div>${str}</div>
+          <div class="gc-topo"><img class="gc-avatar" src="${g.avatarUrl}" onerror="this.style.display='none'"><div class="gc-info"><div class="gc-nome">${g.nome}</div><div class="gc-nivel">⭐ Nível ${g.nivel} · ${g.xp} XP</div><div class="gc-nivel" style="font-size:0.68rem;color:#7f8c8d;font-weight:600">📖 ${g.xpL}${g.xpAtivo ? ` · 🦉 ${g.xpD}` : ` · 🦉 ${g.xpD} (ainda não conta)`}</div></div>${str}</div>
           <div class="gc-saldos"><div class="gc-pill"><div class="gc-pill-val e-val">${g.energia}</div><div class="gc-pill-lbl">⚡ Energia</div></div><div class="gc-pill"><div class="gc-pill-val c-val">${g.cristais}</div><div class="gc-pill-lbl">💎 Cristais</div></div></div>
           <div class="gc-stats"><div>📖 Leitura: <span>${g.lS}/${metaL}</span></div><div>🦉 Duolingo: <span>${g.dS}/${metaD}</span></div><div>📊 XP nível: <span>${g.xpN}/500</span></div><div>🕐 Última: <span>${diasDesde(g.ua)}</span></div></div>
           <div class="gc-bar-lbl"><span>📖 Progresso semanal</span><span>${pL}%</span></div><div class="gc-bar"><div class="gc-bar-fill ${pL>=100?'ok':''}" style="width:${pL}%"></div></div>
@@ -1878,6 +1881,38 @@
             ? 'Os bônus repetidos ficam marcados como "Estornado" (o histórico é mantido) e o saldo é ajustado. O primeiro pagamento de cada período continua valendo.'
             : 'Nenhum bônus repetido encontrado no histórico.',
           colunas: ['Saldo antes', 'Saldo depois'], linhas, escritas
+        };
+      }
+    };
+    /* ── Simulação 2 (Fase 5): XP do Duolingo passa a valer no nível ──
+       Mostra, para cada Guardião, o nível de hoje (só leitura) e o nível com o Duolingo já aprovado.
+       Não há dado para migrar: o XP é calculado na hora a partir das transações Aprovadas.
+       Confirmar só liga o interruptor config/xp_duolingo_ativo (os dois apps passam a somar o Duolingo).
+       Para desfazer: apagar ou colocar false em config/xp_duolingo_ativo no Firebase. */
+    SIMULADORES.xp_duolingo = {
+      titulo: '⭐ XP do Duolingo no nível',
+      dica: 'Compara o nível atual de cada Guardião (só leitura) com o nível recalculado somando o Duolingo já aprovado. Ao confirmar, o Duolingo passa a valer XP.',
+      calcular(ctx) {
+        if (ctx.config.xp_duolingo_ativo === true) {
+          return { resumo: 'O XP do Duolingo já está valendo para o nível de todos os Guardiões. Nada a fazer.', colunas: ['Antes', 'Depois'], linhas: [], escritas: {} };
+        }
+        const soma = (tx, tipo) => tx.filter(t => t.status === 'Aprovado' && t.tipo === tipo).reduce((a, t) => a + (Number(t.quantidade) || 0), 0);
+        const linhas = [];
+        Object.values(ctx.usuarios).filter(u => u.email && !u.is_mestre).forEach(u => {
+          const tx = ctx.trans.filter(t => t.email === u.email);
+          const xpL = soma(tx, 'Leitura'), xpD = soma(tx, 'Duolingo'), xpT = xpL + xpD;
+          const nA = Math.floor(xpL / 500) + 1, nD = Math.floor(xpT / 500) + 1;
+          linhas.push({
+            quem: u.nome,
+            obs: nD > nA ? `sobe ${nD - nA} nível(is) · 🦉 ${Math.floor(xpD)} XP entram` : (xpD ? `o nível não muda · 🦉 ${Math.floor(xpD)} XP entram` : 'sem Duolingo aprovado ainda'),
+            antes:  `Nível ${nA} · ${Math.floor(xpL)} XP`,
+            depois: `Nível ${nD} · ${Math.floor(xpT)} XP`
+          });
+        });
+        return {
+          resumo: 'Nenhum dado é reescrito: o XP é sempre calculado a partir das transações Aprovadas (1 minuto = 1 XP, leitura e Duolingo). Confirmar apenas liga o interruptor. Cada criança verá um aviso do Oráculo uma vez. Só entra Duolingo Aprovado (Pendente, Reprovado e Estornado ficam de fora).',
+          colunas: ['Hoje (só leitura)', 'Com Duolingo'], linhas,
+          escritas: { 'config/xp_duolingo_ativo': true, 'config/xp_duolingo_desde': new Date().toISOString() }
         };
       }
     };
