@@ -167,6 +167,19 @@
     .btn:active { transform:scale(0.94); }
     .btn-ok  { background:var(--green); color:white; }
     .btn-del { background:var(--red); color:white; }
+    .btn-teste { background:#16a085; color:white; }
+    .tst-ov { position:fixed; inset:0; background:rgba(0,0,0,0.62); z-index:5000; display:none; align-items:center; justify-content:center; padding:14px; }
+    .tst-ov.open { display:flex; }
+    .tst-box { background:#fff; border-radius:14px; width:100%; max-width:470px; max-height:92vh; overflow-y:auto; padding:16px 16px 14px; }
+    .tst-tit { font-weight:900; font-size:1.05rem; margin-bottom:2px; }
+    .tst-sec { margin-top:14px; padding-top:12px; border-top:1px solid #e3e3e3; }
+    .tst-sec h4 { margin:0 0 4px; font-size:0.92rem; }
+    .tst-ajuda { font-size:0.78rem; color:#666; margin:0 0 8px; line-height:1.35; }
+    .tst-botoes { display:flex; flex-wrap:wrap; gap:6px; }
+    .tst-botoes .btn { flex:1 1 auto; }
+    .tst-chk { display:flex; gap:8px; align-items:flex-start; padding:7px 0; font-size:0.84rem; line-height:1.3; }
+    .tst-chk input { margin-top:3px; width:auto; }
+    .tst-chk small { display:block; color:#777; font-size:0.74rem; margin-top:1px; }
     .btn-save { background:#2980b9; color:white; }
     .btn-warn { background:#f39c12; color:white; }
     .btn-wide { width:100%; height:44px; margin-top:8px; border-radius:10px; font-size:0.95rem; }
@@ -551,6 +564,38 @@
   </div>
 
   <div id="toast"></div>
+
+  <div class="tst-ov" id="tst-ov" onclick="if(event.target===this)testesFechar()">
+    <div class="tst-box">
+      <div class="tst-tit" id="tst-tit">🧪 Testes</div>
+      <div class="tst-ajuda" id="tst-sub"></div>
+
+      <div class="tst-sec">
+        <h4>🎬 Rever no app da criança (não apaga nada)</h4>
+        <p class="tst-ajuda">Toca a cerimônia na hora, se o app dela estiver aberto, ou na próxima vez que abrir (vale por 15 minutos). Os selos precisam estar ligados em Gestão → Selos.</p>
+        <div class="tst-botoes">
+          <button class="btn btn-teste" onclick="testesTocar('selo','comum')">Comum</button>
+          <button class="btn btn-teste" onclick="testesTocar('selo','raro')">Raro</button>
+          <button class="btn btn-teste" onclick="testesTocar('selo','epico')">Épico</button>
+          <button class="btn btn-teste" onclick="testesTocar('selo','lend')">Lendário</button>
+          <button class="btn btn-teste" onclick="testesTocar('novidade')">📜 Novidade dos Selos</button>
+        </div>
+      </div>
+
+      <div class="tst-sec">
+        <h4>⏪ Voltar passos (apaga dados de teste)</h4>
+        <p class="tst-ajuda">Marque o que apagar. Não tem desfazer. Depois, é só abrir o app da criança: ele se limpa sozinho, sem precisar limpar o cache.</p>
+        <label class="tst-chk"><input type="checkbox" id="tst-selos"><span><b>🏅 Selos e cerimônias</b><small>Apaga os selos ganhos e as marcações de "já vi". Se as leituras ainda merecerem os selos, eles voltam na próxima abertura (menos de 3 viram cerimônia; 3 ou mais chegam em silêncio).</small></span></label>
+        <label class="tst-chk"><input type="checkbox" id="tst-esc"><span><b>🛡️ Escudos e marcos</b><small>Apaga o inventário de escudos e os marcos já pagos (7 e 30 dias, Duelo, Torneio).</small></span></label>
+        <label class="tst-chk"><input type="checkbox" id="tst-leit"><span><b>📖 Leituras, XP e saldo</b><small>Apaga todas as transações e zera energia e cristais (igual ao botão Resetar).</small></span></label>
+        <div class="tst-botoes" style="margin-top:6px">
+          <button class="btn" style="background:#888;color:#fff" onclick="testesMarcar(true)">Marcar tudo</button>
+          <button class="btn btn-del" onclick="testesApagar()">🗑 Apagar marcados</button>
+        </div>
+      </div>
+      <div class="btn-row" style="margin-top:12px"><button class="btn" style="background:#555;color:#fff;width:100%" onclick="testesFechar()">Fechar</button></div>
+    </div>
+  </div>
 
   <!-- ── MODAL: como os Guardiões te conhecem ── -->
   <div id="nome-setup-modal">
@@ -1284,7 +1329,7 @@
     const nomeEmail = (usuarios, email) => Object.values(usuarios).find(u=>u.email===email)?.nome || email;
 
     /* ── ESTADO GLOBAL ── */
-    const APP_VERSAO = 'v25 · Selos 2';
+    const APP_VERSAO = 'v26 · Testes';
     let _usuarios = {}, _trans = [], _config = {}, _inventario = {};
     document.addEventListener('DOMContentLoaded', () => {
       const el = document.getElementById('app-versao');
@@ -2587,6 +2632,7 @@
           </div>
           <div class="btn-row">
             <button class="btn btn-save"  onclick="salvarUsuario('${key}')">💾 Salvar</button>
+            <button class="btn btn-teste" onclick="testesAbrir('${key}')">🧪 Testes</button>
             <button class="btn btn-reset" onclick="resetarUsuario('${key}','${u.nome}')">🔄 Resetar</button>
             <button class="btn btn-del"   onclick="deletarUsuario('${key}','${u.nome}')">🗑 Apagar</button>
           </div>
@@ -2604,6 +2650,57 @@
         toast('✅ Ficha do Guardião salva!','success');
         await carregarDados();
       } catch(e) { toast('❌ '+e.message,'error'); }
+    }
+
+    /* ── Testes por Guardião: tocar cerimônia no app e voltar passos (Fase 6) ── */
+    let _tstKey = null;
+    function testesAbrir(key) {
+      const u = _usuarios[key]; if (!u) return;
+      _tstKey = key;
+      document.getElementById('tst-tit').textContent = '🧪 Testes: ' + u.nome;
+      document.getElementById('tst-sub').textContent = u.email;
+      ['tst-selos', 'tst-esc', 'tst-leit'].forEach(id => document.getElementById(id).checked = false);
+      document.getElementById('tst-ov').classList.add('open');
+    }
+    function testesFechar() { document.getElementById('tst-ov').classList.remove('open'); }
+    function testesMarcar(v) { ['tst-selos', 'tst-esc', 'tst-leit'].forEach(id => document.getElementById(id).checked = !!v); }
+    async function testesTocar(tipo, rar) {
+      if (!_tstKey) return;
+      if (!(_config && _config.selos_ativo === true)) { toast('⚠️ Ligue os selos em Gestão → Selos antes.', 'error'); return; }
+      try {
+        await db.ref('usuarios/' + _tstKey + '/cer_teste').set({ tipo, rar: rar || null, id: 'selos-1', ts: Date.now() });
+        toast('🎬 Enviado! Abra (ou olhe) o app de ' + (_usuarios[_tstKey] || {}).nome + '.', 'success');
+      } catch (e) { toast('❌ ' + e.message, 'error'); }
+    }
+    async function testesApagar() {
+      const key = _tstKey, u = _usuarios[key]; if (!u) return;
+      const sel = { selos: document.getElementById('tst-selos').checked, esc: document.getElementById('tst-esc').checked, leit: document.getElementById('tst-leit').checked };
+      if (!sel.selos && !sel.esc && !sel.leit) { toast('⚠️ Marque o que deseja apagar.', 'error'); return; }
+      const itens = [sel.selos && '• Selos e cerimônias', sel.esc && '• Escudos e marcos', sel.leit && '• Leituras, XP e saldo'].filter(Boolean).join('\n');
+      if (!confirm('Apagar para ' + u.nome + ':\n' + itens + '\n\nIsso não pode ser desfeito.')) return;
+      const dig = prompt('Para confirmar, digite o nome do Guardião: ' + u.nome);
+      if (!dig || dig.trim().toLowerCase() !== String(u.nome).trim().toLowerCase()) { toast('Cancelado: o nome não confere.', 'error'); return; }
+      try {
+        const up = {};
+        if (sel.selos) {
+          await db.ref('selos/' + key).remove();
+          Object.assign(up, { cer_vistas: null, novidades_vistas: null, cer_base: null, cer_teste: null, cer_reset: Date.now() });
+        }
+        if (sel.esc) { await db.ref('inventario/' + key).remove(); await db.ref('bonus_pagos/' + key).remove(); }
+        if (sel.leit) {
+          up.saldo_energia = 0; up.saldo_cristais = 0;
+          const tSnap = await db.ref('transacoes').get();
+          if (tSnap.exists()) {
+            const del = {}; Object.entries(tSnap.val()).forEach(([k, t]) => { if (t.email === u.email) del[k] = null; });
+            if (Object.keys(del).length) await db.ref('transacoes').update(del);
+          }
+          await db.ref('notificacoes/' + key).remove();
+        }
+        if (Object.keys(up).length) await db.ref('usuarios/' + key).update(up);
+        testesFechar();
+        toast('🧪 Pronto! Abra o app de ' + u.nome + ' para ver o resultado.', 'success');
+        await carregarDados();
+      } catch (e) { toast('❌ ' + e.message, 'error'); }
     }
 
     async function deletarUsuario(key, nome) {
