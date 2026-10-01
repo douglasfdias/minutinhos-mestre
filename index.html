@@ -916,7 +916,12 @@
           </div>
         </div>
         <div class="tab-panel" id="tab-selos">
-          <p class="card-hint">Catálogo dos emblemas, das famílias e dos selos que as crianças vão colecionar. Aqui você cadastra, ajusta os textos e confere quem ganharia. <b>Nada aparece para as crianças até a próxima etapa.</b></p>
+          <p class="card-hint">Catálogo dos emblemas, das famílias e dos selos que as crianças vão colecionar. Aqui você cadastra, ajusta os textos e confere quem ganharia. <b>As crianças só veem os selos quando você liga o interruptor abaixo.</b></p>
+          <div class="bn-bloco" id="selos-interruptor" style="margin-bottom:12px">
+            <div class="bn-head"><span class="bn-titulo">🔌 Selos para as crianças</span></div>
+            <div class="bn-sub" id="selos-int-txt"></div>
+            <button class="btn btn-wide" id="selos-int-btn" onclick="selosAlternar()"></button>
+          </div>
           <div id="selos-acoes" class="sl-barra" style="display:none">
             <button class="btn btn-ok" onclick="selosPrevia()">🔍 Prévia</button>
             <button class="btn" style="background:#8e44ad;color:white" onclick="selosNovaFamilia()">➕ Família</button>
@@ -1279,7 +1284,7 @@
     const nomeEmail = (usuarios, email) => Object.values(usuarios).find(u=>u.email===email)?.nome || email;
 
     /* ── ESTADO GLOBAL ── */
-    const APP_VERSAO = 'v24 · Selos';
+    const APP_VERSAO = 'v25 · Selos 2';
     let _usuarios = {}, _trans = [], _config = {}, _inventario = {};
     document.addEventListener('DOMContentLoaded', () => {
       const el = document.getElementById('app-versao');
@@ -2136,6 +2141,32 @@
     /* ── Estado do catálogo em edição ── */
     let _selosCfg = null, _selosEd = null, _seloAberto = null, _selosSujo = false, _embAberto = false;
 
+    /* Interruptor dos selos (config/selos_ativo). Desligado: os apps das crianças não calculam, não gravam e não mostram nada. */
+    function selosInterruptorRender() {
+      const on = !!(_config && _config.selos_ativo === true);
+      const t = document.getElementById('selos-int-txt'), b = document.getElementById('selos-int-btn');
+      if (!t || !b) return;
+      t.innerHTML = on
+        ? '<b>LIGADO.</b> Os apps das crianças calculam e gravam as conquistas e mostram a chave Selos na Coleção do Baú.'
+        : '<b>DESLIGADO.</b> Nada de selos aparece nem é gravado nas crianças. Ligue só depois de colar as regras do Firebase e conferir a Prévia.';
+      b.textContent = on ? '⏸️ Desligar selos' : '▶️ Ligar selos';
+      b.style.background = on ? '#c0392b' : '#27ae60'; b.style.color = 'white';
+    }
+    async function selosAlternar() {
+      const on = !!(_config && _config.selos_ativo === true);
+      const msg = on
+        ? 'Desligar os selos? Os selos já conquistados continuam guardados, mas as crianças deixam de vê-los.'
+        : 'Ligar os selos? Ao abrir o app, cada criança recebe os selos que já merece (se forem 3 ou mais, aparece um aviso só, sem cascata).';
+      if (!confirm(msg)) return;
+      try {
+        await db.ref('config/selos_ativo').set(!on);
+        if (!_config) _config = {};
+        _config.selos_ativo = !on;
+        selosInterruptorRender();
+        toast(on ? '⏸️ Selos desligados para as crianças.' : '▶️ Selos ligados para as crianças.', 'success');
+      } catch (e) { toast('❌ ' + e.message, 'error'); }
+    }
+
     function carregarSelosCfg() {
       if (_selosSujo) return;   // não apaga o que está sendo editado
       const c = _config && _config.selos;
@@ -2143,6 +2174,7 @@
       _selosEd = _clone(_selosCfg);
       if (!_selosEd.emblemas) _selosEd.emblemas = embPadrao();
       _seloAberto = null;
+      selosInterruptorRender();
       renderSelos();
     }
 
