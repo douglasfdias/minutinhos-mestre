@@ -483,7 +483,7 @@
     .trans-row:hover .trans-info { opacity: 0.85; }
     .trans-expandable { border-bottom: 1px solid #f0f0f0; padding-bottom: 6px; margin-bottom: 0; }
     .trans-expandable:last-child { border-bottom: none; }
-    /* ── Selos (Fase 6 · passo 1) ── */
+      /* ── Selos (Fase 6 · passo 1) ── */
     .sl-barra { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
     .sl-barra .btn { flex:1 1 30%; height:38px; }
     .sl-vazio { text-align:center; color:#666; font-size:0.85rem; padding:16px 8px; border:1px dashed #ccc; border-radius:10px; }
@@ -511,6 +511,17 @@
     .sl-tab td { padding:5px 6px; border-top:1px solid #eee; vertical-align:middle; }
     .sl-barra-prog { height:6px; background:#e5e5e5; border-radius:3px; overflow:hidden; margin-top:3px; }
     .sl-barra-prog i { display:block; height:100%; background:#1D9E75; }
+    .sl-emb { border:1px solid #e0e0ec; border-radius:10px; margin-bottom:10px; background:#fbfbff; padding:0 10px 10px; }
+    .sl-emb summary { padding:10px 0; cursor:pointer; font-weight:800; font-size:0.86rem; color:#333; }
+    .sl-emb-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:8px; }
+    .sl-emb-cel { position:relative; text-align:center; border:1px solid #ececec; border-radius:10px; padding:8px 4px 6px; background:white; }
+    .sl-emb-cel.sl-off { opacity:0.6; }
+    .sl-emb-img { display:flex; justify-content:center; min-height:56px; }
+    .sl-emb-nome { font-size:0.74rem; font-weight:800; color:#333; margin-top:3px; }
+    .sl-emb-chk { display:flex; align-items:center; justify-content:center; gap:4px; font-size:0.7rem; font-weight:700; color:#555; margin-top:3px; cursor:pointer; }
+    .sl-emb-chk input { width:16px; height:16px; margin:0; }
+    .sl-emb-cel .sl-ed { position:absolute; top:3px; right:3px; padding:2px 6px; font-size:0.72rem; }
+    .sl-emb-falta { width:56px; height:56px; border:1px dashed #c0392b; color:#c0392b; font-size:0.62rem; display:flex; align-items:center; justify-content:center; border-radius:8px; text-align:center; }
   </style>
 </head>
 <body>
@@ -905,11 +916,12 @@
           </div>
         </div>
         <div class="tab-panel" id="tab-selos">
-          <p class="card-hint">Catálogo das famílias e dos selos que as crianças vão colecionar. Aqui você cadastra, ajusta os textos e confere quem ganharia. <b>Nada aparece para as crianças até a próxima etapa.</b></p>
+          <p class="card-hint">Catálogo dos emblemas, das famílias e dos selos que as crianças vão colecionar. Aqui você cadastra, ajusta os textos e confere quem ganharia. <b>Nada aparece para as crianças até a próxima etapa.</b></p>
           <div id="selos-acoes" class="sl-barra" style="display:none">
             <button class="btn btn-ok" onclick="selosPrevia()">🔍 Prévia</button>
             <button class="btn" style="background:#8e44ad;color:white" onclick="selosNovaFamilia()">➕ Família</button>
             <button class="btn" style="background:#2980b9;color:white" onclick="selosNovoSelo()">➕ Selo</button>
+            <button class="btn" id="selos-completar" style="display:none;background:#16a085;color:white" onclick="selosCompletar()">➕ Completar</button>
           </div>
           <div id="selos-previa"></div>
           <div id="selos-corpo"><div class="empty-msg">Toque em Atualizar.</div></div>
@@ -1267,7 +1279,7 @@
     const nomeEmail = (usuarios, email) => Object.values(usuarios).find(u=>u.email===email)?.nome || email;
 
     /* ── ESTADO GLOBAL ── */
-    const APP_VERSAO = 'v23 · Selos';
+    const APP_VERSAO = 'v24 · Selos';
     let _usuarios = {}, _trans = [], _config = {}, _inventario = {};
     document.addEventListener('DOMContentLoaded', () => {
       const el = document.getElementById('app-versao');
@@ -1932,7 +1944,8 @@
     };
     document.addEventListener('DOMContentLoaded', simRenderLista);
 
-    /* ── Catálogo inicial (rascunho 1 aprovado): 11 famílias e 30 selos ── */
+    /* ── Catálogo inicial v2 (aprovado): 12 emblemas, 11 famílias e 42 selos ── */
+    const EMBLEMAS_INICIAIS = [['livro','Livro',false],['oraculo','Oráculo',true],['brasao','Brasão',false],['torre','Torre',false],['chama','Chama',false],['coruja-fogo','Coruja de fogo',false],['estrela','Estrela',false],['louros','Louros',false],['espadas','Espadas',false],['trofeu','Troféu',false],['pergaminho','Pergaminho',false],['bigorna','Bigorna',false]];
     const SELOS_INICIAIS = {
       familias: [
         ["leitura","Pergaminhos da Ordem","livro","Dizem que um livro bem lido vale mais que mil espadas. A Ordem concorda e guarda as espadas só por garantia."],
@@ -1951,42 +1964,60 @@
       selos: [
         ["guardiao_dos_pergaminhos","leitura","Guardião dos Pergaminhos","comum","livro","xp","leitura",250,"Acumule 250 XP de leitura","Todo herói começa pequeno. O seu primeiro dragão foi uma página difícil, e você o venceu sem gastar uma gota de tinta."],
         ["erudito_dos_tomos","leitura","Erudito dos Tomos","raro","livro","xp","leitura",1000,"Acumule 1.000 XP de leitura","Tomos são livros enormes e antigos. Alguns são tão pesados que precisam de dois Guardiões para carregar. Você leu vários sozinho."],
-        ["bibliotecario_lendario","leitura","Bibliotecário Lendário","epico","livro","xp","leitura",3000,"Acumule 3.000 XP de leitura","A Grande Biblioteca só abre as portas para quem leu de verdade. As portas ouviram falar de você e abriram antes de você bater."],
+        ["sabio_da_biblioteca","leitura","Sábio da Biblioteca","epico","livro","xp","leitura",3000,"Acumule 3.000 XP de leitura","Os livros mais antigos sussurram o seu nome. Dizem que você lê até as letrinhas pequenas, e isso é coisa de sábio."],
+        ["bibliotecario_lendario","leitura","Bibliotecário Lendário","lend","livro","xp","leitura",10000,"Acumule 10.000 XP de leitura","A Grande Biblioteca só abre as portas para quem leu de verdade. As portas ouviram falar de você e abriram antes de você bater."],
         ["aprendiz_do_oraculo","oraculo","Aprendiz do Oráculo","comum","oraculo","xp","duolingo",250,"Acumule 250 XP de Duolingo","Primeiras lições concluídas! O Oráculo arregalou tanto os olhos que o monóculo quase caiu no chão."],
         ["voz_do_oraculo","oraculo","Voz do Oráculo","raro","oraculo","xp","duolingo",1000,"Acumule 1.000 XP de Duolingo","Você já fala tão bem que os corvos mensageiros pedem para você ditar as cartas."],
-        ["poliglota_lendario","oraculo","Poliglota Lendário","epico","oraculo","xp","duolingo",3000,"Acumule 3.000 XP de Duolingo","Dizem que você entende até o idioma dos dragões. O Oráculo jura que foi ele quem ensinou."],
+        ["embaixador_das_linguas","oraculo","Embaixador das Línguas","epico","oraculo","xp","duolingo",3000,"Acumule 3.000 XP de Duolingo","Cartas de todos os reinos chegam pedindo a sua opinião. Os corvos mensageiros já perderam a conta das viagens."],
+        ["poliglota_lendario","oraculo","Poliglota Lendário","lend","oraculo","xp","duolingo",10000,"Acumule 10.000 XP de Duolingo","Dizem que você entende até o idioma dos dragões. O Oráculo jura que foi ele quem ensinou."],
         ["brasao_da_ordem","ordem","Brasão da Ordem","comum","brasao","xp","total",1000,"Acumule 1.000 XP somando leitura e Duolingo","Você ganhou o seu primeiro brasão! Pode olhar para ele de vez em quando, sem exagerar na pose."],
         ["estandarte_da_ordem","ordem","Estandarte da Ordem","raro","brasao","xp","total",3000,"Acumule 3.000 XP somando leitura e Duolingo","Seu estandarte balança no alto da torre. Os inimigos da preguiça já o viram e saíram correndo."],
         ["coroa_da_ordem","ordem","Coroa da Ordem","epico","brasao","xp","total",8000,"Acumule 8.000 XP somando leitura e Duolingo","Só usa coroa quem venceu muitas aventuras. A sua brilha tanto que o Oráculo precisou de óculos de sol."],
+        ["soberano_da_ordem","ordem","Soberano da Ordem","lend","brasao","xp","total",20000,"Acumule 20.000 XP somando leitura e Duolingo","Dizem que a Ordem inteira se levanta quando você entra. Os brasões brilham, o Oráculo bate palmas e a coroa pede licença para brilhar mais."],
         ["sentinela","torre","Sentinela","comum","torre","dias_estudo","qualquer",30,"Estude em 30 dias diferentes","Trinta dias de guarda e nenhum bocejo oficial. A torre agradece."],
         ["vigia_incansavel","torre","Vigia Incansável","raro","torre","dias_estudo","qualquer",100,"Estude em 100 dias diferentes","Cem dias vigiando o reino. Até a lua pediu para dividir o turno com você."],
         ["guardiao_eterno","torre","Guardião Eterno","epico","torre","dias_estudo","qualquer",365,"Estude em 365 dias diferentes","Um ano inteiro de estudo! A torre está tão orgulhosa que vai gravar o seu nome na pedra."],
+        ["sentinela_dos_seculos","torre","Sentinela dos Séculos","lend","torre","dias_estudo","qualquer",730,"Estude em 730 dias diferentes","Dois anos de guarda! A torre já viu você crescer, e as pedras mais velhas pedem para você contar como se faz."],
         ["chama_acesa","chama","Chama Acesa","comum","chama","sequencia","leitura",7,"Leia por 7 dias seguidos","Sete dias seguidos e a sua chama não apagou nem com vento, nem com preguiça. Os corvos da Ordem já estão espalhando a notícia."],
         ["chama_eterna","chama","Chama Eterna","raro","chama","sequencia","leitura",30,"Leia por 30 dias seguidos","Trinta dias de fogo! O dragão da cozinha ficou com inveja e quer saber o seu segredo."],
         ["fenix_das_paginas","chama","Fênix das Páginas","epico","chama","sequencia","leitura",100,"Leia por 100 dias seguidos","Cem dias seguidos e você renasce das cinzas, mais forte a cada dia. A fênix pediu um autógrafo."],
+        ["chama_dos_dragoes","chama","Chama dos Dragões","lend","chama","sequencia","leitura",365,"Leia por 365 dias seguidos","Um ano inteiro sem apagar! Os dragões vieram pedir fogo emprestado e voltaram para casa com inveja."],
         ["coruja_vigilante","ofensiva","Coruja Vigilante","comum","coruja-fogo","sequencia","duolingo",7,"Estude Duolingo por 7 dias seguidos","Sete dias seguidos! A coruja ficou acordada só para ver você chegar."],
         ["coruja_ancestral","ofensiva","Coruja Ancestral","raro","coruja-fogo","sequencia","duolingo",30,"Estude Duolingo por 30 dias seguidos","Trinta dias de estudo. Dizem que as corujas mais antigas agora pedem conselhos a você."],
         ["coruja_de_fogo","ofensiva","Coruja de Fogo","epico","coruja-fogo","sequencia","duolingo",100,"Estude Duolingo por 100 dias seguidos","Cem dias seguidos e as penas pegaram fogo de tanto entusiasmo. Por favor, fique longe das cortinas."],
+        ["coruja_imortal","ofensiva","Coruja Imortal","lend","coruja-fogo","sequencia","duolingo",365,"Estude Duolingo por 365 dias seguidos","Um ano de ofensiva e a coruja virou lenda. Dizem que ela nunca dorme, mas na verdade só cochila entre as lições."],
         ["semana_perfeita","metas","Semana Perfeita","comum","estrela","semanas_meta","qualquer",1,"Cumpra a meta semanal 1 vez","Sete pontas acesas! A semana inteira cumpriu o combinado, até a segunda-feira, que é a mais difícil."],
         ["mes_de_ouro","metas","Mês de Ouro","raro","estrela","semanas_meta","qualquer",4,"Cumpra a meta semanal em 4 semanas","Quatro semanas de meta cumprida. O ouro do reino ficou com inveja e os dragões pediram o seu horário."],
-        ["trimestre_lendario","metas","Trimestre Lendário","epico","estrela","semanas_meta","qualquer",12,"Cumpra a meta semanal em 12 semanas","Doze semanas de metas cumpridas! Os bardos já estão compondo uma canção, mas ainda não acharam rima para o seu nome."],
+        ["trimestre_de_ouro","metas","Trimestre de Ouro","epico","estrela","semanas_meta","qualquer",12,"Cumpra a meta semanal em 12 semanas","Doze semanas de metas cumpridas! Os bardos já estão compondo uma canção, mas ainda não acharam rima para o seu nome."],
+        ["ano_lendario","metas","Ano Lendário","lend","estrela","semanas_meta","qualquer",52,"Cumpra a meta semanal em 52 semanas","Cinquenta e duas semanas de metas! O calendário do reino reclamou que não tem mais páginas para anotar tudo."],
         ["campeao_do_duelo","arena","Campeão do Duelo","comum","espadas","vitorias","duelo",1,"Vença 1 Duelo da semana","Você venceu o Duelo! As espadas eram de mentirinha, mas a vitória foi de verdade."],
         ["coroa_do_torneio","arena","Coroa do Torneio","raro","trofeu","vitorias","torneio",3,"Vença 3 Torneios das Línguas","O Torneio tem muitos competidores e uma coroa só. Dessa vez ela ficou com você, e pode usá-la até a hora do jantar."],
-        ["lenda_da_arena","arena","Lenda da Arena","epico","trofeu","vitorias","total",10,"Some 10 vitórias entre Duelo e Torneio","Dez vitórias! Os corvos cantam o seu nome, e eles nunca cantam para qualquer um."],
+        ["heroi_da_arena","arena","Herói da Arena","epico","trofeu","vitorias","total",10,"Some 10 vitórias entre Duelo e Torneio","Dez vitórias! Os corvos cantam o seu nome, e eles nunca cantam para qualquer um."],
+        ["lenda_da_arena","arena","Lenda da Arena","lend","trofeu","vitorias","total",25,"Some 25 vitórias entre Duelo e Torneio","Vinte e cinco vitórias! A Arena tem uma estátua sua na entrada, mas o escultor ainda tenta acertar o sorriso."],
         ["ajudante_da_ordem","missoes","Ajudante da Ordem","comum","pergaminho","missoes","",5,"Conclua 5 missões","Cinco missões cumpridas! A Ordem anotou tudo no pergaminho, com lacre e tudo."],
         ["braco_direito_do_mestre","missoes","Braço Direito do Mestre","raro","pergaminho","missoes","",25,"Conclua 25 missões","Vinte e cinco missões. O Mestre já não sabe como fazia sem você, e o dragão da bagunça está se escondendo."],
         ["heroi_do_lar","missoes","Herói do Lar","epico","pergaminho","missoes","",100,"Conclua 100 missões","Cem missões! Seu nome vai ser cantado na cozinha, no quintal e até debaixo da cama, onde mora o último monstro."],
+        ["lenda_do_lar","missoes","Lenda do Lar","lend","pergaminho","missoes","",250,"Conclua 250 missões","Duzentas e cinquenta missões! O dragão da bagunça se rendeu e agora só aparece para pedir licença."],
         ["aprendiz_de_ferreiro","forja","Aprendiz de Ferreiro","comum","bigorna","forja","",500,"Forje 500 cristais no total","Você forjou os seus primeiros cristais. O martelo era tão pesado quanto parecia, mas você não desistiu."],
+        ["ferreiro_habilidoso","forja","Ferreiro Habilidoso","raro","bigorna","forja","",2000,"Forje 2.000 cristais no total","Dois mil cristais forjados. O martelo já conhece o seu jeito e bate na hora certa, quase sozinho."],
         ["mestre_ferreiro","forja","Mestre Ferreiro","epico","bigorna","forja","",5000,"Forje 5.000 cristais no total","Cinco mil cristais forjados! As faíscas já iluminam a torre inteira, e até o Oráculo pediu um capacete."],
-        ["honra_do_mestre","honra","Honra do Mestre","epico","louros","manual","",0,"Concedido pelo Mestre em momentos especiais","O Mestre viu o que você fez e decidiu, sozinho, que você merecia uma coroa de louros. Sem conta e sem tabela, só orgulho."]
+        ["forjador_de_estrelas","forja","Forjador de Estrelas","lend","bigorna","forja","",25000,"Forje 25.000 cristais no total","Vinte e cinco mil cristais! Você forjou tanto que uma estrela nova nasceu das faíscas, e já tem o seu nome."],
+        ["honra_do_mestre","honra","Honra do Mestre","epico","louros","manual","",0,"Concedido pelo Mestre em momentos especiais","O Mestre viu o que você fez e decidiu, sozinho, que você merecia uma coroa de louros. Sem conta e sem tabela, só orgulho."],
+        ["honra_suprema","honra","Honra Suprema","lend","louros","manual","",0,"Concedido pelo Mestre em momentos muito especiais","Há quem receba uma coroa de louros. Você recebeu a coroa, o aplauso e um abraço do Mestre, que vale mais que as três juntas."]
       ]
     };
+    /* Renomeações da v1 para a v2: o épico que tinha "Lendário/Lenda" no nome. Só migra se o registro ainda está como veio (nome e história intocados). */
+    const SELOS_RENOMEAR_V2 = [
+      { de:'bibliotecario_lendario', nomeAntigo:'Bibliotecário Lendário', para:'sabio_da_biblioteca',  historiaAntiga:'A Grande Biblioteca só abre as portas para quem leu de verdade. As portas ouviram falar de você e abriram antes de você bater.' },
+      { de:'poliglota_lendario',     nomeAntigo:'Poliglota Lendário',     para:'embaixador_das_linguas', historiaAntiga:'Dizem que você entende até o idioma dos dragões. O Oráculo jura que foi ele quem ensinou.' },
+      { de:'trimestre_lendario',     nomeAntigo:'Trimestre Lendário',     para:'trimestre_de_ouro',    historiaAntiga:null },
+      { de:'lenda_da_arena',         nomeAntigo:'Lenda da Arena',         para:'heroi_da_arena',       historiaAntiga:null }
+    ];
 
     /* ═══════════════════ SELOS (Fase 6 · passo 1) ═══════════════════
-       Catálogo em config/selos (famílias + selos) e prévia "quem ganharia" (só leitura: nada é gravado nas crianças).
+       Catálogo em config/selos (emblemas + famílias + selos) e prévia "quem ganharia" (só leitura: nada é gravado nas crianças).
        Cada selo tem uma regra (tipo + modalidade + valor). O app das crianças (passo 2) usará as mesmas contas. */
     const SELO_IMG_BASE = 'https://douglasfdias.github.io/minutinhos/selos/';
-    const SELO_EMBLEMAS = [['livro','Livro'],['oraculo','Oráculo'],['brasao','Brasão'],['torre','Torre'],['chama','Chama'],['coruja-fogo','Coruja de fogo'],['estrela','Estrela'],['louros','Louros'],['espadas','Espadas'],['trofeu','Troféu'],['pergaminho','Pergaminho'],['bigorna','Bigorna']];
     const SELO_RARIDADES = [['comum','Comum'],['raro','Raro'],['epico','Épico'],['lend','Lendário']];
     const SELO_REGRAS = {
       xp:           { nome:'XP acumulado',                   un:'XP',            mods:[['leitura','Leitura'],['duolingo','Duolingo'],['total','Leitura + Duolingo']] },
@@ -2011,17 +2042,41 @@
 
     const seEsc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const seFmt = n => Number(n || 0).toLocaleString('pt-BR');
-    const seOrd = o => Object.entries(o || {}).map(([id, v]) => Object.assign({ id }, v)).sort((a, b) => (Number(a.ordem) || 0) - (Number(b.ordem) || 0));
+    const seOrd = o => Object.entries(o || {}).map(([id, v]) => Object.assign({ id }, v)).sort((a, b) => (Number(a.ordem) || 0) - (Number(b.ordem) || 0) || (a.id < b.id ? -1 : 1));
+    const _rarIdx = r => Math.max(0, SELO_RARIDADES.findIndex(x => x[0] === r));
+    /* selos: primeiro a raridade (comum, raro, épico, lendário), depois a "ordem" como desempate */
+    const seOrdSelos = o => seOrd(o).sort((a, b) => _rarIdx(a.raridade) - _rarIdx(b.raridade) || (Number(a.ordem) || 0) - (Number(b.ordem) || 0));
     const seRarNome = r => (SELO_RARIDADES.find(x => x[0] === r) || [0, r])[1];
-    const seEmbNome = e => (SELO_EMBLEMAS.find(x => x[0] === e) || [0, e])[1];
+    const _clone = o => JSON.parse(JSON.stringify(o));
+
+    /* ── Catálogo de emblemas: marca quais entram nos campos de seleção ── */
+    function embPadrao() {
+      const o = {}; EMBLEMAS_INICIAIS.forEach((e, i) => { o[e[0]] = { nome: e[1], imagem: '', busto: !!e[2], lista: true, ordem: (i + 1) * 10 }; }); return o;
+    }
+    function seEmbCat() {
+      const c = _selosEd && _selosEd.emblemas;
+      return (c && Object.keys(c).length) ? c : embPadrao();
+    }
+    function seEmbInfo(id) {
+      const e = seEmbCat()[id];
+      if (!e) return { nome: id, src: SELO_IMG_BASE + 'emblema-' + id + '.webp', busto: false, lista: true, existe: false };
+      return { nome: e.nome || id, src: e.imagem || (SELO_IMG_BASE + 'emblema-' + id + '.webp'), busto: !!e.busto, lista: e.lista !== false, existe: true };
+    }
+    /* Opções do campo suspenso: só os marcados "na lista" + o que já está escolhido (para nunca quebrar um selo existente) */
+    function seEmbLista(atual) {
+      const cat = seEmbCat();
+      const ids = seOrd(cat).filter(e => e.lista !== false).map(e => e.id);
+      if (atual && !ids.includes(atual)) ids.push(atual);
+      return ids.map(id => [id, ((cat[id] && cat[id].nome) || id) + ((cat[id] && cat[id].lista === false) ? ' (fora da lista)' : (cat[id] ? '' : ' (não cadastrado)'))]);
+    }
 
     /* Medalha (moldura por raridade + emblema). Mesma arte aprovada; aqui estática. */
     let _slN = 0;
     function seloSvg(emb, rar, o) {
       o = o || {};
-      const size = o.size || 56, bloq = !!o.bloq;
-      const src = o.img || (SELO_IMG_BASE + 'emblema-' + emb + '.webp');
-      const bust = !o.img && emb === 'oraculo';
+      const size = o.size || 56, bloq = !!o.bloq, info = seEmbInfo(emb);
+      const src = o.img || info.src;
+      const bust = !o.img && info.busto;
       const ix = bust ? 12 : 21, iy = bust ? 13.4 : 21, iw = bust ? 76 : 58;
       const cid = 'slc' + (++_slN);
       const clip = bust ? '<clipPath id="' + cid + '"><circle cx="50" cy="50" r="36.5"/></clipPath>' : '';
@@ -2058,9 +2113,9 @@
       return '<svg viewBox="0 0 100 100" width="' + size + '" height="' + size + '" style="display:block">' + clip + corpo + img + '</svg>';
     }
 
-    /* Texto "como ganhar" sugerido a partir da regra (usado quando o campo fica vazio) */
+    /* "Como ganhar": se o campo do selo está vazio, o texto acompanha a regra SEMPRE (muda o valor, muda o texto) */
     function seloComoAuto(r) {
-      const n = seFmt(r.valor), t = r.tipo, m = r.mod;
+      r = r || {}; const n = seFmt(r.valor), t = r.tipo, m = r.mod;
       if (t === 'xp') return m === 'total' ? 'Acumule ' + n + ' XP somando leitura e Duolingo' : 'Acumule ' + n + ' XP de ' + (m === 'duolingo' ? 'Duolingo' : 'leitura');
       if (t === 'dias_estudo') return 'Estude em ' + n + ' dias diferentes';
       if (t === 'sequencia') return (m === 'duolingo' ? 'Estude Duolingo por ' : 'Leia por ') + n + ' dias seguidos';
@@ -2070,6 +2125,7 @@
       if (t === 'forja') return 'Forje ' + n + ' cristais no total';
       return 'Concedido pelo Mestre em momentos especiais';
     }
+    const seloComo = s => String((s && s.como) || '').trim() || seloComoAuto(s && s.regra);
     function seloRegraTxt(r) {
       r = r || {}; const d = SELO_REGRAS[r.tipo]; if (!d) return 'regra inválida';
       if (r.tipo === 'manual') return 'Concedido à mão';
@@ -2078,14 +2134,15 @@
     }
 
     /* ── Estado do catálogo em edição ── */
-    let _selosCfg = null, _selosEd = null, _seloAberto = null, _selosSujo = false;
-    const _clone = o => JSON.parse(JSON.stringify(o));
+    let _selosCfg = null, _selosEd = null, _seloAberto = null, _selosSujo = false, _embAberto = false;
 
     function carregarSelosCfg() {
       if (_selosSujo) return;   // não apaga o que está sendo editado
       const c = _config && _config.selos;
-      _selosCfg = c ? { familias: c.familias || {}, selos: c.selos || {} } : { familias: {}, selos: {} };
-      _selosEd = _clone(_selosCfg); _seloAberto = null;
+      _selosCfg = c ? { emblemas: c.emblemas || null, familias: c.familias || {}, selos: c.selos || {} } : { emblemas: null, familias: {}, selos: {} };
+      _selosEd = _clone(_selosCfg);
+      if (!_selosEd.emblemas) _selosEd.emblemas = embPadrao();
+      _seloAberto = null;
       renderSelos();
     }
 
@@ -2094,19 +2151,67 @@
       const b = document.getElementById('selos-salvar'); if (b) { b.textContent = '💾 Salvar catálogo (há alterações)'; b.style.background = '#e67e22'; }
     }
 
+    function embErro(img) { const d = document.createElement('div'); d.className = 'sl-emb-falta'; d.textContent = 'sem imagem'; img.replaceWith(d); }
+    const embImg = (id, size) => '<img src="' + seEsc(seEmbInfo(id).src) + '" width="' + size + '" height="' + size + '" alt="" style="object-fit:contain" onerror="embErro(this)">';
+    const embUsos = id => Object.values(_selosEd.selos).filter(s => s.emblema === id).length + Object.values(_selosEd.familias).filter(f => f.emblema === id).length;
+
+    function renderEmblemas() {
+      const cat = seEmbCat(), lista = seOrd(cat), nl = lista.filter(e => e.lista !== false).length;
+      let h = '<details class="sl-emb"' + (_embAberto ? ' open' : '') + ' ontoggle="_embAberto=this.open"><summary>🖼️ Emblemas · ' + lista.length + ' cadastrados, ' + nl + ' na lista de seleção</summary>'
+        + '<p class="card-hint" style="margin:6px 0 8px">Marque <b>na lista</b> nos emblemas que devem aparecer nos campos de seleção de selos e famílias. Você pode cadastrar muitos e deixar a lista curta; um emblema já usado continua funcionando mesmo desmarcado.</p><div class="sl-emb-grid">';
+      lista.forEach(e => {
+        h += '<div class="sl-emb-cel' + (e.lista === false ? ' sl-off' : '') + '"><div class="sl-emb-img">' + embImg(e.id, 56) + '</div><div class="sl-emb-nome">' + seEsc(e.nome) + '</div>'
+          + '<div class="sl-regra">' + embUsos(e.id) + ' em uso</div>'
+          + '<label class="sl-emb-chk"><input type="checkbox"' + (e.lista === false ? '' : ' checked') + ' onchange="embSet(\'' + e.id + '\',\'lista\',this.checked,true)"> na lista</label>'
+          + '<button class="sl-ed" onclick="seloAbrir(\'emb\',\'' + e.id + '\')">✏️</button></div>';
+      });
+      h += '</div>';
+      if (_seloAberto && _seloAberto.indexOf('emb:') === 0 && cat[_seloAberto.slice(4)]) h += embForm(_seloAberto.slice(4), cat[_seloAberto.slice(4)]);
+      return h + '<button class="bn-add" onclick="selosNovoEmblema()">➕ Novo emblema</button></details>';
+    }
+    function embForm(id, e) {
+      const usos = embUsos(id);
+      return '<div class="sl-form"><div class="sl-form-top" style="gap:14px">' + embImg(id, 84) + seloSvg(id, 'comum', { size: 84 }) + '</div>'
+        + '<div class="field-row"><span class="field-lbl">Nome</span><input type="text" value="' + seEsc(e.nome) + '" oninput="embSet(\'' + id + '\',\'nome\',this.value)"></div>'
+        + '<div class="field-row"><span class="field-lbl">Imagem</span><input type="text" placeholder="Vazio = selos/emblema-' + seEsc(id) + '.webp" value="' + seEsc(e.imagem) + '" oninput="embSet(\'' + id + '\',\'imagem\',this.value)"></div>'
+        + '<p class="card-hint" style="margin:2px 0 6px">Imagem nova: gere em 512 px com fundo transparente, suba o arquivo <b>emblema-' + seEsc(id) + '.webp</b> na pasta <b>selos/</b> do repositório (ou cole um endereço https acima). Se aparecer "sem imagem", o arquivo ainda não está no ar.</p>'
+        + '<div class="field-row"><span class="field-lbl">Ordem</span><input type="number" value="' + seEsc(e.ordem == null ? 0 : e.ordem) + '" oninput="embSet(\'' + id + '\',\'ordem\',this.value)"></div>'
+        + '<label class="bn-switch" style="margin:6px 0"><input type="checkbox"' + (e.busto ? ' checked' : '') + ' onchange="embSet(\'' + id + '\',\'busto\',this.checked,true)"> é um busto (recortar dentro do disco, como o Oráculo)</label>'
+        + '<label class="bn-switch" style="margin:6px 0"><input type="checkbox"' + (e.lista === false ? '' : ' checked') + ' onchange="embSet(\'' + id + '\',\'lista\',this.checked,true)"> aparece na lista de seleção</label>'
+        + '<div class="btn-row"><button class="btn" style="background:#95a5a6;color:white" onclick="seloAbrir(\'emb\',\'' + id + '\')">Fechar</button>'
+        + '<button class="btn" style="background:#c0392b;color:white" onclick="embExcluir(\'' + id + '\')">🗑 Excluir' + (usos ? ' (em uso)' : '') + '</button></div></div>';
+    }
+    function embSet(id, campo, valor, redesenhar) {
+      const e = _selosEd.emblemas[id]; if (!e) return;
+      e[campo] = valor; seloMarcarSujo(); if (redesenhar) renderSelos();
+    }
+    function selosNovoEmblema() {
+      const nome = (prompt('Nome do novo emblema (ex.: Dragão):') || '').trim(); if (!nome) return;
+      const id = _seloSlug(nome, _selosEd.emblemas).replace(/_/g, '-');
+      const ord = Math.max(0, ...Object.values(_selosEd.emblemas).map(e => Number(e.ordem) || 0)) + 10;
+      _selosEd.emblemas[id] = { nome, imagem: '', busto: false, lista: true, ordem: ord };
+      seloMarcarSujo(); _embAberto = true; _seloAberto = 'emb:' + id; renderSelos();
+    }
+    function embExcluir(id) {
+      if (embUsos(id)) { toast('⚠️ Este emblema está em uso. Troque o emblema dos selos e famílias antes, ou apenas desmarque "na lista".', 'error'); return; }
+      if (!confirm('Excluir este emblema do catálogo? (O arquivo da imagem no repositório não é apagado.)')) return;
+      delete _selosEd.emblemas[id]; seloMarcarSujo(); _seloAberto = null; renderSelos();
+    }
+
     function renderSelos() {
       const box = document.getElementById('selos-corpo'); if (!box) return;
       if (!_selosEd) { box.innerHTML = '<div class="empty-msg">Toque em Atualizar.</div>'; return; }
-      const fams = seOrd(_selosEd.familias), sels = seOrd(_selosEd.selos);
+      const fams = seOrd(_selosEd.familias), sels = seOrdSelos(_selosEd.selos);
       const tem = fams.length || sels.length;
       const sv = document.getElementById('selos-acoes'); if (sv) sv.style.display = tem ? '' : 'none';
       const sb = document.getElementById('selos-salvar'); if (sb) sb.style.display = tem ? '' : 'none';
-      if (!fams.length && !sels.length) {
-        box.innerHTML = '<div class="sl-vazio"><b>O catálogo está vazio.</b><br>Carregue o catálogo inicial (11 famílias e 30 selos, com nomes e histórias já revisados) e depois ajuste o que quiser.'
+      const bc = document.getElementById('selos-completar'); if (bc) { const p = selosPlano(); bc.style.display = (tem && p.total) ? '' : 'none'; bc.textContent = '➕ Completar (' + p.total + ')'; }
+      if (!tem) {
+        box.innerHTML = renderEmblemas() + '<div class="sl-vazio"><b>O catálogo está vazio.</b><br>Carregue o catálogo inicial (12 emblemas, 11 famílias e 42 selos, com nomes e histórias já revisados) e depois ajuste o que quiser.'
           + '<button class="btn btn-ok btn-wide" onclick="selosCarregarIniciais()">📥 Carregar catálogo inicial</button></div>';
         return;
       }
-      let h = '';
+      let h = renderEmblemas();
       const idsFam = new Set(fams.map(f => f.id));
       const grupo = (f, meus, semEd) => {
         let g = '<div class="sl-fam' + (f.ativo === false ? ' sl-off' : '') + '"><div class="sl-fam-head"><div>' + seloSvg(f.emblema, 'comum', { size: 40 }) + '</div>'
@@ -2134,12 +2239,13 @@
       const id = f.id;
       return '<div class="sl-form"><div class="sl-form-top">' + seloSvg(f.emblema, 'comum', { size: 80 }) + '</div>'
         + '<div class="field-row"><span class="field-lbl">Nome</span><input type="text" value="' + seEsc(f.nome) + '" oninput="seloSet(\'fam\',\'' + id + '\',\'nome\',this.value)"></div>'
-        + '<div class="field-row"><span class="field-lbl">Emblema</span><select onchange="seloSet(\'fam\',\'' + id + '\',\'emblema\',this.value,true)">' + _opts(SELO_EMBLEMAS, f.emblema) + '</select></div>'
+        + '<div class="field-row"><span class="field-lbl">Emblema</span><select onchange="seloSet(\'fam\',\'' + id + '\',\'emblema\',this.value,true)">' + _opts(seEmbLista(f.emblema), f.emblema) + '</select></div>'
         + '<div class="field-row"><span class="field-lbl">Ordem</span><input type="number" value="' + seEsc(f.ordem == null ? 0 : f.ordem) + '" oninput="seloSet(\'fam\',\'' + id + '\',\'ordem\',this.value)"></div>'
+        + '<p class="card-hint" style="margin:0 0 6px">Menor número aparece primeiro entre as famílias.</p>'
         + '<p class="section-label">História da família</p><textarea oninput="seloSet(\'fam\',\'' + id + '\',\'historia\',this.value)">' + seEsc(f.historia) + '</textarea>'
         + '<label class="bn-switch" style="margin:8px 0"><input type="checkbox"' + (f.ativo === false ? '' : ' checked') + ' onchange="seloSet(\'fam\',\'' + id + '\',\'ativo\',this.checked,true)"> família visível</label>'
         + '<div class="btn-row"><button class="btn" style="background:#95a5a6;color:white" onclick="seloAbrir(\'fam\',\'' + id + '\')">Fechar</button>'
-        + '<button class="btn btn-danger" style="background:#c0392b;color:white" onclick="seloExcluir(\'fam\',\'' + id + '\')">🗑 Excluir</button></div></div>';
+        + '<button class="btn" style="background:#c0392b;color:white" onclick="seloExcluir(\'fam\',\'' + id + '\')">🗑 Excluir</button></div></div>';
     }
 
     function seloFormSelo(s) {
@@ -2149,15 +2255,17 @@
       return '<div class="sl-form"><div class="sl-form-top">' + seloSvg(s.emblema, s.raridade, { size: 96, img: s.imagem }) + '</div>'
         + '<div class="field-row"><span class="field-lbl">Nome</span><input type="text" value="' + seEsc(s.nome) + '" oninput="seloSet(\'selo\',\'' + id + '\',\'nome\',this.value)"></div>'
         + '<div class="field-row"><span class="field-lbl">Família</span><select onchange="seloSet(\'selo\',\'' + id + '\',\'familia\',this.value,true)">' + _opts(fams, s.familia) + '</select></div>'
-        + '<div class="field-row"><span class="field-lbl">Emblema</span><select onchange="seloSet(\'selo\',\'' + id + '\',\'emblema\',this.value,true)">' + _opts(SELO_EMBLEMAS, s.emblema) + '</select></div>'
+        + '<div class="field-row"><span class="field-lbl">Emblema</span><select onchange="seloSet(\'selo\',\'' + id + '\',\'emblema\',this.value,true)">' + _opts(seEmbLista(s.emblema), s.emblema) + '</select></div>'
         + '<div class="field-row"><span class="field-lbl">Raridade</span><select onchange="seloSet(\'selo\',\'' + id + '\',\'raridade\',this.value,true)">' + _opts(SELO_RARIDADES, s.raridade) + '</select></div>'
         + '<div class="field-row"><span class="field-lbl">Regra</span><select onchange="seloSet(\'selo\',\'' + id + '\',\'regra.tipo\',this.value,true)">' + _opts(tipos, r.tipo) + '</select></div>'
         + (def.mods ? '<div class="field-row"><span class="field-lbl">Vale para</span><select onchange="seloSet(\'selo\',\'' + id + '\',\'regra.mod\',this.value,true)">' + _opts(def.mods, r.mod) + '</select></div>' : '')
         + (r.tipo !== 'manual' ? '<div class="field-row"><span class="field-lbl">Valor (' + seEsc(def.un) + ')</span><input type="number" min="1" value="' + seEsc(r.valor == null ? '' : r.valor) + '" oninput="seloSet(\'selo\',\'' + id + '\',\'regra.valor\',this.value)"></div>' : '')
-        + '<div class="field-row"><span class="field-lbl">Como ganhar</span><input type="text" placeholder="Vazio = texto automático" value="' + seEsc(s.como) + '" oninput="seloSet(\'selo\',\'' + id + '\',\'como\',this.value)"></div>'
+        + '<div class="field-row"><span class="field-lbl">Como ganhar</span><input type="text" id="sl-como-ph" placeholder="Automático: ' + seEsc(seloComoAuto(r)) + '" value="' + seEsc(s.como) + '" oninput="seloSet(\'selo\',\'' + id + '\',\'como\',this.value)"></div>'
+        + '<p class="card-hint" style="margin:0 0 6px">Deixe vazio para o texto acompanhar a regra: se você mudar o valor, o texto muda junto. Escreva algo só se quiser um texto diferente.</p>'
         + '<p class="section-label">História do selo</p><textarea oninput="seloSet(\'selo\',\'' + id + '\',\'historia\',this.value)">' + seEsc(s.historia) + '</textarea>'
         + '<div class="field-row" style="margin-top:6px"><span class="field-lbl">Imagem própria</span><input type="text" placeholder="Opcional: https://..." value="' + seEsc(s.imagem) + '" oninput="seloSet(\'selo\',\'' + id + '\',\'imagem\',this.value)"></div>'
         + '<div class="field-row"><span class="field-lbl">Ordem</span><input type="number" value="' + seEsc(s.ordem == null ? 0 : s.ordem) + '" oninput="seloSet(\'selo\',\'' + id + '\',\'ordem\',this.value)"></div>'
+        + '<p class="card-hint" style="margin:0 0 6px">Dentro da família os selos já saem por raridade (comum, raro, épico, lendário). A ordem só desempata selos da mesma raridade.</p>'
         + '<label class="bn-switch" style="margin:8px 0"><input type="checkbox"' + (s.ativo === false ? '' : ' checked') + ' onchange="seloSet(\'selo\',\'' + id + '\',\'ativo\',this.checked,true)"> selo ativo</label>'
         + '<div class="btn-row"><button class="btn" style="background:#95a5a6;color:white" onclick="seloAbrir(\'selo\',\'' + id + '\')">Fechar</button>'
         + '<button class="btn" style="background:#c0392b;color:white" onclick="seloExcluir(\'selo\',\'' + id + '\')">🗑 Excluir</button></div></div>';
@@ -2176,6 +2284,7 @@
           if (d.mods) o.regra.mod = d.mods[0][0]; else delete o.regra.mod;
           if (valor === 'manual') o.regra.valor = 0; else if (!Number(o.regra.valor)) o.regra.valor = 1;
         }
+        const ph = document.getElementById('sl-como-ph'); if (ph) ph.placeholder = 'Automático: ' + seloComoAuto(Object.assign({}, o.regra, { valor: Number(o.regra.valor) }));
       } else o[campo] = valor;
       seloMarcarSujo();
       if (redesenhar) renderSelos();
@@ -2183,14 +2292,14 @@
 
     function _seloSlug(nome, usados) {
       let b = String(nome || 'novo').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'novo';
-      let id = b, n = 2; while (usados[id]) id = b + '_' + (n++); return id;
+      let id = b, n = 2; while (usados[id] || usados[id.replace(/_/g, '-')]) id = b + '_' + (n++); return id;
     }
     function selosNovaFamilia() {
       if (!_selosEd) return;
       const nome = (prompt('Nome da nova família:') || '').trim(); if (!nome) return;
       const id = _seloSlug(nome, _selosEd.familias);
       const ord = Math.max(0, ...Object.values(_selosEd.familias).map(f => Number(f.ordem) || 0)) + 10;
-      _selosEd.familias[id] = { nome, emblema: 'livro', historia: '', ordem: ord, ativo: true };
+      _selosEd.familias[id] = { nome, emblema: seEmbLista('')[0] ? seEmbLista('')[0][0] : 'livro', historia: '', ordem: ord, ativo: true };
       seloMarcarSujo(); _seloAberto = 'fam:' + id; renderSelos();
     }
     function selosNovoSelo() {
@@ -2212,40 +2321,47 @@
       seloMarcarSujo(); _seloAberto = null; renderSelos();
     }
 
-    async function selosCarregarIniciais() {
-      if (!confirm('Carregar o catálogo inicial (11 famílias e 30 selos)?')) return;
-      const out = { versao: 1, familias: {}, selos: {} };
-      SELOS_INICIAIS.familias.forEach((f, i) => { out.familias[f[0]] = { nome: f[1], emblema: f[2], historia: f[3], ordem: (i + 1) * 10, ativo: true }; });
-      SELOS_INICIAIS.selos.forEach((s, i) => {
-        const regra = { tipo: s[5], valor: s[7] }; if (s[6]) regra.mod = s[6];
-        out.selos[s[0]] = { familia: s[1], nome: s[2], raridade: s[3], emblema: s[4], regra, como: s[8], historia: s[9], ordem: (i + 1) * 10, ativo: true };
-      });
-      try {
-        await db.ref('config/selos').set(out);
-        _config.selos = out; _selosSujo = false; carregarSelosCfg();
-        toast('📥 Catálogo inicial carregado.', 'success');
-      } catch (e) { toast('❌ ' + e.message, 'error'); }
+    /* ── Catálogo inicial (v2) e "Completar" (só acrescenta; nunca apaga nem sobrescreve o que você editou) ── */
+    function seloDeTupla(s, i) {
+      const regra = { tipo: s[5], valor: s[7] }; if (s[6]) regra.mod = s[6];
+      return { familia: s[1], nome: s[2], raridade: s[3], emblema: s[4], regra, como: (s[8] === seloComoAuto(regra)) ? '' : s[8], historia: s[9], ordem: (i + 1) * 10, ativo: true };
+    }
+    function catalogoInicial() {
+      const ed = { emblemas: embPadrao(), familias: {}, selos: {} };
+      SELOS_INICIAIS.familias.forEach((f, i) => { ed.familias[f[0]] = { nome: f[1], emblema: f[2], historia: f[3], ordem: (i + 1) * 10, ativo: true }; });
+      SELOS_INICIAIS.selos.forEach((s, i) => { ed.selos[s[0]] = seloDeTupla(s, i); });
+      return ed;
     }
 
-    async function salvarSelos() {
-      if (!_selosEd) return;
-      const erros = [], out = { versao: 1, familias: {}, selos: {} };
+    /* Monta e valida o que vai para o Firebase (usado ao salvar e ao completar) */
+    function selosMontarSaida(ed) {
+      const erros = [], out = { versao: 2, emblemas: {}, familias: {}, selos: {} };
       const travessao = t => /[\u2014\u2013]/.test(String(t || ''));
       const msgTrav = 'sem travessão longo (— ou –): use vírgula, dois-pontos ou ponto.';
-      Object.entries(_selosEd.familias).forEach(([id, f]) => {
+      Object.entries(ed.emblemas || {}).forEach(([id, e]) => {
+        const nome = String(e.nome || '').trim(), imagem = String(e.imagem || '').trim(), rot = 'Emblema "' + (nome || id) + '"';
+        if (!/^[a-z0-9-]+$/.test(id)) erros.push(rot + ': o código só pode ter letras minúsculas, números e hífen.');
+        if (!nome) erros.push(rot + ': informe o nome.');
+        if (imagem && !/^https:\/\//.test(imagem)) erros.push(rot + ': a imagem deve começar com https://');
+        const o = { nome, busto: !!e.busto, lista: e.lista !== false, ordem: Number(e.ordem) || 0 };
+        if (imagem) o.imagem = imagem;
+        out.emblemas[id] = o;
+      });
+      const temEmb = id => !!out.emblemas[id];
+      Object.entries(ed.familias || {}).forEach(([id, f]) => {
         const nome = String(f.nome || '').trim(), hist = String(f.historia || '').trim(), rot = 'Família "' + (nome || id) + '"';
         if (!nome) erros.push(rot + ': informe o nome.');
-        if (!SELO_EMBLEMAS.some(e => e[0] === f.emblema)) erros.push(rot + ': escolha um emblema.');
+        if (!temEmb(f.emblema)) erros.push(rot + ': escolha um emblema cadastrado.');
         if (travessao(nome) || travessao(hist)) erros.push(rot + ': ' + msgTrav);
         out.familias[id] = { nome, emblema: f.emblema, historia: hist, ordem: Number(f.ordem) || 0, ativo: f.ativo !== false };
       });
-      Object.entries(_selosEd.selos).forEach(([id, s]) => {
-        const nome = String(s.nome || '').trim(), hist = String(s.historia || '').trim(), rot = 'Selo "' + (nome || id) + '"';
+      Object.entries(ed.selos || {}).forEach(([id, s]) => {
+        const nome = String(s.nome || '').trim(), hist = String(s.historia || '').trim(), como = String(s.como || '').trim(), rot = 'Selo "' + (nome || id) + '"';
         const r = s.regra || {}, def = SELO_REGRAS[r.tipo];
         if (!nome) erros.push(rot + ': informe o nome.');
-        if (!_selosEd.familias[s.familia]) erros.push(rot + ': escolha uma família.');
+        if (!(ed.familias || {})[s.familia]) erros.push(rot + ': escolha uma família.');
         if (!SELO_RARIDADES.some(x => x[0] === s.raridade)) erros.push(rot + ': escolha a raridade.');
-        if (!SELO_EMBLEMAS.some(e => e[0] === s.emblema)) erros.push(rot + ': escolha um emblema.');
+        if (!temEmb(s.emblema)) erros.push(rot + ': escolha um emblema cadastrado.');
         if (!def) erros.push(rot + ': escolha a regra.');
         const regra = { tipo: r.tipo };
         if (def) {
@@ -2255,19 +2371,83 @@
         }
         const imagem = String(s.imagem || '').trim();
         if (imagem && !/^https:\/\//.test(imagem)) erros.push(rot + ': a imagem própria deve começar com https://');
-        const como = String(s.como || '').trim() || (def && regra.valor != null ? seloComoAuto(regra) : '');
         if (travessao(nome) || travessao(hist) || travessao(como)) erros.push(rot + ': ' + msgTrav);
         const o = { familia: s.familia, nome, raridade: s.raridade, emblema: s.emblema, regra, como, historia: hist, ordem: Number(s.ordem) || 0, ativo: s.ativo !== false };
         if (imagem) o.imagem = imagem;
         out.selos[id] = o;
       });
-      const box = document.getElementById('selos-erros');
-      if (erros.length) { box.innerHTML = '<div class="sl-erros">' + erros.map(seEsc).join('\n') + '</div>'; box.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+      return { erros, out };
+    }
+
+    /* O que falta no catálogo atual em relação ao inicial (v2) */
+    function selosPlano() {
+      const ed = _selosEd || { emblemas: {}, familias: {}, selos: {} }, p = { emblemas: [], familias: [], renomear: [], selos: [], conflitos: [], gravarEmb: false, total: 0 };
+      p.gravarEmb = !(_config && _config.selos && _config.selos.emblemas);
+      EMBLEMAS_INICIAIS.forEach(e => { if (!ed.emblemas[e[0]]) p.emblemas.push(e); });
+      SELOS_INICIAIS.familias.forEach(f => { if (!ed.familias[f[0]]) p.familias.push(f); });
+      const ocupado = new Set(Object.keys(ed.selos));
+      SELOS_RENOMEAR_V2.forEach(R => {
+        const s = ed.selos[R.de];
+        if (s && s.nome === R.nomeAntigo && s.raridade === 'epico' && !ed.selos[R.para]) { p.renomear.push(R); ocupado.delete(R.de); ocupado.add(R.para); }
+      });
+      SELOS_INICIAIS.selos.forEach((t, i) => { if (!ocupado.has(t[0])) p.selos.push([t, i]); });
+      SELOS_INICIAIS.selos.forEach(t => {
+        const s = ed.selos[t[0]];
+        if (s && s.raridade !== t[3] && !p.renomear.some(R => R.de === t[0] || R.para === t[0])) p.conflitos.push([t, s]);
+      });
+      p.total = p.emblemas.length + p.familias.length + p.renomear.length + p.selos.length + (p.gravarEmb ? 1 : 0);
+      return p;
+    }
+
+    async function selosCarregarIniciais() {
+      if (!confirm('Carregar o catálogo inicial (12 emblemas, 11 famílias e 42 selos)?')) return;
+      const m = selosMontarSaida(catalogoInicial());
+      if (m.erros.length) { toast('❌ ' + m.erros[0], 'error'); return; }
+      try {
+        await db.ref('config/selos').set(m.out);
+        _config.selos = m.out; _selosSujo = false; carregarSelosCfg();
+        toast('📥 Catálogo inicial carregado.', 'success');
+      } catch (e) { toast('❌ ' + e.message, 'error'); }
+    }
+
+    async function selosCompletar() {
+      if (_selosSujo) { toast('⚠️ Salve (ou atualize) as alterações antes de completar.', 'error'); return; }
+      const p = selosPlano(); if (!p.total) { toast('✅ O catálogo já está completo.', 'success'); return; }
+      const linhas = [];
+      if (p.emblemas.length || p.gravarEmb) linhas.push('• ' + (p.emblemas.length ? p.emblemas.length + ' emblema(s) novo(s)' : 'gravar o catálogo de emblemas'));
+      if (p.familias.length) linhas.push('• ' + p.familias.length + ' família(s) nova(s)');
+      p.renomear.forEach(R => linhas.push('• renomear "' + R.nomeAntigo + '" (épico) para "' + SELOS_INICIAIS.selos.find(t => t[0] === R.para)[2] + '"'));
+      if (p.selos.length) linhas.push('• ' + p.selos.length + ' selo(s) novo(s): ' + p.selos.map(x => x[0][2]).join(', '));
+      p.conflitos.forEach(([t, s]) => linhas.push('• NÃO será alterado: "' + s.nome + '" (você editou). A versão nova seria "' + t[2] + '" (' + seRarNome(t[3]).toLowerCase() + ').'));
+      if (!confirm('Completar o catálogo?\n\n' + linhas.join('\n') + '\n\nNada que você editou será apagado.')) return;
+      const ed = _clone(_selosEd);
+      p.emblemas.forEach(e => { const pd = embPadrao()[e[0]]; ed.emblemas[e[0]] = pd; });
+      p.familias.forEach(f => { const i = SELOS_INICIAIS.familias.indexOf(f); ed.familias[f[0]] = { nome: f[1], emblema: f[2], historia: f[3], ordem: (i + 1) * 10, ativo: true }; });
+      p.renomear.forEach(R => {
+        const velho = ed.selos[R.de], novo = SELOS_INICIAIS.selos.find(t => t[0] === R.para);
+        const copia = Object.assign({}, velho, { nome: novo[2] });
+        if (R.historiaAntiga && String(velho.historia || '').trim() === R.historiaAntiga) copia.historia = novo[9];
+        ed.selos[R.para] = copia; delete ed.selos[R.de];
+      });
+      p.selos.forEach(([t, i]) => { ed.selos[t[0]] = seloDeTupla(t, i); });
+      const m = selosMontarSaida(ed);
+      if (m.erros.length) { toast('❌ ' + m.erros[0], 'error'); return; }
+      try {
+        await db.ref('config/selos').set(m.out);
+        _config.selos = m.out; _selosSujo = false; carregarSelosCfg();
+        toast('➕ Catálogo completado.', 'success');
+      } catch (e) { toast('❌ ' + e.message, 'error'); }
+    }
+
+    async function salvarSelos() {
+      if (!_selosEd) return;
+      const m = selosMontarSaida(_selosEd), box = document.getElementById('selos-erros');
+      if (m.erros.length) { box.innerHTML = '<div class="sl-erros">' + m.erros.map(seEsc).join('\n') + '</div>'; box.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
       box.innerHTML = '';
       const b = document.getElementById('selos-salvar'); b.disabled = true; b.textContent = '⏳ Salvando...';
       try {
-        await db.ref('config/selos').set(out);
-        _config.selos = out; _selosSujo = false; b.disabled = false; b.textContent = '💾 Salvar catálogo'; b.style.background = '';
+        await db.ref('config/selos').set(m.out);
+        _config.selos = m.out; _selosSujo = false; b.disabled = false; b.textContent = '💾 Salvar catálogo'; b.style.background = '';
         carregarSelosCfg(); toast('🏅 Catálogo de selos salvo.', 'success');
       } catch (e) { b.disabled = false; b.textContent = '💾 Salvar catálogo (há alterações)'; toast('❌ ' + e.message, 'error'); }
     }
@@ -2320,9 +2500,9 @@
       try {
         let bonus = {};
         try { const b = await db.ref('bonus_pagos').get(); bonus = b.exists() ? b.val() : {}; } catch (e) { console.warn('bonus_pagos: sem leitura', e); }
-        const sels = seOrd(_selosEd.selos).filter(s => s.ativo !== false && _selosEd.familias[s.familia] && _selosEd.familias[s.familia].ativo !== false);
         const ordemFam = seOrd(_selosEd.familias).map(f => f.id);
-        sels.sort((a, b) => ordemFam.indexOf(a.familia) - ordemFam.indexOf(b.familia) || (Number(a.ordem) || 0) - (Number(b.ordem) || 0));
+        const sels = seOrdSelos(_selosEd.selos).filter(s => s.ativo !== false && _selosEd.familias[s.familia] && _selosEd.familias[s.familia].ativo !== false)
+          .sort((a, b) => ordemFam.indexOf(a.familia) - ordemFam.indexOf(b.familia));
         const guard = Object.entries(_usuarios).filter(([, u]) => u && u.email && !u.is_mestre);
         if (!guard.length) { out.innerHTML = '<div class="empty-msg">Nenhum Guardião encontrado.</div>'; return; }
         let h = '<hr class="divider"><p class="section-label">🔍 Quem ganharia hoje</p>'
@@ -2341,7 +2521,7 @@
               const pct = l.alvo ? Math.min(100, Math.round(l.atual / l.alvo * 100)) : 0;
               const prog = l.manual ? '<span class="sl-regra">à mão</span>'
                 : '<div>' + seFmt(l.atual) + ' / ' + seFmt(l.alvo) + ' ' + seEsc((SELO_REGRAS[l.s.regra.tipo] || {}).un || '') + '</div><div class="sl-barra-prog"><i style="width:' + pct + '%"></i></div>';
-              return '<tr><td style="width:40px">' + seloSvg(l.s.emblema, l.s.raridade, { size: 32, img: l.s.imagem, bloq: !l.ok }) + '</td><td><b>' + seEsc(l.s.nome) + '</b><div class="sl-regra">' + seEsc(seloRegraTxt(l.s.regra)) + '</div></td><td style="width:38%">' + prog + '</td><td style="width:26px;text-align:center">' + (l.ok ? '✅' : '') + '</td></tr>';
+              return '<tr><td style="width:40px">' + seloSvg(l.s.emblema, l.s.raridade, { size: 32, img: l.s.imagem, bloq: !l.ok }) + '</td><td><b>' + seEsc(l.s.nome) + '</b><div class="sl-regra">' + seEsc(seloComo(l.s)) + '</div></td><td style="width:38%">' + prog + '</td><td style="width:26px;text-align:center">' + (l.ok ? '✅' : '') + '</td></tr>';
             }).join('') + '</table></details>';
         });
         out.innerHTML = h;
