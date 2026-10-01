@@ -39,7 +39,7 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 // sw-mestre.js - Service Worker - Painel do Mestre
-const CACHE_NAME = 'minutinhos-mestre-v26';
+const CACHE_NAME = 'minutinhos-mestre-v27';
 
 const ROOT  = '/minutinhos-mestre/';
 const INDEX = '/minutinhos-mestre/index.html';
