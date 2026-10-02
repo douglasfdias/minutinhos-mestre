@@ -583,6 +583,12 @@
       </div>
 
       <div class="tst-sec">
+        <h4>📱 Liberar o aparelho</h4>
+        <p class="tst-ajuda">Se você <b>limpou os dados do navegador</b> (ou trocou de celular) onde esta criança usa o app, o aparelho perde a identidade e o app deixa de conseguir gravar e ler os dados dela. Este botão solta o vínculo antigo: na próxima abertura o app se vincula de novo sozinho.</p>
+        <div class="tst-botoes"><button class="btn btn-teste" onclick="testesLiberar()">📱 Liberar aparelho</button></div>
+      </div>
+
+      <div class="tst-sec">
         <h4>⏪ Voltar passos (apaga dados de teste)</h4>
         <p class="tst-ajuda">Marque o que apagar. Não tem desfazer. Depois, é só abrir o app da criança: ele se limpa sozinho, sem precisar limpar o cache.</p>
         <label class="tst-chk"><input type="checkbox" id="tst-selos"><span><b>🏅 Selos e cerimônias</b><small>Apaga os selos ganhos e as marcações de "já vi". Se as leituras ainda merecerem os selos, eles voltam na próxima abertura (menos de 3 viram cerimônia; 3 ou mais chegam em silêncio).</small></span></label>
@@ -1329,7 +1335,7 @@
     const nomeEmail = (usuarios, email) => Object.values(usuarios).find(u=>u.email===email)?.nome || email;
 
     /* ── ESTADO GLOBAL ── */
-    const APP_VERSAO = 'v26 · Testes';
+    const APP_VERSAO = 'v27 · Testes 2';
     let _usuarios = {}, _trans = [], _config = {}, _inventario = {};
     document.addEventListener('DOMContentLoaded', () => {
       const el = document.getElementById('app-versao');
@@ -2670,6 +2676,16 @@
       try {
         await db.ref('usuarios/' + _tstKey + '/cer_teste').set({ tipo, rar: rar || null, id: 'selos-1', ts: Date.now() });
         toast('🎬 Enviado! Abra (ou olhe) o app de ' + (_usuarios[_tstKey] || {}).nome + '.', 'success');
+      } catch (e) { toast('❌ ' + e.message, 'error'); }
+    }
+    async function testesLiberar() {
+      const key = _tstKey, u = _usuarios[key]; if (!u) return;
+      if (!confirm('Liberar o aparelho de ' + u.nome + '? O vínculo antigo é apagado e o próximo aparelho que abrir o app dela passa a ser o dono.')) return;
+      try {
+        await db.ref('usuarios/' + key + '/device_uid').remove();
+        await db.ref('usuarios/' + key + '/cer_teste').remove();
+        toast('📱 Aparelho liberado. Abra o app de ' + u.nome + ' (com a internet ligada) para vincular de novo.', 'success');
+        await carregarDados();
       } catch (e) { toast('❌ ' + e.message, 'error'); }
     }
     async function testesApagar() {
