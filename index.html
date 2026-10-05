@@ -1335,7 +1335,7 @@
     const nomeEmail = (usuarios, email) => Object.values(usuarios).find(u=>u.email===email)?.nome || email;
 
     /* ── ESTADO GLOBAL ── */
-    const APP_VERSAO = 'v27 · Testes 2';
+    const APP_VERSAO = 'v28 · Óculos';
     let _usuarios = {}, _trans = [], _config = {}, _inventario = {};
     document.addEventListener('DOMContentLoaded', () => {
       const el = document.getElementById('app-versao');
@@ -2005,7 +2005,7 @@
     const SELOS_INICIAIS = {
       familias: [
         ["leitura","Pergaminhos da Ordem","livro","Dizem que um livro bem lido vale mais que mil espadas. A Ordem concorda e guarda as espadas só por garantia."],
-        ["oraculo","Voz do Oráculo","oraculo","O Oráculo conhece todas as línguas do reino e até as dos dragões. Quem estuda com ele aprende a falar sem tropeçar, e sem ele perder o monóculo."],
+        ["oraculo","Voz do Oráculo","oraculo","O Oráculo conhece todas as línguas do reino e até as dos dragões. Quem estuda com ele aprende a falar sem tropeçar, e sem ele perder os óculos."],
         ["ordem","Brasões da Ordem","brasao","Cada brasão conta uma batalha vencida com livros, lições e muita teimosia. Os seus crescem a cada dia."],
         ["torre","Sentinelas da Torre","torre","No alto da torre, sempre tem alguém de olho no horizonte. Vencer não é só ter força: é aparecer todo dia."],
         ["chama","Chama da Leitura","chama","A chama da leitura só apaga se você deixar. Com um pouquinho de leitura por dia, ela vira fogueira."],
@@ -2022,7 +2022,7 @@
         ["erudito_dos_tomos","leitura","Erudito dos Tomos","raro","livro","xp","leitura",1000,"Acumule 1.000 XP de leitura","Tomos são livros enormes e antigos. Alguns são tão pesados que precisam de dois Guardiões para carregar. Você leu vários sozinho."],
         ["sabio_da_biblioteca","leitura","Sábio da Biblioteca","epico","livro","xp","leitura",3000,"Acumule 3.000 XP de leitura","Os livros mais antigos sussurram o seu nome. Dizem que você lê até as letrinhas pequenas, e isso é coisa de sábio."],
         ["bibliotecario_lendario","leitura","Bibliotecário Lendário","lend","livro","xp","leitura",10000,"Acumule 10.000 XP de leitura","A Grande Biblioteca só abre as portas para quem leu de verdade. As portas ouviram falar de você e abriram antes de você bater."],
-        ["aprendiz_do_oraculo","oraculo","Aprendiz do Oráculo","comum","oraculo","xp","duolingo",250,"Acumule 250 XP de Duolingo","Primeiras lições concluídas! O Oráculo arregalou tanto os olhos que o monóculo quase caiu no chão."],
+        ["aprendiz_do_oraculo","oraculo","Aprendiz do Oráculo","comum","oraculo","xp","duolingo",250,"Acumule 250 XP de Duolingo","Primeiras lições concluídas! O Oráculo arregalou tanto os olhos que os óculos quase caíram no chão."],
         ["voz_do_oraculo","oraculo","Voz do Oráculo","raro","oraculo","xp","duolingo",1000,"Acumule 1.000 XP de Duolingo","Você já fala tão bem que os corvos mensageiros pedem para você ditar as cartas."],
         ["embaixador_das_linguas","oraculo","Embaixador das Línguas","epico","oraculo","xp","duolingo",3000,"Acumule 3.000 XP de Duolingo","Cartas de todos os reinos chegam pedindo a sua opinião. Os corvos mensageiros já perderam a conta das viagens."],
         ["poliglota_lendario","oraculo","Poliglota Lendário","lend","oraculo","xp","duolingo",10000,"Acumule 10.000 XP de Duolingo","Dizem que você entende até o idioma dos dragões. O Oráculo jura que foi ele quem ensinou."],
