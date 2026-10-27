@@ -1,5 +1,5 @@
 // sw-mestre.js - Service Worker - Painel do Mestre
-// v31 - Central de Mensagens: notificação única, com o texto da mensagem
+// v32 - Central de Mensagens: notificação única, com o texto da mensagem
 
 const TITULO_PADRAO = 'Painel do Mestre';
 
@@ -89,7 +89,7 @@ self.addEventListener('notificationclick', (event) => {
   })());
 });
 
-const CACHE_NAME = 'minutinhos-mestre-v31';
+const CACHE_NAME = 'minutinhos-mestre-v32';
 
 const ROOT  = '/minutinhos-mestre/';
 const INDEX = '/minutinhos-mestre/index.html';

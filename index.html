@@ -1032,7 +1032,10 @@
         <button class="btn btn-del btn-wide" onclick="forcarAtualizacao()">🧹 Limpar Cache e Recarregar</button>
       </div>
       <div class="card">
-        <h3>👥 Outros Mestres</h3>
+        <h3>👥 Mestres da Ordem</h3>
+        <p class="card-hint">Quem entra no Painel. Nome, emoji e foto são os que a família vê nas mensagens.</p>
+        <div id="lista-mestres"><div class="empty-msg">Toque em Atualizar.</div></div>
+        <hr class="divider">
         <p class="card-hint">Gere um código de uso único para outra pessoa (ex: o pai) entrar com a conta própria dela e ter os mesmos poderes de Mestre, sem precisar editar nada no Firebase. Toque no código para copiar.</p>
         <button class="btn btn-ok btn-wide" onclick="gerarConviteMestre()">➕ Gerar Código de Convite</button>
         <div id="convite-resultado" style="display:none;margin-top:10px;background:#f0f8ff;border:1px solid #bee3f8;border-radius:8px;padding:12px;text-align:center;">
@@ -1521,7 +1524,7 @@
     const nomeEmail = (usuarios, email) => Object.values(usuarios).find(u=>u.email===email)?.nome || email;
 
     /* ── ESTADO GLOBAL ── */
-    const APP_VERSAO = 'v29 · Mensagens';
+    const APP_VERSAO = 'v30 · Organização';
     let _usuarios = {}, _trans = [], _config = {}, _inventario = {};
     document.addEventListener('DOMContentLoaded', () => {
       const el = document.getElementById('app-versao');
@@ -1557,7 +1560,7 @@
         const hoje  = new Date();
         const iSStr = segundaDe(diaLocal(hoje));   // semana começa na segunda, como no app da criança
 
-        const guardioes = Object.values(_usuarios).filter(u=>u.email).map(u => {
+        const guardioes = Object.values(_usuarios).filter(u=>u.email && !u.is_mestre).map(u => {
           const mt  = _trans.filter(t => t.email===u.email);
           const xpL = mt.filter(t => t.status==='Aprovado' && t.tipo==='Leitura').reduce((s,t)=>s+(Number(t.quantidade)||0),0);
           const xpD = mt.filter(t => t.status==='Aprovado' && t.tipo==='Duolingo').reduce((s,t)=>s+(Number(t.quantidade)||0),0);
@@ -1577,6 +1580,7 @@
         renderHist(historico);
         renderSels(guardioes);
         renderUsuarios();
+        renderMestres();
         renderTransacoes();
         const nomes={}; Object.entries(_usuarios).forEach(([,u])=>{ if(u.email) nomes[u.email]=u.nome; });
         renderConfig();
@@ -2602,7 +2606,7 @@
         Object.entries(us).forEach(([k, u]) => {
           if (!u || !u.email) return;
           if (u.avatar_url) sugestoes.add(u.avatar_url);
-          if (!u.is_mestre) lista.push({ id: 'g_' + k, nome: u.nome || 'Guardião', foto: u.foto_perfil || '', avatar: u.avatar_url || '' });
+          if (!u.is_mestre && !u.teste) lista.push({ id: 'g_' + k, nome: u.nome || 'Guardião', foto: u.foto_perfil || '', avatar: u.avatar_url || '' });
         });
         Object.entries(aS.val() || {}).forEach(([uid, a]) => {
           const o = (a && typeof a === 'object') ? a : {};
@@ -2664,6 +2668,47 @@
           db.ref('chat/c/' + cid + '/lido/' + id).transaction((v) => Math.max(Number(v) || 0, ts)).catch(() => {})))));
       await db.ref('chat/meta/importado_v1').set({ em: firebase.database.ServerValue.TIMESTAMP, por: mestreUid, total });
       if (total) toast('📜 ' + total + ' mensagens antigas foram levadas para a nova Central.', 'success');
+    }
+
+    /* ── Gestão: Mestres da Ordem (quem tem acesso ao Painel) ──
+       O acesso vem de /admins (conta de login). O "Papel: Mestre" de um perfil em
+       Usuários é só um perfil de jogo, sem acesso. Aqui ficam nome, emoji e foto
+       que a família vê no chat. */
+    let _admins = {};
+    async function renderMestres() {
+      const div = document.getElementById('lista-mestres');
+      if (!div) return;
+      try {
+        const snap = await db.ref('admins').get();
+        _admins = snap.val() || {};
+      } catch (e) { div.innerHTML = '<div class="empty-msg">Não foi possível ler os Mestres.</div>'; return; }
+      const ids = Object.keys(_admins).sort((a, b) => (a === mestreUid ? -1 : b === mestreUid ? 1 : 0));
+      if (!ids.length) { div.innerHTML = '<div class="empty-msg">Nenhum Mestre.</div>'; return; }
+      const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+      div.innerHTML = ids.map((uid) => {
+        const a = (_admins[uid] && typeof _admins[uid] === 'object') ? _admins[uid] : {};
+        const semNome = !a.nome || a.nome === 'Mestre';
+        return `<div class="user-card">
+          <div class="user-card-nome">${esc(a.emoji || '⚔️')} ${esc(a.nome || 'Mestre')}${uid === mestreUid ? ' <span class="user-card-email">(você)</span>' : ''}${semNome ? ' <span class="user-card-email" style="color:#c0392b">sem nome definido</span>' : ''}</div>
+          <div class="field-row"><span class="field-lbl">Nome</span><input id="mn-${uid}" type="text" maxlength="30" value="${esc(a.nome || '')}" placeholder="Ex.: Mãe, Pai"></div>
+          <div class="field-row"><span class="field-lbl">Emoji</span><input id="me-${uid}" type="text" maxlength="4" value="${esc(a.emoji || '')}" placeholder="⚔️"></div>
+          <div class="field-row"><span class="field-lbl">🙂 Foto do chat</span><input id="mf-${uid}" type="text" inputmode="url" value="${esc(a.foto || '')}" placeholder="link de uma foto de rosto (opcional)"></div>
+          <div class="btn-row"><button class="btn btn-save" onclick="salvarMestre('${uid}')">💾 Salvar</button></div>
+        </div>`;
+      }).join('');
+    }
+    async function salvarMestre(uid) {
+      const nome = document.getElementById('mn-' + uid).value.trim();
+      const emoji = document.getElementById('me-' + uid).value.trim() || '⚔️';
+      const foto = document.getElementById('mf-' + uid).value.trim();
+      if (!nome) { toast('⚠️ Dê um nome a este Mestre.', 'error'); return; }
+      if (foto && !/^https:\/\//i.test(foto)) { toast('⚠️ O link da foto precisa começar com https://', 'error'); return; }
+      try {
+        await db.ref('admins/' + uid).update({ nome, emoji, foto: foto || null });
+        toast('✅ Mestre atualizado!', 'success');
+        renderMestres();
+        if (Chat.ativo) carregarMembrosChatMestre();
+      } catch (e) { toast('❌ ' + e.message, 'error'); }
     }
 
 
@@ -3588,7 +3633,7 @@
       if (!us.length) { div.innerHTML='<div class="empty-msg">Nenhum usuário.</div>'; return; }
       div.innerHTML = us.map(([key,u]) => `
         <div class="user-card" id="uc-${key}">
-          <div class="user-card-nome">${u.nome}<span class="user-card-email">${u.email}</span></div>
+          <div class="user-card-nome">${u.nome}${u.teste?' 🧪':''}<span class="user-card-email">${u.email}${u.is_mestre?' · perfil de Mestre (não aparece no Início nem nas mensagens)':''}${u.teste?' · teste (fora das mensagens)':''}</span></div>
           <div class="field-row"><span class="field-lbl">⚡ Energia</span><input id="ue-${key}" type="number" value="${Math.floor(Number(u.saldo_energia))}" min="0"></div>
           <div class="field-row"><span class="field-lbl">💎 Cristais</span><input id="uc2-${key}" type="number" value="${Math.floor(Number(u.saldo_cristais))}" min="0"></div>
           <div class="field-row"><span class="field-lbl">🖼 Avatar</span><input id="ua-${key}" type="text" value="${u.avatar_url||''}"></div>
@@ -3596,7 +3641,13 @@
           <div class="field-row"><span class="field-lbl">Papel</span>
             <select id="um-${key}">
               <option value="false" ${!u.is_mestre?'selected':''}>Guardião</option>
-              <option value="true"  ${u.is_mestre ?'selected':''}>Mestre</option>
+              <option value="true"  ${u.is_mestre ?'selected':''}>Mestre (só perfil, sem acesso)</option>
+            </select>
+          </div>
+          <div class="field-row"><span class="field-lbl">🧪 Teste</span>
+            <select id="ut-${key}">
+              <option value="false" ${!u.teste?'selected':''}>Não</option>
+              <option value="true"  ${u.teste ?'selected':''}>Sim, esconder das mensagens</option>
             </select>
           </div>
           <div class="btn-row">
@@ -3615,7 +3666,8 @@
           saldo_cristais: Number(document.getElementById('uc2-'+key).value),
           avatar_url:     document.getElementById('ua-'+key).value.trim(),
           foto_perfil:    document.getElementById('uf-'+key).value.trim() || null,
-          is_mestre:      document.getElementById('um-'+key).value === 'true'
+          is_mestre:      document.getElementById('um-'+key).value === 'true',
+          teste:          document.getElementById('ut-'+key).value === 'true' || null
         });
         toast('✅ Ficha do Guardião salva!','success');
         await carregarDados();
