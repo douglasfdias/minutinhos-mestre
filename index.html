@@ -2571,7 +2571,16 @@
         ref.set(obj).then(() => {
           c.pend.delete(mid);
           agendar(cid);
-          if (C.enviarPush) { try { C.enviarPush(cid, mid); } catch (e) {} }
+          if (C.enviarPush) {
+            try {
+              Promise.resolve(C.enviarPush(cid, mid)).then((r) => {
+                if (!r) return;
+                if (r.erro) { pill('Enviada, mas o aviso não saiu: ' + r.erro); return; }
+                const lista = Array.isArray(r.resultado) ? r.resultado : [];
+                if (cid !== GRUPO && lista.length && lista.every((x) => x && x.aparelhos === 0)) pill('Enviada, mas o outro lado não tem aparelho registrado para avisos.');
+              }).catch(() => {});
+            } catch (e) {}
+          }
         }).catch((e) => {
           c.pend.delete(mid);
           c.msgs.delete(mid); c.ord = null;
@@ -3033,6 +3042,8 @@
     })();
 
     /* ── Central de Mensagens: ligação com o Painel do Mestre ── */
+    function _escapeM(str) { const d = document.createElement('div'); d.textContent = str == null ? '' : str; return d.innerHTML; }   // ainda usado pela lista de pendências do Início
+
     const AVATARES_CHAT = [
       'https://i.ibb.co/rR2qn4yf/avatar-dad-full-body-mod1-nobg-2.png',
       'https://i.ibb.co/V077M1SY/avatar-girl-full-body-mod1-nobg-2.png',
@@ -3099,13 +3110,17 @@
         const user = auth.currentUser;
         if (!user) return;
         const idToken = await user.getIdToken();
-        await fetch(PUSH_WORKER_URL + '/notify', {
+        const r = await fetch(PUSH_WORKER_URL + '/notify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + idToken },
           body: JSON.stringify({ tipo: 'chat', cid, mid })
         });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) return { erro: j.erro || ('erro ' + r.status) };
+        return j;
       } catch (e) {
         console.warn('Push do chat não enviado:', e.message);
+        return { erro: 'sem conexão com o serviço de avisos' };
       }
     }
 

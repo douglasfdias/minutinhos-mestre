@@ -89,7 +89,7 @@ self.addEventListener('notificationclick', (event) => {
   })());
 });
 
-const CACHE_NAME = 'minutinhos-mestre-v33';
+const CACHE_NAME = 'minutinhos-mestre-v34';
 
 const ROOT  = '/minutinhos-mestre/';
 const INDEX = '/minutinhos-mestre/index.html';
