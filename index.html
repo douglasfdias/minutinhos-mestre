@@ -781,6 +781,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
     .trans-expandable:last-child { border-bottom: none; }
       /* ── Selos (Fase 6 · passo 1) ── */
     .sl-barra { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+    .btn-sm { padding:4px 10px; font-size:0.75rem; border-radius:6px; flex:0 0 auto; }
     .sl-barra .btn { flex:1 1 30%; height:38px; }
     .sl-vazio { text-align:center; color:#666; font-size:0.85rem; padding:16px 8px; border:1px dashed #ccc; border-radius:10px; }
     .sl-fam { border:1px solid #ececec; border-radius:10px; margin-bottom:10px; background:#fafafa; overflow:hidden; }
@@ -1159,6 +1160,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
           <button class="tab-btn" onclick="aba('bonus')">🎁 Bônus</button>
           <button class="tab-btn" onclick="aba('artefatos')">⚔️ Artefatos</button>
           <button class="tab-btn" onclick="aba('selos')">🏅 Selos</button>
+          <button class="tab-btn" onclick="aba('avatares')">🧙 Avatares</button>
           <button class="tab-btn" onclick="aba('simulador')">🧪 Simulador</button>
         </div>
         <div class="tab-panel active" id="tab-usuarios">
@@ -1243,6 +1245,30 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
           <div id="selos-corpo"><div class="empty-msg">Toque em Atualizar.</div></div>
           <div id="selos-erros"></div>
           <button class="btn btn-ok btn-wide" id="selos-salvar" style="display:none" onclick="salvarSelos()">💾 Salvar catálogo</button>
+        </div>
+        <div class="tab-panel" id="tab-avatares">
+          <p class="card-hint">Loja de Avatares: catálogo e liberação. <b>As crianças só veem a loja quando você a liga aqui</b> e só se ela tiver ao menos um avatar à venda. O avatar comprado fica da criança para sempre.</p>
+          <div class="bn-bloco" id="avp-interruptor">
+            <div class="bn-head"><span class="bn-titulo">🔌 Loja para as crianças</span></div>
+            <div class="bn-sub" id="avp-modo-txt"></div>
+            <div class="field-row"><span class="field-lbl">Liberação</span>
+              <select id="avp-modo">
+                <option value="off">Desligada</option>
+                <option value="teste">Só usuários de teste</option>
+                <option value="todos">Todos os Guardiões</option>
+              </select>
+            </div>
+            <div class="field-row"><span class="field-lbl">Nível mínimo</span><input id="avp-nivel" type="number" min="1" max="50" value="4"></div>
+            <button class="btn btn-ok btn-wide" onclick="avpSalvarModo()">💾 Salvar liberação</button>
+          </div>
+          <div class="sl-barra"><button class="btn" style="background:#2980b9;color:white" onclick="avpNovo()">➕ Avatar</button></div>
+          <div id="avp-erros"></div>
+          <div id="avp-lista"><div class="empty-msg">Toque em Atualizar.</div></div>
+          <button class="btn btn-ok btn-wide" id="avp-salvar" style="display:none" onclick="avpSalvarCatalogo()">💾 Salvar catálogo</button>
+          <hr class="divider">
+          <p class="section-label">🎁 Avatares dos Guardiões</p>
+          <div class="bn-sub">Quem tem o quê. Dar um avatar é presente (sem cobrar cristais). Remover não devolve cristais.</div>
+          <div id="avp-guardioes"><div class="empty-msg">Toque em Atualizar.</div></div>
         </div>
         <div class="tab-panel" id="tab-simulador">
           <p class="card-hint">Mostra o resultado de uma mudança em cima dos dados reais, lado a lado (antes e depois). <b>Nada é gravado</b> até você confirmar.</p>
@@ -1630,7 +1656,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
     const nomeEmail = (usuarios, email) => Object.values(usuarios).find(u=>u.email===email)?.nome || email;
 
     /* ── ESTADO GLOBAL ── */
-    const APP_VERSAO = 'v32 · Limpar conversa';
+    const APP_VERSAO = 'v33 · Avatares';
     let _usuarios = {}, _trans = [], _config = {}, _inventario = {};
     document.addEventListener('DOMContentLoaded', () => {
       const el = document.getElementById('app-versao');
@@ -1692,6 +1718,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
         renderConfig();
         renderBonus();
         carregarSelosCfg();
+        avpRender();
         await carregarVouchers();
         await carregarArtefatosConfig();
         await _carregarMissoesPend(nomes);
@@ -4091,6 +4118,211 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
       } catch (e) { toast('❌ ' + e.message, 'error'); }
     }
 
+    /* ══════════════════════════════════════════════════════
+       LOJA DE AVATARES (Fase 7) · aba 🧙 Avatares da Gestão
+       config/avatares = { modo: 'off' | 'teste' | 'todos', nivel_min, itens: { id: { nome, imagem, preco,
+         xp_leitura, xp_duolingo, selo, historia, ordem, ativo } } }
+       avatares/{emailKey}/{id} = { data, preco, origem: 'loja' | 'mestre' }
+       Item que alguém já tem não é apagado: desativa (some da loja de quem não tem, continua com quem tem).
+    ══════════════════════════════════════════════════════ */
+    let _avpEd = [], _avpSujo = false, _avpPosses = {}, _avpRegras = true;
+
+    const avpTrav = t => /[\u2014\u2013]/.test(String(t || ''));
+    function avpSlug(nome) {
+      return String(nome || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 30) || 'avatar';
+    }
+    const avpCfg = () => (_config && _config.avatares) || {};
+    const avpDonos = id => Object.entries(_avpPosses).filter(([, m]) => m && m[id]).length;
+
+    async function avpRender() {
+      if (!document.getElementById('avp-lista')) return;
+      try {
+        const sn = await db.ref('avatares').get();
+        _avpPosses = sn.exists() ? sn.val() : {}; _avpRegras = true;
+      } catch (e) { _avpPosses = {}; _avpRegras = false; }
+      const c = avpCfg();
+      document.getElementById('avp-modo').value = (c.modo === 'teste' || c.modo === 'todos') ? c.modo : 'off';
+      document.getElementById('avp-nivel').value = Math.max(1, Math.floor(Number(c.nivel_min)) || 4);
+      if (!_avpSujo) {
+        _avpEd = Object.entries(c.itens || {}).map(([id, v]) => ({
+          id, nome: v.nome || '', imagem: v.imagem || '', preco: Number(v.preco) || 0,
+          xp_leitura: Number(v.xp_leitura) || 0, xp_duolingo: Number(v.xp_duolingo) || 0,
+          selo: v.selo || '', historia: v.historia || '', ordem: Number(v.ordem) || 0, ativo: v.ativo !== false
+        })).sort((a, b) => a.ordem - b.ordem || (a.id < b.id ? -1 : 1));
+      }
+      avpModoTexto();
+      avpRenderLista();
+      avpRenderGuardioes();
+    }
+
+    function avpModoTexto() {
+      const c = avpCfg(), t = document.getElementById('avp-modo-txt'); if (!t) return;
+      const modo = (c.modo === 'teste' || c.modo === 'todos') ? c.modo : 'off';
+      const nivel = Math.max(1, Math.floor(Number(c.nivel_min)) || 4);
+      const aviso = _avpRegras ? '' : '<br><b style="color:#c0392b">⚠️ As regras do Firebase de avatares ainda não foram publicadas.</b> Cole o bloco do arquivo regras-firebase-bloco-avatares.txt antes de ligar a loja.';
+      t.innerHTML = (modo === 'todos'
+        ? '<b>LIGADA para todos.</b> Cada Guardião abre a loja ao chegar no Nível ' + nivel + '.'
+        : modo === 'teste'
+          ? '<b>SÓ TESTE.</b> Apenas usuários marcados com 🧪 Teste veem a loja, e eles ignoram o nível mínimo.'
+          : '<b>DESLIGADA.</b> As crianças continuam vendo o botão Avatares trancado.') + aviso;
+    }
+
+    async function avpSalvarModo() {
+      const modo = document.getElementById('avp-modo').value;
+      const nivel = Math.floor(Number(document.getElementById('avp-nivel').value));
+      if (!(nivel >= 1 && nivel <= 50)) { toast('⚠️ O nível mínimo deve ficar entre 1 e 50.', 'error'); return; }
+      if (modo === 'todos') {
+        const n = _avpEd.filter(i => i.ativo).length;
+        if (!n) { toast('⚠️ Cadastre e salve ao menos um avatar antes de ligar para todos.', 'error'); return; }
+        if (!confirm('Ligar a loja para TODOS os Guardiões? Quem estiver no Nível ' + nivel + ' ou mais já poderá comprar (e o Oráculo vai anunciar a novidade).')) return;
+      }
+      try {
+        await db.ref('config/avatares').update({ modo, nivel_min: nivel });
+        if (!_config.avatares) _config.avatares = {};
+        _config.avatares.modo = modo; _config.avatares.nivel_min = nivel;
+        avpModoTexto();
+        toast(modo === 'off' ? '⏸️ Loja desligada.' : modo === 'teste' ? '🧪 Loja liberada só para usuários de teste.' : '▶️ Loja liberada para todos.', 'success');
+      } catch (e) { toast('❌ ' + e.message, 'error'); }
+    }
+
+    function avpSujo() {
+      _avpSujo = true;
+      const b = document.getElementById('avp-salvar');
+      if (b) { b.style.display = ''; b.textContent = '💾 Salvar catálogo (há alterações)'; b.style.background = '#e67e22'; }
+    }
+
+    function avpRenderLista() {
+      const box = document.getElementById('avp-lista'); if (!box) return;
+      const b = document.getElementById('avp-salvar'); if (b) b.style.display = (_avpEd.length || _avpSujo) ? '' : 'none';
+      if (!_avpEd.length) { box.innerHTML = '<div class="empty-msg">Nenhum avatar cadastrado. Toque em ➕ Avatar.</div>'; return; }
+      const selos = (_config.selos && _config.selos.selos) || {};
+      const opSelos = id => '<option value="">Nenhum</option>' + Object.entries(selos).map(([sid, s]) =>
+        '<option value="' + seEsc(sid) + '"' + (sid === id ? ' selected' : '') + '>' + seEsc(s.nome || sid) + '</option>').join('');
+      box.innerHTML = _avpEd.map((it, i) => {
+        const donos = it._novo ? 0 : avpDonos(it.id);
+        return '<div class="bn-bloco' + (it.ativo ? '' : ' bn-off') + '" id="avp-it-' + i + '">' +
+          '<div style="display:flex;gap:10px;align-items:flex-start">' +
+            '<img id="avp-prev-' + i + '" src="' + seEsc(it.imagem) + '" width="70" height="94" alt="" style="object-fit:contain;background:#eee;border-radius:8px;flex-shrink:0" onerror="this.style.opacity=0.3">' +
+            '<div style="flex:1;min-width:0">' +
+              '<div class="field-row"><span class="field-lbl">Nome</span><input type="text" maxlength="40" value="' + seEsc(it.nome) + '" oninput="avpSet(' + i + ',\'nome\',this.value)"></div>' +
+              '<div class="field-row"><span class="field-lbl">💎 Preço</span><input type="number" min="1" value="' + (it.preco || '') + '" oninput="avpSet(' + i + ',\'preco\',this.value)"></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="field-row" style="margin-top:6px"><span class="field-lbl">Imagem</span><input type="text" inputmode="url" placeholder="https://..." value="' + seEsc(it.imagem) + '" oninput="avpSet(' + i + ',\'imagem\',this.value)"></div>' +
+          '<div class="field-row"><span class="field-lbl">📖 XP leitura</span><input type="number" min="0" value="' + (it.xp_leitura || 0) + '" oninput="avpSet(' + i + ',\'xp_leitura\',this.value)"></div>' +
+          '<div class="field-row"><span class="field-lbl">🦉 XP Duolingo</span><input type="number" min="0" value="' + (it.xp_duolingo || 0) + '" oninput="avpSet(' + i + ',\'xp_duolingo\',this.value)"></div>' +
+          '<div class="field-row"><span class="field-lbl">🏅 Selo</span><select onchange="avpSet(' + i + ',\'selo\',this.value)">' + opSelos(it.selo) + '</select></div>' +
+          '<div class="field-row" style="align-items:flex-start"><span class="field-lbl">História</span><textarea rows="3" maxlength="300" style="flex:1;margin:0;padding:8px 10px;font-size:0.85rem;font-family:inherit" oninput="avpSet(' + i + ',\'historia\',this.value)">' + seEsc(it.historia) + '</textarea></div>' +
+          '<div class="field-row"><span class="field-lbl">Ordem</span><input type="number" value="' + (it.ordem || 0) + '" oninput="avpSet(' + i + ',\'ordem\',this.value)"></div>' +
+          '<div class="bn-head" style="margin-top:6px"><label class="bn-switch"><input type="checkbox" ' + (it.ativo ? 'checked' : '') + ' onchange="avpSet(' + i + ',\'ativo\',this.checked)"> À venda</label>' +
+            '<span class="bn-sub" style="margin:0">' + (it._novo ? 'novo, ainda não salvo' : donos + (donos === 1 ? ' Guardião tem' : ' Guardiões têm')) + '</span>' +
+            (donos ? '' : '<button class="btn btn-sm" style="background:#c0392b;color:white" onclick="avpRemover(' + i + ')">🗑️ Remover</button>') +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function avpSet(i, campo, v) {
+      const it = _avpEd[i]; if (!it) return;
+      if (campo === 'ativo') { it.ativo = !!v; const el = document.getElementById('avp-it-' + i); if (el) el.classList.toggle('bn-off', !it.ativo); }
+      else if (['preco', 'xp_leitura', 'xp_duolingo', 'ordem'].includes(campo)) it[campo] = Math.floor(Number(v)) || 0;
+      else it[campo] = String(v);
+      if (campo === 'imagem') { const p = document.getElementById('avp-prev-' + i); if (p) { p.style.opacity = 1; p.src = it.imagem; } }
+      avpSujo();
+    }
+
+    function avpNovo() {
+      const prox = _avpEd.reduce((m, i) => Math.max(m, i.ordem), 0) + 1;
+      _avpEd.push({ id: '', _novo: true, nome: '', imagem: '', preco: 100, xp_leitura: 0, xp_duolingo: 0, selo: '', historia: '', ordem: prox, ativo: true });
+      avpSujo(); avpRenderLista();
+      const el = document.getElementById('avp-it-' + (_avpEd.length - 1)); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function avpRemover(i) {
+      const it = _avpEd[i]; if (!it) return;
+      if (!confirm('Remover "' + (it.nome || 'avatar novo') + '" do catálogo? Só é possível porque ninguém tem este avatar.')) return;
+      _avpEd.splice(i, 1); avpSujo(); avpRenderLista();
+    }
+
+    function avpMontarSaida() {
+      const erros = [], out = {}, usados = new Set(_avpEd.filter(i => !i._novo).map(i => i.id));
+      _avpEd.forEach((it, n) => {
+        const rot = 'Avatar ' + (n + 1) + (it.nome ? ' (' + it.nome + ')' : '');
+        const nome = String(it.nome || '').trim(), img = String(it.imagem || '').trim(), hist = String(it.historia || '').trim();
+        if (!nome) erros.push(rot + ': falta o nome.');
+        if (!/^https:\/\/\S+$/i.test(img)) erros.push(rot + ': a imagem precisa ser um endereço https://.');
+        if (!(it.preco >= 1)) erros.push(rot + ': o preço deve ser de pelo menos 1 cristal.');
+        if (hist.length > 300) erros.push(rot + ': a história passou de 300 letras.');
+        if (avpTrav(nome) || avpTrav(hist)) erros.push(rot + ': sem travessão longo (o traço comprido): use vírgula, dois-pontos ou ponto.');
+        let id = it.id;
+        if (!id) { const base = avpSlug(nome); id = base; let k = 2; while (usados.has(id)) id = base + '_' + (k++); usados.add(id); }
+        out[id] = { nome, imagem: img, preco: Math.floor(it.preco) || 0, xp_leitura: it.xp_leitura || 0, xp_duolingo: it.xp_duolingo || 0,
+          selo: it.selo || '', historia: hist, ordem: it.ordem || 0, ativo: !!it.ativo };
+      });
+      return { erros, out };
+    }
+
+    async function avpSalvarCatalogo() {
+      const m = avpMontarSaida(), box = document.getElementById('avp-erros');
+      if (m.erros.length) { box.innerHTML = '<div class="sl-erros">' + m.erros.map(seEsc).join('\n') + '</div>'; box.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+      box.innerHTML = '';
+      const b = document.getElementById('avp-salvar'); b.disabled = true; b.textContent = '⏳ Salvando...';
+      try {
+        await db.ref('config/avatares/itens').set(Object.keys(m.out).length ? m.out : null);
+        if (!_config.avatares) _config.avatares = {};
+        _config.avatares.itens = m.out; _avpSujo = false;
+        b.disabled = false; b.style.background = ''; b.textContent = '💾 Salvar catálogo';
+        await avpRender(); toast('🧙 Catálogo de avatares salvo.', 'success');
+      } catch (e) { b.disabled = false; b.textContent = '💾 Salvar catálogo (há alterações)'; toast('❌ ' + e.message, 'error'); }
+    }
+
+    function avpRenderGuardioes() {
+      const box = document.getElementById('avp-guardioes'); if (!box) return;
+      const gs = Object.entries(_usuarios).filter(([, u]) => u.email && !u.is_mestre);
+      if (!gs.length) { box.innerHTML = '<div class="empty-msg">Nenhum Guardião.</div>'; return; }
+      const itens = Object.entries((avpCfg().itens) || {}).map(([id, v]) => ({ id, nome: v.nome || id, ativo: v.ativo !== false }));
+      const nomeItem = id => (itens.find(x => x.id === id) || { nome: id }).nome;
+      box.innerHTML = gs.map(([k, u]) => {
+        const tem = _avpPosses[k] || {}, ids = Object.keys(tem);
+        const livres = itens.filter(x => !tem[x.id]);
+        return '<div class="user-card"><div class="user-card-nome">' + seEsc(u.nome) + (u.teste ? ' 🧪' : '') + '</div>' +
+          (ids.length ? ids.map(id => '<div class="bn-linha"><span style="flex:1;font-size:0.8rem">🧙 ' + seEsc(nomeItem(id)) +
+              ' <small style="color:#888">· ' + (tem[id].origem === 'mestre' ? 'presente' : (Number(tem[id].preco) || 0) + ' 💎') + '</small></span>' +
+              '<button class="btn btn-sm" style="background:#c0392b;color:white" onclick="avpTirar(\'' + seEsc(k) + '\',\'' + seEsc(id) + '\')">✖</button></div>').join('')
+            : '<div class="bn-sub">Ainda sem avatares da loja.</div>') +
+          (livres.length ? '<div class="field-row" style="margin-top:6px"><select id="avp-dar-' + seEsc(k) + '">' + livres.map(x => '<option value="' + seEsc(x.id) + '">' + seEsc(x.nome) + '</option>').join('') + '</select>' +
+            '<button class="btn" style="background:#8e44ad;color:white;flex:0 0 auto" onclick="avpDar(\'' + seEsc(k) + '\')">🎁 Dar</button></div>' : '') +
+          '</div>';
+      }).join('');
+    }
+
+    async function avpDar(k) {
+      const sel = document.getElementById('avp-dar-' + k); if (!sel || !sel.value) return;
+      const id = sel.value, v = ((avpCfg().itens) || {})[id], u = _usuarios[k]; if (!v || !u) return;
+      if (!confirm('Dar o avatar "' + v.nome + '" de presente para ' + u.nome + '?')) return;
+      try {
+        const agora = new Date().toISOString();
+        await db.ref('avatares/' + k + '/' + id).set({ data: agora, preco: 0, origem: 'mestre' });
+        try {
+          await db.ref('notificacoes/' + k).push({ tipo: 'avatar_presente', titulo: '🧙 Avatar novo!', mensagem: 'O Mestre deu a você o avatar ' + v.nome + '!', quantidade: 0, item: v.nome, timestamp: agora });
+          enviarPush(k, '🧙 Avatar novo!', 'O Mestre deu a você o avatar ' + v.nome + '!', 'avatar_presente', { item: v.nome });
+        } catch (e) { console.error('Aviso do presente:', e); }
+        toast('🎁 Avatar dado para ' + u.nome + '.', 'success');
+        await avpRender();
+      } catch (e) { toast('❌ ' + e.message, 'error'); }
+    }
+
+    async function avpTirar(k, id) {
+      const v = ((avpCfg().itens) || {})[id], u = _usuarios[k]; if (!u) return;
+      if (!confirm('Tirar o avatar "' + (v ? v.nome : id) + '" de ' + u.nome + '? Isso NÃO devolve cristais.')) return;
+      try {
+        await db.ref('avatares/' + k + '/' + id).remove();
+        toast('✖ Avatar removido de ' + u.nome + '.', 'success');
+        await avpRender();
+      } catch (e) { toast('❌ ' + e.message, 'error'); }
+    }
+
     async function salvarSelos() {
       if (!_selosEd) return;
       const m = selosMontarSaida(_selosEd), box = document.getElementById('selos-erros');
@@ -4183,7 +4415,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
 
     /* ── ABAS ── */
     function aba(nome) {
-      document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active',['usuarios','transacoes','config','bonus','artefatos','selos','simulador'][i]===nome));
+      document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active',['usuarios','transacoes','config','bonus','artefatos','selos','avatares','simulador'][i]===nome));
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       document.getElementById('tab-'+nome).classList.add('active');
     }
