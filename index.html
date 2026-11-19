@@ -1656,7 +1656,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
     const nomeEmail = (usuarios, email) => Object.values(usuarios).find(u=>u.email===email)?.nome || email;
 
     /* ── ESTADO GLOBAL ── */
-    const APP_VERSAO = 'v35 · XP dos avatares';
+    const APP_VERSAO = 'v36 · Sexo dos avatares';
     let _usuarios = {}, _trans = [], _config = {}, _inventario = {};
     document.addEventListener('DOMContentLoaded', () => {
       const el = document.getElementById('app-versao');
@@ -4148,7 +4148,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
         _avpEd = Object.entries(c.itens || {}).map(([id, v]) => ({
           id, nome: v.nome || '', imagem: v.imagem || '', preco: Number(v.preco) || 0,
           xp_leitura: Number(v.xp_leitura) || 0, xp_duolingo: Number(v.xp_duolingo) || 0,
-          selo: v.selo || '', historia: v.historia || '', ordem: Number(v.ordem) || 0, ativo: v.ativo !== false
+          selo: v.selo || '', historia: v.historia || '', genero: v.genero || '', ordem: Number(v.ordem) || 0, ativo: v.ativo !== false
         })).sort((a, b) => a.ordem - b.ordem || (a.id < b.id ? -1 : 1));
       }
       avpModoTexto();
@@ -4214,6 +4214,8 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
           '<div class="field-row"><span class="field-lbl">🦉 XP Duolingo</span><input type="number" min="0" value="' + (it.xp_duolingo || 0) + '" oninput="avpSet(' + i + ',\'xp_duolingo\',this.value)"></div>' +
           '<div class="field-row"><span class="field-lbl">🏅 Selo</span><select onchange="avpSet(' + i + ',\'selo\',this.value)">' + opSelos(it.selo) + '</select></div>' +
           '<div class="field-row" style="align-items:flex-start"><span class="field-lbl">História</span><textarea rows="3" maxlength="300" style="flex:1;margin:0;padding:8px 10px;font-size:0.85rem;font-family:inherit" oninput="avpSet(' + i + ',\'historia\',this.value)">' + seEsc(it.historia) + '</textarea></div>' +
+          '<div class="field-row"><span class="field-lbl">👤 Para quem</span><select onchange="avpSet(' + i + ',\'genero\',this.value)">' +
+            [['', 'Não definido (todos veem)'], ['U', 'Meninos e meninas'], ['M', 'Só meninos'], ['F', 'Só meninas']].map(o => '<option value="' + o[0] + '"' + ((it.genero || '') === o[0] ? ' selected' : '') + '>' + o[1] + '</option>').join('') + '</select></div>' +
           '<div class="field-row"><span class="field-lbl">Ordem</span><input type="number" value="' + (it.ordem || 0) + '" oninput="avpSet(' + i + ',\'ordem\',this.value)"></div>' +
           '<div class="bn-head" style="margin-top:6px"><label class="bn-switch"><input type="checkbox" ' + (it.ativo ? 'checked' : '') + ' onchange="avpSet(' + i + ',\'ativo\',this.checked)"> À venda</label>' +
             '<span class="bn-sub" style="margin:0">' + (it._novo ? 'novo, ainda não salvo' : donos + (donos === 1 ? ' Guardião tem' : ' Guardiões têm')) + '</span>' +
@@ -4233,35 +4235,46 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
     }
 
     const AVP_BASE_IMG = 'https://douglasfdias.github.io/minutinhos/avatares/';
+    /* g: M menino, F menina. sl: selo exigido (id do catálogo de selos). Ordem segue o preço. */
     const AVP_INICIAIS = [
-      { id: 'explorador', nome: 'Explorador', preco: 30, xl: 0, xd: 0, historia: 'Leva um mapa, uma luneta e muita curiosidade. Nenhuma estante da Ordem consegue deixá-lo perdido.' },
-      { id: 'exploradora', nome: 'Exploradora', preco: 30, xl: 0, xd: 0, historia: 'Anda sempre com a bússola e a luneta. Dizem que já achou três atalhos secretos dentro da biblioteca!' },
-      { id: 'pequeno_construtor', nome: 'Pequeno Construtor', preco: 40, xl: 0, xd: 0, historia: 'Constrói torres de blocos em um minuto e nunca sai sem o seu cavalinho de madeira.' },
-      { id: 'guardia_da_floresta', nome: 'Guardiã da Floresta', preco: 50, xl: 0, xd: 0, historia: 'O cajado verde brilha quando ela chega. O coelhinho cuida do baú de tesouros, e ele é muito bom nisso.' },
-      { id: 'maga_dos_livros', nome: 'Maga dos Livros', preco: 90, xl: 1200, xd: 0, historia: 'O grimório dela brilha quando alguém aprende algo novo. A coruja do ombro garante que já leu todas as estantes.' },
-      { id: 'guardiao_de_blocos', nome: 'Guardião de Blocos', preco: 120, xl: 1200, xd: 500, historia: 'Vigia os corredores da Ordem com a capa vermelha ao vento. Parece sério, mas adora ajudar quem estuda.' },
-      { id: 'guardia_de_blocos', nome: 'Guardiã de Blocos', preco: 120, xl: 1200, xd: 500, historia: 'Cruza os braços e observa tudo com sua capa verde. Quem estuda todo dia ganha a confiança dela.' },
-      { id: 'paladino_dourado', nome: 'Paladino Dourado', preco: 200, xl: 2000, xd: 1000, historia: 'A armadura dele brilha mais a cada página lida. Só os Guardiões mais dedicados conseguem usá-la.' },
-      { id: 'paladina_dourada', nome: 'Paladina Dourada', preco: 200, xl: 2000, xd: 1000, historia: 'Sua lança dourada aponta sempre para o próximo desafio. Nenhum livro é grande demais para ela.' }
+      { id: 'explorador', g: 'M', nome: 'Explorador', preco: 30, xl: 0, xd: 0, sl: '', historia: 'Leva um mapa, uma luneta e muita curiosidade. Nenhuma estante da Ordem consegue deixá-lo perdido.' },
+      { id: 'exploradora', g: 'F', nome: 'Exploradora', preco: 30, xl: 0, xd: 0, sl: '', historia: 'Anda sempre com a bússola e a luneta. Dizem que já achou três atalhos secretos dentro da biblioteca!' },
+      { id: 'pequeno_construtor', g: 'M', nome: 'Pequeno Construtor', preco: 40, xl: 0, xd: 0, sl: '', historia: 'Constrói torres de blocos em um minuto e nunca sai sem o seu cavalinho de madeira.' },
+      { id: 'guardia_da_floresta', g: 'F', nome: 'Guardiã da Floresta', preco: 50, xl: 0, xd: 0, sl: '', historia: 'O cajado verde brilha quando ela chega. O coelhinho cuida do baú de tesouros, e ele é muito bom nisso.' },
+      { id: 'maga_dos_livros', g: 'F', nome: 'Maga dos Livros', preco: 90, xl: 1200, xd: 0, sl: '', historia: 'O grimório dela brilha quando alguém aprende algo novo. A coruja do ombro garante que já leu todas as estantes.' },
+      { id: 'sabio_da_coruja', g: 'M', nome: 'Sábio da Coruja', preco: 110, xl: 1400, xd: 0, sl: '', historia: 'Leva um grimório que brilha toda vez que alguém aprende algo novo. A coruja do ombro dá palpite em tudo, e quase sempre acerta.' },
+      { id: 'sabia_da_coruja', g: 'F', nome: 'Sábia da Coruja', preco: 110, xl: 1400, xd: 0, sl: '', historia: 'Leva um grimório que brilha toda vez que alguém aprende algo novo. A coruja do ombro dá palpite em tudo, e quase sempre acerta.' },
+      { id: 'guardiao_de_blocos', g: 'M', nome: 'Guardião de Blocos', preco: 120, xl: 1200, xd: 500, sl: '', historia: 'Vigia os corredores da Ordem com a capa vermelha ao vento. Parece sério, mas adora ajudar quem estuda.' },
+      { id: 'guardia_de_blocos', g: 'F', nome: 'Guardiã de Blocos', preco: 120, xl: 1200, xd: 500, sl: '', historia: 'Cruza os braços e observa tudo com sua capa verde. Quem estuda todo dia ganha a confiança dela.' },
+      { id: 'ferreiro_de_cristais', g: 'M', nome: 'Ferreiro de Cristais', preco: 130, xl: 0, xd: 0, sl: 'aprendiz_de_ferreiro', historia: 'Sabe a hora certa de bater no cristal para ele brilhar mais. Usa óculos de proteção, porque as faíscas da Forja adoram pregar peças.' },
+      { id: 'ferreira_de_cristais', g: 'F', nome: 'Ferreira de Cristais', preco: 130, xl: 0, xd: 0, sl: 'aprendiz_de_ferreiro', historia: 'Sabe a hora certa de bater no cristal para ele brilhar mais. Usa óculos de proteção, porque as faíscas da Forja adoram pregar peças.' },
+      { id: 'cacador_de_reliquias', g: 'M', nome: 'Caçador de Relíquias', preco: 160, xl: 0, xd: 0, sl: 'ajudante_da_ordem', historia: 'Com a lanterna numa mão e a chave do baú na outra, encontra tesouros que ninguém viu. Dizem que até o dragão da bagunça tem medo dele.' },
+      { id: 'cacadora_de_reliquias', g: 'F', nome: 'Caçadora de Relíquias', preco: 160, xl: 0, xd: 0, sl: 'ajudante_da_ordem', historia: 'Com a lanterna numa mão e a chave do baú na outra, encontra tesouros que ninguém viu. Dizem que até o dragão da bagunça tem medo dela.' },
+      { id: 'paladino_dourado', g: 'M', nome: 'Paladino Dourado', preco: 200, xl: 2000, xd: 1000, sl: '', historia: 'A armadura dele brilha mais a cada página lida. Só os Guardiões mais dedicados conseguem usá-la.' },
+      { id: 'paladina_dourada', g: 'F', nome: 'Paladina Dourada', preco: 200, xl: 2000, xd: 1000, sl: '', historia: 'Sua lança dourada aponta sempre para o próximo desafio. Nenhum livro é grande demais para ela.' },
+      { id: 'tigre_guardiao_da_chama', g: 'M', nome: 'Tigre Guardião da Chama', preco: 220, xl: 0, xd: 0, sl: 'chama_acesa', historia: 'A tocha dele nunca apaga, nem com vento forte. Quem estuda todo dia ganha a proteção desse tigre, que ruge baixinho para não acordar os dragões.' },
+      { id: 'gata_guardia_da_chama', g: 'F', nome: 'Gata Guardiã da Chama', preco: 220, xl: 0, xd: 0, sl: 'chama_acesa', historia: 'A tocha dela nunca apaga, nem com vento forte. Quem estuda todo dia ganha a proteção dessa gata, que ronrona perto da fogueira da Ordem.' }
     ];
 
     function avpCarregarIniciais() {
-      const tem = new Set(_avpEd.map(i => i.id));
-      const faltam = AVP_INICIAIS.filter(a => !tem.has(a.id));
-      if (!faltam.length) { toast('Os 9 avatares iniciais já estão no catálogo.', 'success'); return; }
-      if (!confirm('Acrescentar ' + faltam.length + ' avatares ao catálogo? Nada do que você já cadastrou é alterado, e só vale depois de tocar em Salvar catálogo.')) return;
+      const porId = {}; _avpEd.forEach(i => { porId[i.id] = i; });
+      const faltam = AVP_INICIAIS.filter(a => !porId[a.id]);
+      const semSexo = AVP_INICIAIS.filter(a => porId[a.id] && !porId[a.id].genero);
+      if (!faltam.length && !semSexo.length) { toast('Os avatares iniciais já estão no catálogo, com o sexo definido.', 'success'); return; }
+      if (!confirm('Acrescentar ' + faltam.length + ' avatares e definir o sexo de ' + semSexo.length + ' que já estão no catálogo? Preço, requisitos e textos que você já editou não mudam, e só vale depois de tocar em Salvar catálogo.')) return;
+      semSexo.forEach(a => { porId[a.id].genero = a.g; });
       let ordem = _avpEd.reduce((m, i) => Math.max(m, i.ordem), 0);
       faltam.forEach(a => _avpEd.push({
         id: a.id, _novo: true, nome: a.nome, imagem: AVP_BASE_IMG + a.id + '.webp', preco: a.preco,
-        xp_leitura: a.xl, xp_duolingo: a.xd, selo: '', historia: a.historia, ordem: ++ordem, ativo: true
+        xp_leitura: a.xl, xp_duolingo: a.xd, selo: a.sl || '', historia: a.historia, genero: a.g, ordem: ++ordem, ativo: true
       }));
       avpSujo(); avpRenderLista();
-      toast('📥 ' + faltam.length + ' avatares acrescentados. Confira e toque em Salvar catálogo.', 'success');
+      toast('📥 ' + faltam.length + ' avatares acrescentados e ' + semSexo.length + ' com o sexo definido. Confira e toque em Salvar catálogo.', 'success');
     }
 
     function avpNovo() {
       const prox = _avpEd.reduce((m, i) => Math.max(m, i.ordem), 0) + 1;
-      _avpEd.push({ id: '', _novo: true, nome: '', imagem: '', preco: 100, xp_leitura: 0, xp_duolingo: 0, selo: '', historia: '', ordem: prox, ativo: true });
+      _avpEd.push({ id: '', _novo: true, nome: '', imagem: '', preco: 100, xp_leitura: 0, xp_duolingo: 0, selo: '', historia: '', genero: 'U', ordem: prox, ativo: true });
       avpSujo(); avpRenderLista();
       const el = document.getElementById('avp-it-' + (_avpEd.length - 1)); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -4285,7 +4298,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
         let id = it.id;
         if (!id) { const base = avpSlug(nome); id = base; let k = 2; while (usados.has(id)) id = base + '_' + (k++); usados.add(id); }
         out[id] = { nome, imagem: img, preco: Math.floor(it.preco) || 0, xp_leitura: it.xp_leitura || 0, xp_duolingo: it.xp_duolingo || 0,
-          selo: it.selo || '', historia: hist, ordem: it.ordem || 0, ativo: !!it.ativo };
+          selo: it.selo || '', historia: hist, genero: ['M', 'F'].includes(it.genero) ? it.genero : 'U', ordem: it.ordem || 0, ativo: !!it.ativo };
       });
       return { erros, out };
     }
@@ -4314,6 +4327,8 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
         const tem = _avpPosses[k] || {}, ids = Object.keys(tem);
         const livres = itens.filter(x => !tem[x.id]);
         return '<div class="user-card"><div class="user-card-nome">' + seEsc(u.nome) + (u.teste ? ' 🧪' : '') + '</div>' +
+          '<div class="field-row"><span class="field-lbl">👤 Sexo</span><select onchange="avpSetSexo(\'' + seEsc(k) + '\',this.value)">' +
+            [['', 'Não definido (não vê avatares de menino ou menina)'], ['M', 'Menino'], ['F', 'Menina']].map(o => '<option value="' + o[0] + '"' + ((u.sexo || '') === o[0] ? ' selected' : '') + '>' + o[1] + '</option>').join('') + '</select></div>' +
           (ids.length ? ids.map(id => '<div class="bn-linha"><span style="flex:1;font-size:0.8rem">🧙 ' + seEsc(nomeItem(id)) +
               ' <small style="color:#888">· ' + (tem[id].origem === 'mestre' ? 'presente' : (Number(tem[id].preco) || 0) + ' 💎') + '</small></span>' +
               '<button class="btn btn-sm" style="background:#c0392b;color:white" onclick="avpTirar(\'' + seEsc(k) + '\',\'' + seEsc(id) + '\')">✖</button></div>').join('')
@@ -4322,6 +4337,15 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
             '<button class="btn" style="background:#8e44ad;color:white;flex:0 0 auto" onclick="avpDar(\'' + seEsc(k) + '\')">🎁 Dar</button></div>' : '') +
           '</div>';
       }).join('');
+    }
+
+    async function avpSetSexo(k, v) {
+      const u = _usuarios[k]; if (!u) return;
+      try {
+        await db.ref('usuarios/' + k + '/sexo').set(v === 'M' || v === 'F' ? v : null);
+        u.sexo = (v === 'M' || v === 'F') ? v : '';
+        toast('👤 Sexo de ' + (u.nome || 'Guardião') + ' salvo. Vale na próxima abertura do app dele.', 'success');
+      } catch (e) { toast('❌ ' + e.message, 'error'); avpRenderGuardioes(); }
     }
 
     async function avpDar(k) {
