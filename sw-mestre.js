@@ -7,7 +7,7 @@ const TITULO_PADRAO = 'Painel do Mestre';
 // O Worker manda só "dados" (sem bloco notification). Assim só ESTE código
 // mostra a notificação, uma vez só. Antes o Firebase mostrava uma e este
 // arquivo mostrava outra: era a notificação duplicada.
-const ICONE_PADRAO = 'https://i.ibb.co/1YgwbMTG/duolingo-oraculo-head.png';
+const ICONE_PADRAO = 'https://douglasfdias.github.io/minutinhos/img/oraculo-cabeca.webp';
 const SELO = new URL('badge-notif.png', self.registration.scope).href;
 
 function lerPush(event) {
@@ -89,7 +89,7 @@ self.addEventListener('notificationclick', (event) => {
   })());
 });
 
-const CACHE_NAME = 'minutinhos-mestre-v35';
+const CACHE_NAME = 'minutinhos-mestre-v36';
 
 const ROOT  = '/minutinhos-mestre/';
 const INDEX = '/minutinhos-mestre/index.html';
@@ -99,8 +99,8 @@ const ASSETS = [
   INDEX,
   'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js',
-  'https://i.ibb.co/YF6L3bP8/imagem-livro-180x140.png',
-  'https://i.ibb.co/jvkzKpNL/duolingo-oraculo-head-50x50.png',
+  'https://douglasfdias.github.io/minutinhos/img/livro.webp',
+  'https://douglasfdias.github.io/minutinhos/img/oraculo-cabeca.webp',
 ];
 
 /* Baixa SEMPRE da rede na instalação (ignora o cache HTTP do navegador).
