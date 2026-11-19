@@ -1261,7 +1261,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
             <div class="field-row"><span class="field-lbl">Nível mínimo</span><input id="avp-nivel" type="number" min="1" max="50" value="4"></div>
             <button class="btn btn-ok btn-wide" onclick="avpSalvarModo()">💾 Salvar liberação</button>
           </div>
-          <div class="sl-barra"><button class="btn" style="background:#2980b9;color:white" onclick="avpNovo()">➕ Avatar</button></div>
+          <div class="sl-barra"><button class="btn" style="background:#2980b9;color:white" onclick="avpNovo()">➕ Avatar</button> <button class="btn" style="background:#8e44ad;color:white" onclick="avpCarregarIniciais()">📥 Carregar avatares iniciais</button></div>
           <div id="avp-erros"></div>
           <div id="avp-lista"><div class="empty-msg">Toque em Atualizar.</div></div>
           <button class="btn btn-ok btn-wide" id="avp-salvar" style="display:none" onclick="avpSalvarCatalogo()">💾 Salvar catálogo</button>
@@ -1656,7 +1656,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
     const nomeEmail = (usuarios, email) => Object.values(usuarios).find(u=>u.email===email)?.nome || email;
 
     /* ── ESTADO GLOBAL ── */
-    const APP_VERSAO = 'v33 · Avatares';
+    const APP_VERSAO = 'v34 · Avatares iniciais';
     let _usuarios = {}, _trans = [], _config = {}, _inventario = {};
     document.addEventListener('DOMContentLoaded', () => {
       const el = document.getElementById('app-versao');
@@ -4230,6 +4230,33 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
       else it[campo] = String(v);
       if (campo === 'imagem') { const p = document.getElementById('avp-prev-' + i); if (p) { p.style.opacity = 1; p.src = it.imagem; } }
       avpSujo();
+    }
+
+    const AVP_BASE_IMG = 'https://douglasfdias.github.io/minutinhos/avatares/';
+    const AVP_INICIAIS = [
+      { id: 'explorador', nome: 'Explorador', preco: 30, xl: 0, xd: 0, historia: 'Leva um mapa, uma luneta e muita curiosidade. Nenhuma estante da Ordem consegue deixá-lo perdido.' },
+      { id: 'exploradora', nome: 'Exploradora', preco: 30, xl: 0, xd: 0, historia: 'Anda sempre com a bússola e a luneta. Dizem que já achou três atalhos secretos dentro da biblioteca!' },
+      { id: 'pequeno_construtor', nome: 'Pequeno Construtor', preco: 40, xl: 0, xd: 0, historia: 'Constrói torres de blocos em um minuto e nunca sai sem o seu cavalinho de madeira.' },
+      { id: 'guardia_da_floresta', nome: 'Guardiã da Floresta', preco: 50, xl: 0, xd: 0, historia: 'O cajado verde brilha quando ela chega. O coelhinho cuida do baú de tesouros, e ele é muito bom nisso.' },
+      { id: 'maga_dos_livros', nome: 'Maga dos Livros', preco: 90, xl: 300, xd: 0, historia: 'O grimório dela brilha quando alguém aprende algo novo. A coruja do ombro garante que já leu todas as estantes.' },
+      { id: 'guardiao_de_blocos', nome: 'Guardião de Blocos', preco: 120, xl: 200, xd: 200, historia: 'Vigia os corredores da Ordem com a capa vermelha ao vento. Parece sério, mas adora ajudar quem estuda.' },
+      { id: 'guardia_de_blocos', nome: 'Guardiã de Blocos', preco: 120, xl: 200, xd: 200, historia: 'Cruza os braços e observa tudo com sua capa verde. Quem estuda todo dia ganha a confiança dela.' },
+      { id: 'paladino_dourado', nome: 'Paladino Dourado', preco: 200, xl: 400, xd: 400, historia: 'A armadura dele brilha mais a cada página lida. Só os Guardiões mais dedicados conseguem usá-la.' },
+      { id: 'paladina_dourada', nome: 'Paladina Dourada', preco: 200, xl: 400, xd: 400, historia: 'Sua lança dourada aponta sempre para o próximo desafio. Nenhum livro é grande demais para ela.' }
+    ];
+
+    function avpCarregarIniciais() {
+      const tem = new Set(_avpEd.map(i => i.id));
+      const faltam = AVP_INICIAIS.filter(a => !tem.has(a.id));
+      if (!faltam.length) { toast('Os 9 avatares iniciais já estão no catálogo.', 'success'); return; }
+      if (!confirm('Acrescentar ' + faltam.length + ' avatares ao catálogo? Nada do que você já cadastrou é alterado, e só vale depois de tocar em Salvar catálogo.')) return;
+      let ordem = _avpEd.reduce((m, i) => Math.max(m, i.ordem), 0);
+      faltam.forEach(a => _avpEd.push({
+        id: a.id, _novo: true, nome: a.nome, imagem: AVP_BASE_IMG + a.id + '.webp', preco: a.preco,
+        xp_leitura: a.xl, xp_duolingo: a.xd, selo: '', historia: a.historia, ordem: ++ordem, ativo: true
+      }));
+      avpSujo(); avpRenderLista();
+      toast('📥 ' + faltam.length + ' avatares acrescentados. Confira e toque em Salvar catálogo.', 'success');
     }
 
     function avpNovo() {
