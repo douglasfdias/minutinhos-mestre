@@ -1039,6 +1039,30 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
         <select id="sel-voucher-manual"><option value="">Selecione o Guardião...</option></select>
         <input type="number" id="val-voucher-manual" placeholder="Cristais (= minutos de tela)" min="1">
         <button class="btn btn-ok btn-wide" onclick="criarVoucherMestre()">📜 Criar e Ativar</button>
+        <hr class="divider">
+        <div class="section-label">⏪ Registrar Uso Já Feito</div>
+        <p class="card-hint">Tempo de tela que o Guardião já usou. Cria o voucher já encerrado e debita os cristais, deixando tudo no histórico. Sem a hora, fica anotado como "concedido fora do app".</p>
+        <select id="sel-voucher-retro"><option value="">Selecione o Guardião...</option></select>
+        <input type="number" id="val-voucher-retro" placeholder="Minutos usados (= cristais)" min="1">
+        <label style="font-size:0.78rem;font-weight:700;color:#555;margin-top:6px;display:block">📅 Dia do uso</label>
+        <input type="date" id="data-voucher-retro">
+        <label style="font-size:0.78rem;font-weight:700;color:#555;margin-top:6px;display:block">🕐 Hora que começou (opcional)</label>
+        <input type="time" id="hora-voucher-retro">
+        <input type="text" id="obs-voucher-retro" placeholder="Observação (opcional)" maxlength="80">
+        <button class="btn btn-warn btn-wide" onclick="registrarVoucherRetroativo()">⏪ Registrar e Liquidar</button>
+      </div>
+    </div>
+
+    <!-- Encerrar voucher (com devolução de cristais) -->
+    <div class="tst-ov" id="enc-ov" onclick="if(event.target===this)fecharEncerrarVoucher()">
+      <div class="tst-box">
+        <div class="tst-tit" id="enc-titulo">⏹ Encerrar voucher</div>
+        <p class="tst-ajuda" id="enc-resumo"></p>
+        <label style="font-size:0.78rem;font-weight:700;color:#555;display:block">💎 Devolver ao tesouro (minutos inteiros)</label>
+        <input type="number" id="enc-devolver" min="0" step="1">
+        <p class="tst-ajuda" id="enc-dica" style="margin-top:6px"></p>
+        <button class="btn btn-warn btn-wide" onclick="confirmarEncerrarVoucher()">⏹ Encerrar voucher</button>
+        <button class="btn btn-wide" style="background:#e3e3e3;color:#333" onclick="fecharEncerrarVoucher()">Voltar</button>
       </div>
     </div>
 
@@ -1670,6 +1694,8 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
         const el = document.getElementById(id);
         if (el && !el.value) el.value = hoje;
       });
+      const rd = document.getElementById('data-voucher-retro');   // data local (não UTC)
+      if (rd && !rd.value) { const n = new Date(); rd.value = new Date(n.getTime() - n.getTimezoneOffset()*60000).toISOString().substring(0,10); }
     }
 
     async function carregarDados() {
@@ -1797,7 +1823,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
     function renderHist(hs) {
       const d=document.getElementById('historico');
       if (!hs.length) { d.innerHTML='<div class="empty-msg">Sem histórico ainda.</div>'; return; }
-      const ic={Leitura:'📖',Forja:'⚒️',Duolingo:'🦉',Gasto:'💸'};
+      const ic={Leitura:'📖',Forja:'⚒️',Duolingo:'🦉',Gasto:'💸',Estorno:'↩️'};
       d.innerHTML = hs.map(h => {
         const sc=h.status==='Pendente'?'s-pend':h.status==='Aprovado'?'s-apro':'s-repr';
         const sn=h.tipo==='Gasto'?'−':'+';
@@ -1811,7 +1837,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
         s.innerHTML='<option value="">Selecione o Guardião...</option>';
         gs.forEach(g => s.innerHTML += `<option value="${g.email}">${g.nome}</option>`);
       });
-      ['sel-art-guardiao','sel-voucher-manual'].forEach(id => {
+      ['sel-art-guardiao','sel-voucher-manual','sel-voucher-retro'].forEach(id => {
         const s=document.getElementById(id); if(!s) return;
         const prev=s.value;
         s.innerHTML='<option value="">Selecione o Guardião...</option>';
@@ -4647,7 +4673,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
       if (filtroTipo!=='todos')   items=items.filter(t=>t.tipo===filtroTipo);
       items = items.slice(0,40);
       if (!items.length) { div.innerHTML='<div class="empty-msg">Nenhuma transação encontrada.</div>'; return; }
-      const ic={Leitura:'📖',Forja:'⚒️',Duolingo:'🦉',Gasto:'💸',Bonus:'🎁'};
+      const ic={Leitura:'📖',Forja:'⚒️',Duolingo:'🦉',Gasto:'💸',Bonus:'🎁',Estorno:'↩️'};
       div.innerHTML = items.map(t => {
         const dataAf = t.data_aferida ? t.data_aferida.substring(0,10) : (t.data||'').substring(0,10);
         return `<div class="trans-expandable" id="tr-wrap-${t._key}">
@@ -5131,18 +5157,26 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
     /* Minutos realmente consumidos por um voucher */
     function _audMinReais(v) {
       const aut = Number(v.cristais) || 0;
+      if (v.usado_min !== undefined && v.usado_min !== null) return Math.max(0, Number(v.usado_min) || 0);   // gravado no encerramento/registro
       const ini = new Date(v.timestamp_aprovacao || v.timestamp_solicitacao);
       if (isNaN(ini)) return aut;
+      const pausa = Number(v.pausa_total_ms) || 0;
       if (v.timestamp_fim) {
-        const m = Math.round((new Date(v.timestamp_fim) - ini) / 60000);
+        const m = Math.round((new Date(v.timestamp_fim) - ini - pausa) / 60000);
         return Math.max(0, Math.min(aut, m));
       }
+      if (v.status === 'Pausado') {
+        const m = Math.round((new Date(v.pausado_em) - ini - pausa) / 60000);
+        return Math.max(0, Math.min(aut, isNaN(m) ? aut : m));
+      }
       if (v.status === 'Ativo') {
-        const m = Math.round((Date.now() - ini) / 60000);
+        const m = Math.round((Date.now() - ini - pausa) / 60000);
         return Math.max(0, Math.min(aut, m));
       }
       return aut;   // Expirado sem registro de fim → assume uso integral
     }
+    /* Minutos autorizados de fato (cristais do voucher menos o que foi devolvido) */
+    function _audAut(v) { return Math.max(0, (Number(v.cristais)||0) - (Number(v.cristais_devolvidos)||0)); }
 
     /* Classifica o efeito de uma transação */
     function _audFluxo(t) {
@@ -5151,6 +5185,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
       switch (t.tipo) {
         case 'Voucher':
         case 'Gasto':    return { moeda:'💎', sinal:-1, q };
+        case 'Estorno':  return { moeda:'💎', sinal: 1, q };   // devolução de voucher encerrado antes
         case 'Forja':
         case 'Artefato':
         case 'Missao':   return { moeda:'💎', sinal: 1, q };
@@ -5212,7 +5247,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
     /* Vouchers que consumiram cristais em um dia */
     function _audVouchersDoDia(dia) {
       return _audVouchers
-        .filter(v => (v.status==='Ativo' || v.status==='Expirado') &&
+        .filter(v => (v.status==='Ativo' || v.status==='Pausado' || v.status==='Expirado') &&
                      _audDiaISO(v.timestamp_aprovacao || v.timestamp_solicitacao) === dia)
         .sort((a,b) => new Date(a.timestamp_aprovacao||a.timestamp_solicitacao) - new Date(b.timestamp_aprovacao||b.timestamp_solicitacao));
     }
@@ -5224,7 +5259,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
     }
     /* Total de minutos autorizados num dia (vouchers + gasto manual) */
     function _audTotalDia(dia) {
-      const v = _audVouchersDoDia(dia).reduce((s,x)=>s+(Number(x.cristais)||0),0);
+      const v = _audVouchersDoDia(dia).reduce((s,x)=>s+_audAut(x),0);
       const g = _audGastosManuais(dia).reduce((s,x)=>s+(Number(x.quantidade)||0),0);
       return v + g;
     }
@@ -5249,7 +5284,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
       const porG = guardioes.map(g => {
         const vs = vsDia.filter(v => v.email === g.email);
         const gs = gsDia.filter(t => t.email === g.email);
-        const aut = vs.reduce((s,v)=>s+(Number(v.cristais)||0),0) + gs.reduce((s,t)=>s+(Number(t.quantidade)||0),0);
+        const aut = vs.reduce((s,v)=>s+_audAut(v),0) + gs.reduce((s,t)=>s+(Number(t.quantidade)||0),0);
         const real = vs.reduce((s,v)=>s+_audMinReais(v),0) + gs.reduce((s,t)=>s+(Number(t.quantidade)||0),0);
         return { ...g, aut, real, n: vs.length + gs.length };
       });
@@ -5267,19 +5302,24 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
       const nomeDe = email => guardioes.find(g=>g.email===email)?.nome || email;
       const itens = [];
       vsDia.forEach(v => {
-        const aut  = Number(v.cristais)||0;
+        const aut  = _audAut(v);
         const real = _audMinReais(v);
         const ini  = v.timestamp_aprovacao || v.timestamp_solicitacao;
         const fimP = v.timer_fim;
         const fimR = v.timestamp_fim;
         let cls = '', obs = '';
+        const devolv = Number(v.cristais_devolvidos)||0;
         if (v.status === 'Ativo') { cls='ativo'; obs = `▶ em andamento · ~${real} min já usados`; }
+        else if (v.status === 'Pausado') { cls='ativo'; obs = `⏸ pausado · ~${real} min já usados`; }
+        else if (v.fora_do_app) { obs = `📝 concedido fora do app · ${aut} min` + (v.obs ? ' · ' + v.obs : ''); }
+        else if (v.retroativo) { obs = `⏪ registrado depois pelo Mestre · ${aut} min` + (v.obs ? ' · ' + v.obs : ''); }
+        else if (devolv > 0) { cls='parcial'; obs = `⏹ encerrado pelo Mestre · usou ${real} min, devolveu ${devolv} 💎`; }
         else if (fimR && real < aut - 1) { cls='parcial'; obs = `⏹ encerrado antes · usou ${real} de ${aut} min`; }
         else if (fimR) { obs = `✔ usou o tempo todo`; }
         else { obs = `✔ expirou naturalmente (uso integral presumido)`; }
         itens.push({ t:new Date(ini), html:`
           <div class="aud-tl-item ${cls}">
-            <div class="aud-tl-time">${_audHora(ini)}<small>${_audHora(fimR||fimP)}</small></div>
+            <div class="aud-tl-time">${v.fora_do_app ? '--:--' : _audHora(ini)}<small>${v.fora_do_app ? '' : _audHora(fimR||fimP)}</small></div>
             <div class="aud-tl-info">
               <div class="aud-tl-nome">${nomeDe(v.email)}</div>
               <div class="aud-tl-det">${obs}</div>
@@ -5330,7 +5370,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
 
       vsDia.forEach(v => {
         const h = new Date(v.timestamp_aprovacao || v.timestamp_solicitacao).getHours();
-        if (h >= 21 || h < 7)
+        if (!v.fora_do_app && !v.retroativo && (h >= 21 || h < 7))
           alertas.push({c:'warn', t:`${nomeDe(v.email)} recebeu ${v.cristais} min às ${_audHora(v.timestamp_aprovacao||v.timestamp_solicitacao)}, fora do horário habitual.`});
       });
 
@@ -5448,7 +5488,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
       _audGuardioes().forEach(g => {
         const inp = document.getElementById('aud-fl-'+g.emailKey);
         if (inp && inp.value !== '') {
-          const vs = _audVouchersDoDia(dia).filter(v=>v.email===g.email).reduce((s,v)=>s+(Number(v.cristais)||0),0);
+          const vs = _audVouchersDoDia(dia).filter(v=>v.email===g.email).reduce((s,v)=>s+_audAut(v),0);
           const gs = _audGastosManuais(dia).filter(t=>t.email===g.email).reduce((s,t)=>s+(Number(t.quantidade)||0),0);
           payload[g.emailKey] = { fl_min: Number(inp.value), sistema_min: vs+gs, nome: g.nome };
         }
@@ -5522,7 +5562,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
         const pendentes=[], ativos=[], historico=[];
         snapV.forEach(userSnap=>{ userSnap.forEach(v=>{ const vd={key:v.key,emailKey:userSnap.key,...v.val()};
           if(vd.status==='Pendente') pendentes.push(vd);
-          else if(vd.status==='Ativo') ativos.push(vd);
+          else if(vd.status==='Ativo' || vd.status==='Pausado') ativos.push(vd);
           else historico.push(vd);
         }); });
 
@@ -5554,17 +5594,24 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
         const ativoEl=document.getElementById('lista-vouchers-ativo');
         if(ativoEl) ativoEl.innerHTML = ativos.length
           ? ativos.map(v=>{ const nome=nomes[v.email]||v.email;
-              return `<div class="voucher-ativo-card" id="vacard-${v.key}"><div class="va-info"><div class="va-nome">${nome} &middot; ${v.cristais} min</div><div class="va-det">Aprovado ${new Date(v.timestamp_aprovacao||v.timestamp_solicitacao).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div></div><div id="vm-timer-${v.key}" class="va-timer">--:--</div><div class="va-btns"><button class="btn btn-del" style="font-size:0.75rem;padding:5px 8px" onclick="encerrarVoucher('${v.emailKey}','${v.key}','${v.email}')">⏹ Encerrar</button></div></div>`;}).join('')
+              const pausado=v.status==='Pausado';
+              const rest=Math.max(0,Number(v.restante_ms)||0), rm=Math.floor(rest/60000), rs=Math.floor((rest%60000)/1000);
+              const timerTxt=pausado ? '⏸ '+String(rm).padStart(2,'0')+':'+String(rs).padStart(2,'0') : '--:--';
+              const det=pausado ? 'Pausado às '+new Date(v.pausado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : 'Aprovado '+new Date(v.timestamp_aprovacao||v.timestamp_solicitacao).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+              const btnP=pausado
+                ? `<button class="btn btn-ok" style="font-size:0.75rem;padding:5px 8px" onclick="retomarVoucher('${v.emailKey}','${v.key}')">▶ Retomar</button>`
+                : `<button class="btn btn-warn" style="font-size:0.75rem;padding:5px 8px" onclick="pausarVoucher('${v.emailKey}','${v.key}')">⏸ Pausar</button>`;
+              return `<div class="voucher-ativo-card" id="vacard-${v.key}"${pausado?' style="background:#fff8e1;border-left-color:#f39c12"':''}><div class="va-info"><div class="va-nome">${nome} &middot; ${v.cristais} min</div><div class="va-det">${det}</div></div><div id="vm-timer-${v.key}" class="va-timer"${pausado?' style="color:#f39c12"':''}>${timerTxt}</div><div class="va-btns">${btnP}<button class="btn btn-del" style="font-size:0.75rem;padding:5px 8px" onclick="abrirEncerrarVoucher('${v.emailKey}','${v.key}')">⏹ Encerrar</button></div></div>`;}).join('')
           : '<div class="empty-msg">Nenhum ativo.</div>';
 
-        ativos.forEach(v=>_iniciarTimerMestreVoucher(v.key,v.timer_fim,v.emailKey));
+        ativos.filter(v=>v.status==='Ativo').forEach(v=>_iniciarTimerMestreVoucher(v.key,v.timer_fim,v.emailKey));
 
         // Histórico
         const histEl=document.getElementById('lista-vouchers-hist');
         if(histEl) histEl.innerHTML = historico.length
           ? historico.slice(0,20).map(v=>{ const nome=nomes[v.email]||v.email; const dt=new Date(v.timestamp_solicitacao).toLocaleDateString('pt-BR');
               const scls=v.status==='Expirado'?'vhs-expirado':v.status==='Recusado'?'vhs-recusado':'vhs-pendente';
-              return `<div class="voucher-hist-item"><span class="vh-nome">${nome}</span><span class="vh-det">${v.cristais} min &middot; ${dt}</span><span class="vh-status ${scls}">${v.status}</span></div>`;}).join('')
+              return `<div class="voucher-hist-item"><span class="vh-nome">${nome}</span><span class="vh-det">${v.cristais} min &middot; ${dt}${v.fora_do_app?' &middot; 📝 fora do app':v.retroativo?' &middot; ⏪ retroativo':''}${v.cristais_devolvidos?' &middot; ↩️ '+v.cristais_devolvidos+' 💎 devolvidos':''}</span><span class="vh-status ${scls}">${v.status}</span></div>`;}).join('')
           : '<div class="empty-msg">Nenhum histórico.</div>';
 
         _atualizarBadgesPendentes();
@@ -5593,8 +5640,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
         const snapU=await db.ref('usuarios/'+emailKey).get(), u=snapU.val();
         const saldo=Number(u.saldo_cristais)||0;
         if(saldo<cristais){ toast('⚠️ O tesouro de '+u.nome+' tem só '+saldo+' 💎!','error'); return; }
-        const snapAtivos=await db.ref('vouchers/'+emailKey).orderByChild('status').equalTo('Ativo').get();
-        if(snapAtivos.exists()){ toast('⚠️ '+u.nome+' ainda tem um voucher valendo!','error'); return; }
+        if(await _temVoucherEmAndamento(emailKey)){ toast('⚠️ '+u.nome+' ainda tem um voucher valendo ou pausado!','error'); return; }
         const agora=new Date(), timerFim=new Date(agora.getTime()+cristais*60000).toISOString();
         await db.ref('usuarios/'+emailKey).update({saldo_cristais:saldo-cristais});
         await db.ref('vouchers/'+emailKey+'/'+vkey).update({status:'Ativo',timestamp_aprovacao:agora.toISOString(),timer_fim:timerFim});
@@ -5603,6 +5649,146 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
         enviarPush(emailKey, '📜 Voucher Aprovado!', `O Mestre aprovou ${cristais} minutos de tela! ⏱`, 'voucher_aprovado', { cristais });
         toast('📜 Voucher selado! '+cristais+' min de tela para '+u.nome,'success');
         carregarVouchers();
+      } catch(e){ toast('❌ '+e.message,'error'); }
+    }
+
+    /* Há voucher Ativo ou Pausado? (1 por vez por Guardião) */
+    async function _temVoucherEmAndamento(emailKey) {
+      const snap=await db.ref('vouchers/'+emailKey).get();
+      let tem=false;
+      if(snap.exists()) snap.forEach(c=>{ const st=c.val().status; if(st==='Ativo'||st==='Pausado') tem=true; });
+      return tem;
+    }
+
+    async function pausarVoucher(emailKey,vkey) {
+      if(!confirm('Pausar este voucher? O tempo que sobrou fica guardado até você retomar.')) return;
+      try {
+        const agora=new Date(), ref=db.ref('vouchers/'+emailKey+'/'+vkey);
+        const cur=(await ref.get()).val();
+        if(!cur || cur.status!=='Ativo'){ toast('⚠️ Esse voucher não está mais ativo.','error'); carregarVouchers(); return; }
+        const resto=Math.max(0,new Date(cur.timer_fim).getTime()-agora.getTime());
+        if(resto<=0){ toast('⚠️ O tempo desse voucher já acabou.','error'); carregarVouchers(); return; }
+        await ref.update({status:'Pausado',restante_ms:resto,pausado_em:agora.toISOString()});
+        if(_mestreTimers[vkey]){ clearInterval(_mestreTimers[vkey]); delete _mestreTimers[vkey]; }
+        const min=Math.floor(resto/60000);
+        await db.ref('notificacoes/'+emailKey).push({tipo:'voucher_pausado',titulo:'⏸ Voucher Pausado',mensagem:'O Mestre pausou seu tempo de tela. Seus '+min+' minutos estão guardados! ⏸',quantidade:min,timestamp:agora.toISOString()});
+        enviarPush(emailKey, '⏸ Voucher Pausado', `O Mestre pausou seu tempo de tela. Seus ${min} minutos estão guardados!`, 'voucher_pausado', { min });
+        toast('⏸ Voucher pausado. Restam '+min+' min guardados.','success'); carregarVouchers();
+      } catch(e){ toast('❌ '+e.message,'error'); }
+    }
+
+    async function retomarVoucher(emailKey,vkey) {
+      try {
+        if(await (async()=>{ const sn=await db.ref('vouchers/'+emailKey).get(); let a=false; if(sn.exists()) sn.forEach(c=>{ if(c.val().status==='Ativo') a=true; }); return a; })()){ toast('⚠️ Já existe outro voucher valendo para este Guardião.','error'); return; }
+        const agora=new Date(), ref=db.ref('vouchers/'+emailKey+'/'+vkey);
+        const cur=(await ref.get()).val();
+        if(!cur || cur.status!=='Pausado'){ toast('⚠️ Esse voucher não está mais pausado.','error'); carregarVouchers(); return; }
+        const restMs=Math.max(0,Number(cur.restante_ms)||0);
+        const pausadoEm=new Date(cur.pausado_em).getTime();
+        const pausa=(Number(cur.pausa_total_ms)||0)+(isNaN(pausadoEm)?0:Math.max(0,agora.getTime()-pausadoEm));
+        await ref.update({status:'Ativo',timer_fim:new Date(agora.getTime()+restMs).toISOString(),pausa_total_ms:pausa,pausas:(Number(cur.pausas)||0)+1,restante_ms:null,pausado_em:null});
+        const min=Math.ceil(restMs/60000);
+        await db.ref('notificacoes/'+emailKey).push({tipo:'voucher_retomado',titulo:'▶ Voucher Retomado',mensagem:'O Mestre retomou seu tempo de tela! Restam '+min+' minutos. ▶',quantidade:min,timestamp:agora.toISOString()});
+        enviarPush(emailKey, '▶ Voucher Retomado', `O Mestre retomou seu tempo de tela! Restam ${min} minutos.`, 'voucher_retomado', { min });
+        toast('▶ Voucher retomado. Restam '+min+' min.','success'); carregarVouchers();
+      } catch(e){ toast('❌ '+e.message,'error'); }
+    }
+
+    /* Encerrar antes da hora, com escolha de quantos cristais devolver */
+    let _encCtx=null;
+    async function abrirEncerrarVoucher(emailKey,vkey) {
+      try {
+        const [sv,su]=await Promise.all([db.ref('vouchers/'+emailKey+'/'+vkey).get(), db.ref('usuarios/'+emailKey).get()]);
+        const v=sv.val(); if(!v || (v.status!=='Ativo' && v.status!=='Pausado')){ toast('⚠️ Esse voucher já foi encerrado.','error'); carregarVouchers(); return; }
+        const total=Number(v.cristais)||0;
+        const restMs=v.status==='Pausado' ? Math.max(0,Number(v.restante_ms)||0) : Math.max(0,new Date(v.timer_fim).getTime()-Date.now());
+        const sobra=Math.min(total,Math.floor(restMs/60000));
+        _encCtx={emailKey,vkey,total,nome:(su.val()||{}).nome||'Guardião'};
+        document.getElementById('enc-titulo').textContent='⏹ Encerrar voucher de '+_encCtx.nome;
+        document.getElementById('enc-resumo').textContent='Voucher de '+total+' min. Restam cerca de '+Math.floor(restMs/60000)+' min'+(v.status==='Pausado'?' (pausado)':'')+'.';
+        const inp=document.getElementById('enc-devolver'); inp.max=total; inp.value=sobra;
+        document.getElementById('enc-dica').textContent='Sugestão: '+sobra+' 💎 (os minutos inteiros que sobraram). Digite 0 para não devolver nada, ou '+total+' para devolver tudo (não usou).';
+        document.getElementById('enc-ov').classList.add('open');
+      } catch(e){ toast('❌ '+e.message,'error'); }
+    }
+    function fecharEncerrarVoucher() { document.getElementById('enc-ov').classList.remove('open'); _encCtx=null; }
+
+    async function confirmarEncerrarVoucher() {
+      if(!_encCtx) return;
+      const {emailKey,vkey,total,nome}=_encCtx;
+      const dev=parseInt(document.getElementById('enc-devolver').value);
+      if(isNaN(dev)||dev<0||dev>total){ toast('⚠️ Informe de 0 a '+total+' cristais para devolver.','error'); return; }
+      try {
+        const sv=await db.ref('vouchers/'+emailKey+'/'+vkey).get(), v=sv.val();
+        if(!v || (v.status!=='Ativo' && v.status!=='Pausado')){ toast('⚠️ Esse voucher já foi encerrado.','error'); fecharEncerrarVoucher(); carregarVouchers(); return; }
+        const agora=new Date(), agoraISO=agora.toISOString();
+        const up={};
+        up['vouchers/'+emailKey+'/'+vkey+'/status']='Expirado';
+        up['vouchers/'+emailKey+'/'+vkey+'/timestamp_fim']=agoraISO;
+        up['vouchers/'+emailKey+'/'+vkey+'/encerrado_por']='mestre';
+        up['vouchers/'+emailKey+'/'+vkey+'/usado_min']=total-dev;
+        up['vouchers/'+emailKey+'/'+vkey+'/cristais_devolvidos']=dev;
+        up['vouchers/'+emailKey+'/'+vkey+'/restante_ms']=null;
+        up['vouchers/'+emailKey+'/'+vkey+'/pausado_em']=null;
+        if(dev>0){
+          const su=await db.ref('usuarios/'+emailKey).get(), saldo=Number((su.val()||{}).saldo_cristais)||0;
+          up['usuarios/'+emailKey+'/saldo_cristais']=saldo+dev;
+          up['transacoes/'+db.ref('transacoes').push().key]={data:agoraISO,email:v.email,tipo:'Estorno',quantidade:dev,detalhes:'Devolução de voucher encerrado ('+dev+' min não usados)',status:'Aprovado',voucher_key:vkey};
+        }
+        const msg=dev>0 ? 'O Mestre encerrou seu tempo de tela e devolveu '+dev+' 💎 ao seu tesouro.' : 'O Mestre encerrou seu tempo de tela.';
+        up['notificacoes/'+emailKey+'/'+db.ref('notificacoes/'+emailKey).push().key]={tipo:dev>0?'voucher_estorno':'voucher_encerrado',titulo:'⏱ Voucher Encerrado',mensagem:msg,quantidade:dev,timestamp:agoraISO};
+        if(_mestreTimers[vkey]){ clearInterval(_mestreTimers[vkey]); delete _mestreTimers[vkey]; }
+        await db.ref().update(up);
+        enviarPush(emailKey, '⏱ Voucher Encerrado', msg, 'voucher_encerrado', {});
+        fecharEncerrarVoucher();
+        toast('⏹ Voucher encerrado'+(dev>0?' e '+dev+' 💎 devolvidos a '+nome:' sem devolução')+'.','success'); carregarVouchers(); if(typeof carregarDados==='function') carregarDados();
+      } catch(e){ toast('❌ '+e.message,'error'); }
+    }
+
+    /* Registra tempo de tela JÁ usado: voucher nasce Expirado; voucher, débito e transação num único write atômico. */
+    async function registrarVoucherRetroativo() {
+      const selVal=document.getElementById('sel-voucher-retro').value;
+      if(!selVal){ toast('⚠️ Escolha um Guardião.','error'); return; }
+      const [email,emailKey]=selVal.split('|');
+      const cristais=parseInt(document.getElementById('val-voucher-retro').value);
+      if(!cristais||cristais<1){ toast('⚠️ Informe quantos minutos foram usados.','error'); return; }
+      const dia=document.getElementById('data-voucher-retro').value, hora=document.getElementById('hora-voucher-retro').value;
+      if(!dia){ toast('⚠️ Informe o dia do uso.','error'); return; }
+      const [a,m,d]=dia.split('-').map(Number), agora=new Date();
+      const foraDoApp=!hora;
+      let ini,fim;
+      if(foraDoApp){
+        ini=new Date(a,m-1,d,12,0,0,0); if(ini>agora) ini=agora; fim=ini;
+        if(new Date(a,m-1,d,0,0,0,0)>agora){ toast('⚠️ Esse dia ainda não chegou.','error'); return; }
+      } else {
+        const [hh,mm]=hora.split(':').map(Number);
+        ini=new Date(a,m-1,d,hh,mm,0,0); fim=new Date(ini.getTime()+cristais*60000);
+        if(isNaN(ini)){ toast('⚠️ Data ou hora inválida.','error'); return; }
+        if(fim>agora){ toast('⚠️ Esse uso termina no futuro. Para tempo ainda em andamento, use Criar e Ativar.','error'); return; }
+      }
+      const obs=(document.getElementById('obs-voucher-retro').value||'').trim();
+      const quando=foraDoApp ? ini.toLocaleDateString('pt-BR')+' (sem hora)' : ini.toLocaleDateString('pt-BR')+' às '+ini.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      if(!confirm('Registrar '+cristais+' min de tela em '+quando+' e debitar '+cristais+' 💎?')) return;
+      try {
+        const snapU=await db.ref('usuarios/'+emailKey).get(), u=snapU.val();
+        if(!u){ toast('❌ Guardião não encontrado.','error'); return; }
+        const saldo=Number(u.saldo_cristais)||0;
+        if(saldo<cristais){ toast('⚠️ O tesouro de '+u.nome+' tem só '+saldo+' 💎.','error'); return; }
+        const vkey=db.ref('vouchers/'+emailKey).push().key, tkey=db.ref('transacoes').push().key, nkey=db.ref('notificacoes/'+emailKey).push().key;
+        const iniISO=ini.toISOString(), fimISO=fim.toISOString(), agoraISO=agora.toISOString();
+        const voucher={email,status:'Expirado',cristais,usado_min:cristais,timestamp_solicitacao:iniISO,timestamp_aprovacao:iniISO,timer_fim:fimISO,timestamp_fim:fimISO,encerrado_por:'retroativo',retroativo:true,registrado_em:agoraISO};
+        if(foraDoApp) voucher.fora_do_app=true;
+        if(obs) voucher.obs=obs;
+        const rotulo=foraDoApp?'Concedido fora do app':'Voucher Retroativo';
+        const up={};
+        up['usuarios/'+emailKey+'/saldo_cristais']=saldo-cristais;
+        up['vouchers/'+emailKey+'/'+vkey]=voucher;
+        up['transacoes/'+tkey]={data:iniISO,email,tipo:'Voucher',quantidade:cristais,detalhes:'Tempo de Tela ('+rotulo+')'+(obs?' · '+obs:''),status:'Aprovado',retroativo:true,registrado_em:agoraISO,voucher_key:vkey};
+        up['notificacoes/'+emailKey+'/'+nkey]={tipo:'gasto',titulo:'💎 Cristais Usados!',mensagem:cristais+' cristais registrados pelo Mestre pelo tempo de tela de '+quando+'.',quantidade:cristais,timestamp:agoraISO};
+        await db.ref().update(up);
+        toast('⏪ '+cristais+' 💎 debitados de '+u.nome+' ('+quando+'). Voucher liquidado.','success');
+        ['val-voucher-retro','obs-voucher-retro','hora-voucher-retro'].forEach(id=>document.getElementById(id).value='');
+        carregarVouchers(); if(typeof carregarDados==='function') carregarDados();
       } catch(e){ toast('❌ '+e.message,'error'); }
     }
 
@@ -5615,16 +5801,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
       } catch(e){ toast('❌ '+e.message,'error'); }
     }
 
-    async function encerrarVoucher(emailKey,vkey,email) {
-      if(!confirm('Encerrar este voucher?')) return;
-      try {
-        if(_mestreTimers[vkey]){ clearInterval(_mestreTimers[vkey]); delete _mestreTimers[vkey]; }
-        await db.ref('vouchers/'+emailKey+'/'+vkey).update({status:'Expirado', timestamp_fim:new Date().toISOString(), encerrado_por:'mestre'});
-        await db.ref('notificacoes/'+emailKey).push({tipo:'voucher_encerrado',titulo:'⏱ Voucher Encerrado',mensagem:'O Mestre encerrou seu tempo de tela.',quantidade:0,timestamp:new Date().toISOString()});
-        enviarPush(emailKey, '⏱ Voucher Encerrado', 'O Mestre encerrou seu tempo de tela.', 'voucher_encerrado', {});
-        toast('⏹ Voucher encerrado. O Guardião foi avisado.','success'); carregarVouchers();
-      } catch(e){ toast('❌ '+e.message,'error'); }
-    }
+    function encerrarVoucher(emailKey,vkey) { return abrirEncerrarVoucher(emailKey,vkey); }
 
     async function criarVoucherMestre() {
       const selVal=document.getElementById('sel-voucher-manual').value;
@@ -5635,8 +5812,7 @@ var m=/^https:\/\/i\.ibb\.co\/([^?#]+)/.exec(t.getAttribute('src')||'');if(m&&M[
       try {
         const snapU=await db.ref('usuarios/'+emailKey).get(), u=snapU.val(), saldo=Number(u.saldo_cristais)||0;
         if(saldo<cristais){ toast('⚠️ O tesouro só tem '+saldo+' 💎.','error'); return; }
-        const snapAtivos=await db.ref('vouchers/'+emailKey).orderByChild('status').equalTo('Ativo').get();
-        if(snapAtivos.exists()){ toast('⚠️ '+u.nome+' ainda tem um voucher valendo!','error'); return; }
+        if(await _temVoucherEmAndamento(emailKey)){ toast('⚠️ '+u.nome+' ainda tem um voucher valendo ou pausado!','error'); return; }
         const agora=new Date(), timerFim=new Date(agora.getTime()+cristais*60000).toISOString();
         await db.ref('usuarios/'+emailKey).update({saldo_cristais:saldo-cristais});
         await db.ref('vouchers/'+emailKey).push({email,status:'Ativo',cristais,timestamp_solicitacao:agora.toISOString(),timestamp_aprovacao:agora.toISOString(),timer_fim:timerFim});
